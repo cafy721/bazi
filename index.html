@@ -41,7 +41,7 @@
 <div id="app" class="max-w-6xl mx-auto">
   <header class="text-center my-4">
     <h1 class="text-2xl font-bold tracking-wider gold-text">八字排盤系統</h1>
-    <p class="text-xs text-slate-400 mt-1">ISO 診斷 ‧ 動態解蓋頭 ‧ 五行用神 ‧ 電路彈窗</p>
+    <p class="text-xs text-slate-400 mt-1">ISO 診斷 ‧ 可取消大運(恢復原命) ‧ 五行用神 ‧ 電路彈窗</p>
   </header>
 
   <!-- 輸入區 & 命例管理 -->
@@ -103,7 +103,7 @@
 
   <!-- 排盤結果區 -->
   <div v-if="result" class="space-y-6">
-    <!-- 基本資訊與用神忌神 (附帶金木水火土) -->
+    <!-- 基本資訊與用神忌神 -->
     <div class="card-bg p-4 rounded-2xl border border-slate-700/50 text-center text-xs text-slate-300 space-y-3">
       <div class="flex justify-center items-center gap-4 flex-wrap">
         <span class="text-amber-500 font-bold text-sm" v-if="result.name">{{ result.name }}</span>
@@ -125,7 +125,7 @@
         </span>
       </div>
 
-      <!-- 用神喜忌定位列 (附帶五行) -->
+      <!-- 用神喜忌定位列 -->
       <div v-if="godsInfo" class="flex justify-center items-center gap-2 flex-wrap text-xs pt-1">
         <span class="bg-indigo-950/60 text-indigo-300 px-2.5 py-1 rounded-md border border-indigo-800/60 font-bold">
           格神：{{ godsInfo.geShen }}
@@ -192,11 +192,20 @@
         </div>
       </div>
 
-      <!-- 右側：大運與流年連動 -->
+      <!-- 右側：大運與流年連動 (含一鍵恢復原命) -->
       <div class="card-bg p-4 rounded-2xl border border-slate-700/50 flex-[2] overflow-x-auto">
-        <h2 class="text-sm font-bold text-slate-200 mb-3 border-b border-slate-700 pb-2 text-center">【 大運 ＆ 流年連動 】</h2>
+        <div class="flex justify-between items-center border-b border-slate-700 pb-2 mb-3">
+          <h2 class="text-sm font-bold text-slate-200">【 大運 ＆ 流年連動 】</h2>
+          <button v-if="selectedDaYun" @click="selectDaYun(null)" 
+                  class="text-[10px] bg-amber-950/60 hover:bg-amber-900 text-amber-300 px-2 py-1 rounded border border-amber-700/50 transition">
+            ↺ 恢復原命
+          </button>
+        </div>
         
-        <div v-if="!selectedDaYun" class="text-center text-slate-400 py-10">請在下方選擇一步大運</div>
+        <div v-if="!selectedDaYun" class="text-center text-slate-400 py-10 space-y-2">
+          <div>目前顯示：<b>純原命盤狀態</b></div>
+          <div class="text-[11px] text-slate-500">可在下方點擊任意大運進行連動推算</div>
+        </div>
         
         <div v-if="selectedDaYun" class="grid grid-cols-2 text-center text-xs gap-1 min-w-[200px]">
           <div class="text-amber-500 font-bold py-2">大運 ({{ selectedDaYun.startYear }}~)</div>
@@ -229,14 +238,20 @@
       </div>
     </div>
 
-    <!-- 排位 2: 點擊選擇大運區 -->
+    <!-- 排位 2: 點擊選擇大運區 (可再按一次取消) -->
     <div class="card-bg p-4 rounded-2xl border border-slate-700/50 shadow-lg">
-      <h2 class="text-sm font-bold text-slate-200 mb-3 border-b border-slate-700 pb-2">點擊選擇大運：</h2>
+      <div class="flex justify-between items-center border-b border-slate-700 pb-2 mb-3">
+        <h2 class="text-sm font-bold text-slate-200">點擊選擇大運：</h2>
+        <span class="text-[10px] text-slate-400">再按一次選中的大運可取消選擇</span>
+      </div>
       <div class="flex overflow-x-auto no-scrollbar gap-2 pb-2">
         <div v-for="(dy, index) in result.daYunList" :key="dy.startYear" @click="selectDaYun(dy)"
-             :class="['cursor-pointer border rounded-xl p-3 w-32 text-center flex-shrink-0 transition', 
-                      selectedDaYun?.startYear === dy.startYear ? 'border-amber-500 bg-amber-900/20 shadow-[0_0_10px_rgba(245,158,11,0.2)]' : 'border-slate-800 bg-slate-900/80 hover:bg-slate-700']">
-          <div class="text-[10px] text-amber-500/80 font-bold">第 {{ index + 1 }} 運</div>
+             :class="['cursor-pointer border rounded-xl p-3 w-32 text-center flex-shrink-0 transition relative', 
+                      selectedDaYun?.startYear === dy.startYear ? 'border-amber-500 bg-amber-900/30 shadow-[0_0_12px_rgba(245,158,11,0.3)] ring-1 ring-amber-500' : 'border-slate-800 bg-slate-900/80 hover:bg-slate-700']">
+          <div class="text-[10px] text-amber-500/80 font-bold flex justify-between items-center">
+            <span>第 {{ index + 1 }} 運</span>
+            <span v-if="selectedDaYun?.startYear === dy.startYear" class="text-[9px] text-amber-400 font-normal">已選</span>
+          </div>
           <div class="text-xs text-slate-400">{{ dy.startAge }} - {{ dy.endAge }} 歲</div>
           <div class="text-[10px] text-slate-500">{{ dy.startYear }} 年</div>
           <div class="text-lg font-bold mt-1">
@@ -504,7 +519,18 @@ createApp({
       return selectedDaYun.value.liuNianList.find(ln => ln.year === selectedLiuNian.value);
     });
 
-    // 推導用神喜忌 (標註金木水火土)
+    // 大運選擇/取消切換邏輯
+    const selectDaYun = (dy) => {
+      if (!dy || (selectedDaYun.value && selectedDaYun.value.startYear === dy.startYear)) {
+        selectedDaYun.value = null;
+        selectedLiuNian.value = null;
+      } else {
+        selectedDaYun.value = dy;
+        selectedLiuNian.value = dy.startYear;
+      }
+    };
+
+    // 推導用神喜忌
     const godsInfo = computed(() => {
       if (!result.value || !quantScore.value) return null;
       const dayGan = result.value.dayGan;
@@ -680,7 +706,7 @@ createApp({
       quantScore.value = { allyScore: allyScore.toFixed(1), diffScore: diffScore.toFixed(1), ratio, verdict };
     };
 
-    // 動態電路診斷矩陣 (大運/流年透水自動解除蓋頭)
+    // 動態電路診斷矩陣 (大運/流年透干自動解蓋頭)
     const checkCircuitDiagnostics = () => {
       if (!result.value) return;
       const pillars = result.value.pillars;
@@ -702,7 +728,6 @@ createApp({
         const hasSelfRoot = cangs.some(cg => STEM_PROPS[gan].e === STEM_PROPS[cg.stem].e || getShiShen(gan, cg.stem) === '正印' || getShiShen(gan, cg.stem) === '偏印');
         if (!hasSelfRoot) diags.push(`${p.name}截腳(${gan}無根)`);
 
-        // 動態蓋頭判定：若大運或流年透干成功通電，蓋頭自動解除！
         const hasProtrusion = cangs.some(cg => curGans.includes(cg.stem));
         if (!hasProtrusion) {
           diags.push(`${p.name}蓋頭(${zhi}不透)`);
@@ -801,7 +826,7 @@ createApp({
         sRels.push({ desc: '天干「雙七殺攻身」', source: checkSource('七殺') });
       }
 
-      // 2. 地支合局 (重磅三合局修復)
+      // 2. 地支合局
       const bSanHes = [
         ['申','子','辰','三合水局'],
         ['亥','卯','未','三合木局'],
@@ -908,11 +933,6 @@ createApp({
       localStorage.setItem('bazi_records', JSON.stringify(records.value));
     };
 
-    const selectDaYun = (dy) => {
-      selectedDaYun.value = dy;
-      selectedLiuNian.value = dy.startYear;
-    };
-
     const calculate = () => {
       if (typeof Solar === 'undefined') return alert("萬年曆載入中，請稍候");
       if (!birthTime.value) return;
@@ -973,8 +993,8 @@ createApp({
     return { 
       name, birthTime, gender, result, selectedDaYun, selectedLiuNian, currentLiuNianObj, 
       stemRelations, branchCombos, branchClashes, relations, circuitDiagnostics, injuryAlerts, quantScore, godsInfo, isoReport, activeModal,
-      records, showRecords, saveRecord, loadRecord, deleteRecord, formatTime, openCircuitModal,
-      calculate, selectDaYun, getShiShen, getElemClass, getCustomCangGan: zhi => CUSTOM_CANG_GAN[zhi] || [] 
+      records, showRecords, saveRecord, loadRecord, deleteRecord, formatTime, openCircuitModal, selectDaYun,
+      calculate, getShiShen, getElemClass, getCustomCangGan: zhi => CUSTOM_CANG_GAN[zhi] || [] 
     };
   }
 }).mount('#app');
