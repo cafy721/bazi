@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>專業八字排盤（進階神煞版）</title>
+  <title>專業八字排盤（數論八字全校正版）</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.min.js"></script>
@@ -13,15 +13,22 @@
     .card-bg { background-color: #1e293b; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    .color-wood { color: #22c55e; }
-    .color-fire { color: #ef4444; }
-    .color-earth { color: #b8621b; }
-    .color-metal { color: #facc15; }
-    .color-water { color: #38bdf8; }
-    .relation-tag { padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; margin-bottom: 2px; display: inline-block; }
+    
+    /* 五行配色 */
+    .color-wood { color: #22c55e; }  /* 木 - 綠色 */
+    .color-fire { color: #ef4444; }  /* 火 - 紅色 */
+    .color-earth { color: #b8621b; } /* 土 - 深啡色 */
+    .color-metal { color: #facc15; } /* 金 - 黃色 */
+    .color-water { color: #38bdf8; } /* 水 - 藍色 */
+    
+    .relation-tag { padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; display: inline-block; }
     .tag-he { background-color: #064e3b; color: #34d399; }
     .tag-chong { background-color: #7f1d1d; color: #fca5a5; }
     .tag-xing { background-color: #701a75; color: #f0abfc; }
+    .tag-circuit { background-color: #1e1b4b; color: #818cf8; border: 1px solid #4338ca; }
+    .tag-alert-xiang { background-color: #854d0e; color: #fef08a; }
+    .tag-alert-ge { background-color: #991b1b; color: #fecaca; }
+    .tag-alert-shen { background-color: #581c87; color: #f5d0fe; font-weight: 900; }
   </style>
 </head>
 <body class="p-3 sm:p-6 min-h-screen">
@@ -29,7 +36,7 @@
 <div id="app" class="max-w-6xl mx-auto">
   <header class="text-center my-4">
     <h1 class="text-2xl font-bold tracking-wider gold-text">八字排盤系統</h1>
-    <p class="text-xs text-slate-400 mt-1">專屬藏干 ‧ 流年連動 ‧ 命例庫</p>
+    <p class="text-xs text-slate-400 mt-1">以數論八字 ‧ 主餘中三氣權重 ‧ 量化身強弱 ‧ 電路診斷版</p>
   </header>
 
   <!-- 輸入區 & 命例管理 -->
@@ -73,7 +80,7 @@
       </div>
     </div>
 
-    <!-- 展開的命例庫清單 -->
+    <!-- 命例庫清單 -->
     <div v-if="showRecords" class="mt-4 p-3 bg-slate-900/80 rounded-xl border border-slate-700">
       <h3 class="text-xs font-bold text-slate-400 mb-2 border-b border-slate-700 pb-2">已儲存命例 (點擊直接排盤)</h3>
       <div v-if="records.length === 0" class="text-xs text-slate-500 text-center py-4">暫無儲存的命例</div>
@@ -92,21 +99,61 @@
   <!-- 排盤結果區 -->
   <div v-if="result" class="space-y-6">
     <!-- 基本資訊 -->
-    <div class="card-bg p-4 rounded-2xl border border-slate-700/50 text-center text-xs text-slate-300">
-      <span class="mr-3 text-amber-500 font-bold text-sm" v-if="result.name">{{ result.name }}</span>
-      <span class="mr-4">陽曆：{{ result.solarStr }}</span>
-      <span class="mr-4">陰曆：{{ result.lunarStr }}</span>
-      <span class="gold-text font-semibold">起運：{{ result.yunStr }}</span>
+    <div class="card-bg p-4 rounded-2xl border border-slate-700/50 text-center text-xs text-slate-300 space-y-2">
+      <div class="flex justify-center items-center gap-4 flex-wrap">
+        <span class="text-amber-500 font-bold text-sm" v-if="result.name">{{ result.name }}</span>
+        <span>陽曆：{{ result.solarStr }}</span>
+        <span>陰曆：{{ result.lunarStr }}</span>
+        <span class="gold-text font-semibold">起運：{{ result.yunStr }}</span>
+      </div>
+      
+      <!-- 身強弱量化面板 -->
+      <div v-if="quantScore" class="pt-2 border-t border-slate-800 flex justify-center items-center gap-4 flex-wrap text-xs">
+        <span class="bg-slate-900 px-3 py-1 rounded-lg border border-slate-700">
+          同黨能量(印比)：<b class="text-emerald-400">{{ quantScore.allyScore }}</b>
+        </span>
+        <span class="bg-slate-900 px-3 py-1 rounded-lg border border-slate-700">
+          異黨能量(財官食)：<b class="text-rose-400">{{ quantScore.diffScore }}</b>
+        </span>
+        <span class="bg-amber-950/40 text-amber-300 px-3 py-1 rounded-lg border border-amber-800/50 font-bold">
+          狀態判定：{{ quantScore.verdict }} (比率 {{ quantScore.ratio }})
+        </span>
+      </div>
     </div>
 
-    <!-- 刑沖合會提示區 -->
-    <div v-if="relations.length > 0" class="card-bg p-4 rounded-2xl border border-slate-700/50">
-      <h3 class="text-sm font-bold text-slate-200 mb-2">⚡ 刑沖合會檢測 (原局 + 大運/流年)</h3>
-      <div class="flex flex-wrap gap-2">
-        <span v-for="rel in relations" :key="rel.desc" 
-              :class="['relation-tag text-xs px-2 py-1', rel.type === 'he' ? 'tag-he' : (rel.type === 'chong' ? 'tag-chong' : 'tag-xing')]">
-          {{ rel.desc }}
-        </span>
+    <!-- 警報與診斷面板 -->
+    <div v-if="relations.length > 0 || circuitDiagnostics.length > 0 || injuryAlerts.length > 0" class="card-bg p-4 rounded-2xl border border-slate-700/50 space-y-3">
+      
+      <!-- 三層氣場傷損警報 -->
+      <div v-if="injuryAlerts.length > 0" class="space-y-1">
+        <h3 class="text-xs font-bold text-rose-400">🚨 歲運衝擊與傷損警報</h3>
+        <div class="flex flex-wrap gap-2">
+          <span v-for="alt in injuryAlerts" :key="alt.desc" 
+                :class="['relation-tag text-xs px-2 py-1', alt.level === 'shen' ? 'tag-alert-shen' : (alt.level === 'ge' ? 'tag-alert-ge' : 'tag-alert-xiang')]">
+            {{ alt.desc }}
+          </span>
+        </div>
+      </div>
+
+      <!-- 刑沖合會 -->
+      <div v-if="relations.length > 0" class="space-y-1">
+        <h3 class="text-xs font-bold text-slate-300">⚡ 宮位地戰與刑沖合會</h3>
+        <div class="flex flex-wrap gap-2">
+          <span v-for="rel in relations" :key="rel.desc" 
+                :class="['relation-tag text-xs px-2 py-1', rel.type === 'he' ? 'tag-he' : (rel.type === 'chong' ? 'tag-chong' : 'tag-xing')]">
+            {{ rel.desc }}
+          </span>
+        </div>
+      </div>
+
+      <!-- 電路診斷 -->
+      <div v-if="circuitDiagnostics.length > 0" class="space-y-1">
+        <h3 class="text-xs font-bold text-indigo-300">🔌 電路診斷矩陣 (通根 / 透干 / 同氣 / 蓋頭 / 截腳)</h3>
+        <div class="flex flex-wrap gap-2">
+          <span v-for="cd in circuitDiagnostics" :key="cd" class="relation-tag tag-circuit text-xs px-2 py-1">
+            {{ cd }}
+          </span>
+        </div>
       </div>
     </div>
 
@@ -124,26 +171,27 @@
           <div class="text-slate-400 py-2">時柱</div>
 
           <div class="text-slate-400 border-t border-slate-800 py-2 self-center">十神</div>
-          <div v-for="p in result.pillars" class="border-t border-slate-800 py-2 text-slate-300">
+          <div v-for="p in result.pillars" :key="p.name" class="border-t border-slate-800 py-2 text-slate-300">
             {{ p.isDayMaster ? '日主' : p.shishen }}
           </div>
 
           <div class="text-slate-400 border-t border-slate-800 py-2 self-center">天干</div>
-          <div v-for="p in result.pillars" :class="['border-t border-slate-800 py-2 text-2xl font-bold', getElemClass(p.gan)]">
+          <div v-for="p in result.pillars" :key="p.name" :class="['border-t border-slate-800 py-2 text-2xl font-bold', getElemClass(p.gan)]">
             {{ p.gan }}
           </div>
 
           <div class="text-slate-400 border-t border-slate-800 py-2 self-center">地支</div>
-          <div v-for="p in result.pillars" :class="['border-t border-slate-800 py-2 text-2xl font-bold', getElemClass(p.zhi)]">
+          <div v-for="p in result.pillars" :key="p.name" :class="['border-t border-slate-800 py-2 text-2xl font-bold', getElemClass(p.zhi)]">
             {{ p.zhi }}
           </div>
 
-          <div class="text-slate-400 border-t border-slate-800 py-2">藏干</div>
-          <div v-for="p in result.pillars" class="border-t border-slate-800 py-2 text-left text-[11px] space-y-1">
-            <div v-for="cg in getCustomCangGan(p.zhi)" class="bg-slate-900/60 p-1 rounded flex justify-between">
+          <div class="text-slate-400 border-t border-slate-800 py-2">地支<br>三氣</div>
+          <div v-for="p in result.pillars" :key="p.name" class="border-t border-slate-800 py-2 text-left text-[11px] space-y-1">
+            <div v-for="cg in getCustomCangGan(p.zhi)" :key="cg.type" class="bg-slate-900/60 p-1 rounded flex justify-between">
               <span>
                 <span class="text-[9px] bg-slate-800 px-1 rounded text-slate-400">{{ cg.type }}</span>
-                <b :class="getElemClass(cg.stem)">{{ cg.stem }}</b> <span class="text-[9px] text-slate-400">({{ getShiShen(result.dayGan, cg.stem) }})</span>
+                <b :class="getElemClass(cg.stem)">{{ cg.stem }}</b> 
+                <span class="text-[9px] text-slate-400">({{ getShiShen(result.dayGan, cg.stem) }})</span>
               </span>
               <span class="text-amber-500/80 text-[9px]">{{ cg.changsheng }}</span>
             </div>
@@ -151,41 +199,36 @@
         </div>
       </div>
 
-      <!-- 右側：大運與流年連動 (移除重複標籤) -->
+      <!-- 右側：大運與流年連動 -->
       <div class="card-bg p-4 rounded-2xl border border-slate-700/50 flex-[2] overflow-x-auto">
         <h2 class="text-sm font-bold text-slate-200 mb-3 border-b border-slate-700 pb-2 text-center">【 大運 ＆ 流年連動 】</h2>
         
         <div v-if="!selectedDaYun" class="text-center text-slate-400 py-10">請在下方選擇一步大運</div>
         
         <div v-if="selectedDaYun" class="grid grid-cols-2 text-center text-xs gap-1 min-w-[200px]">
-          <!-- 頂部標題列 -->
           <div class="text-amber-500 font-bold py-2">大運 ({{ selectedDaYun.startYear }}~)</div>
           <div class="text-sky-400 font-bold py-2">
             <select v-model="selectedLiuNian" class="bg-slate-800 border-none text-sky-400 text-xs p-1 rounded outline-none cursor-pointer">
-              <option v-for="ln in selectedDaYun.liuNianList" :value="ln.year">{{ ln.year }} 流年</option>
+              <option v-for="ln in selectedDaYun.liuNianList" :key="ln.year" :value="ln.year">{{ ln.year }} 流年</option>
             </select>
           </div>
 
-          <!-- 十神 -->
           <div class="border-t border-slate-800 py-2 text-slate-300">{{ getShiShen(result.dayGan, selectedDaYun.gan) }}</div>
           <div class="border-t border-slate-800 py-2 text-slate-300">{{ getShiShen(result.dayGan, currentLiuNianObj?.gan) }}</div>
 
-          <!-- 天干 -->
           <div :class="['border-t border-slate-800 py-2 text-2xl font-bold', getElemClass(selectedDaYun.gan)]">{{ selectedDaYun.gan }}</div>
           <div :class="['border-t border-slate-800 py-2 text-2xl font-bold', getElemClass(currentLiuNianObj?.gan)]">{{ currentLiuNianObj?.gan }}</div>
 
-          <!-- 地支 -->
           <div :class="['border-t border-slate-800 py-2 text-2xl font-bold', getElemClass(selectedDaYun.zhi)]">{{ selectedDaYun.zhi }}</div>
           <div :class="['border-t border-slate-800 py-2 text-2xl font-bold', getElemClass(currentLiuNianObj?.zhi)]">{{ currentLiuNianObj?.zhi }}</div>
 
-          <!-- 藏干 -->
           <div class="border-t border-slate-800 py-2 text-left text-[11px] space-y-1">
-            <div v-for="cg in getCustomCangGan(selectedDaYun.zhi)" class="bg-slate-900/60 p-1 rounded flex justify-between">
+            <div v-for="cg in getCustomCangGan(selectedDaYun.zhi)" :key="cg.type" class="bg-slate-900/60 p-1 rounded flex justify-between">
               <span><span class="text-[9px] bg-slate-800 px-1 rounded text-slate-400">{{ cg.type }}</span> <b :class="getElemClass(cg.stem)">{{ cg.stem }}</b> <span class="text-[9px] text-slate-400">({{ getShiShen(result.dayGan, cg.stem) }})</span></span>
             </div>
           </div>
           <div class="border-t border-slate-800 py-2 text-left text-[11px] space-y-1">
-            <div v-if="currentLiuNianObj" v-for="cg in getCustomCangGan(currentLiuNianObj.zhi)" class="bg-slate-900/60 p-1 rounded flex justify-between">
+            <div v-if="currentLiuNianObj" v-for="cg in getCustomCangGan(currentLiuNianObj.zhi)" :key="cg.type" class="bg-slate-900/60 p-1 rounded flex justify-between">
               <span><span class="text-[9px] bg-slate-800 px-1 rounded text-slate-400">{{ cg.type }}</span> <b :class="getElemClass(cg.stem)">{{ cg.stem }}</b> <span class="text-[9px] text-slate-400">({{ getShiShen(result.dayGan, cg.stem) }})</span></span>
             </div>
           </div>
@@ -197,7 +240,7 @@
     <div class="card-bg p-4 rounded-2xl border border-slate-700/50 shadow-lg">
       <h2 class="text-sm font-bold text-slate-200 mb-3 border-b border-slate-700 pb-2">點擊選擇大運：</h2>
       <div class="flex overflow-x-auto no-scrollbar gap-2 pb-2">
-        <div v-for="(dy, index) in result.daYunList" @click="selectDaYun(dy)"
+        <div v-for="(dy, index) in result.daYunList" :key="dy.startYear" @click="selectDaYun(dy)"
              :class="['cursor-pointer border rounded-xl p-3 w-32 text-center flex-shrink-0 transition', 
                       selectedDaYun?.startYear === dy.startYear ? 'border-amber-500 bg-amber-900/20 shadow-[0_0_10px_rgba(245,158,11,0.2)]' : 'border-slate-800 bg-slate-900/80 hover:bg-slate-700']">
           <div class="text-[10px] text-amber-500/80 font-bold">第 {{ index + 1 }} 運</div>
@@ -223,25 +266,29 @@ createApp({
     const result = ref(null);
     const selectedDaYun = ref(null);
     const selectedLiuNian = ref(null);
-    const relations = ref([]);
     
-    // 命例庫狀態
+    const relations = ref([]);
+    const circuitDiagnostics = ref([]);
+    const injuryAlerts = ref([]);
+    const quantScore = ref(null);
+
     const records = ref([]);
     const showRecords = ref(false);
 
+    // 專屬地支三氣對照表（順序：主氣 -> 餘氣 -> 中氣，依據《子平真詮》氣場演變）
     const CUSTOM_CANG_GAN = {
-      '寅': [ { type: '主', stem: '甲', changsheng: '臨官' }, { type: '中', stem: '丙', changsheng: '長生' }, { type: '餘', stem: '己', changsheng: '帝旺' } ],
-      '卯': [ { type: '主', stem: '乙', changsheng: '臨官' }, { type: '中', stem: '癸', changsheng: '長生' }, { type: '餘', stem: '甲', changsheng: '帝旺' } ],
-      '辰': [ { type: '主', stem: '己', changsheng: '臨官' }, { type: '中', stem: '癸', changsheng: '養' },   { type: '餘', stem: '乙', changsheng: '冠帶' } ],
-      '巳': [ { type: '主', stem: '丙', changsheng: '臨官' }, { type: '中', stem: '庚', changsheng: '長生' }, { type: '餘', stem: '己', changsheng: '帝旺' } ],
-      '午': [ { type: '主', stem: '丁', changsheng: '臨官' }, { type: '中', stem: '乙', changsheng: '長生' }, { type: '餘', stem: '丙', changsheng: '帝旺' } ],
-      '未': [ { type: '主', stem: '戊', changsheng: '臨官' }, { type: '中', stem: '乙', changsheng: '養' },   { type: '餘', stem: '丁', changsheng: '冠帶' } ],
-      '申': [ { type: '主', stem: '庚', changsheng: '臨官' }, { type: '中', stem: '壬', changsheng: '長生' }, { type: '餘', stem: '戊', changsheng: '帝旺' } ],
-      '酉': [ { type: '主', stem: '辛', changsheng: '臨官' }, { type: '中', stem: '丁', changsheng: '長生' }, { type: '餘', stem: '庚', changsheng: '帝旺' } ],
-      '戌': [ { type: '主', stem: '戊', changsheng: '臨官' }, { type: '中', stem: '丁', changsheng: '養' },   { type: '餘', stem: '辛', changsheng: '冠帶' } ],
-      '亥': [ { type: '主', stem: '壬', changsheng: '臨官' }, { type: '中', stem: '甲', changsheng: '長生' }, { type: '餘', stem: '戊', changsheng: '帝旺' } ],
-      '子': [ { type: '主', stem: '癸', changsheng: '臨官' }, { type: '中', stem: '辛', changsheng: '長生' }, { type: '餘', stem: '壬', changsheng: '帝旺' } ],
-      '丑': [ { type: '主', stem: '己', changsheng: '臨官' }, { type: '中', stem: '辛', changsheng: '養' },   { type: '餘', stem: '癸', changsheng: '冠帶' } ]
+      '寅': [ { type: '主', stem: '甲', changsheng: '臨官', w: 9 }, { type: '餘', stem: '己', changsheng: '帝旺', w: 4 }, { type: '中', stem: '丙', changsheng: '長生', w: 2 } ],
+      '卯': [ { type: '主', stem: '乙', changsheng: '臨官', w: 9 }, { type: '餘', stem: '甲', changsheng: '帝旺', w: 4 }, { type: '中', stem: '癸', changsheng: '長生', w: 2 } ],
+      '辰': [ { type: '主', stem: '己', changsheng: '臨官', w: 9 }, { type: '餘', stem: '乙', changsheng: '冠帶', w: 4 }, { type: '中', stem: '癸', changsheng: '養',   w: 2 } ],
+      '巳': [ { type: '主', stem: '丙', changsheng: '臨官', w: 9 }, { type: '餘', stem: '己', changsheng: '帝旺', w: 4 }, { type: '中', stem: '庚', changsheng: '長生', w: 2 } ],
+      '午': [ { type: '主', stem: '丁', changsheng: '臨官', w: 9 }, { type: '餘', stem: '丙', changsheng: '帝旺', w: 4 }, { type: '中', stem: '乙', changsheng: '長生', w: 2 } ],
+      '未': [ { type: '主', stem: '戊', changsheng: '臨官', w: 9 }, { type: '餘', stem: '丁', changsheng: '冠帶', w: 4 }, { type: '中', stem: '乙', changsheng: '養',   w: 2 } ],
+      '申': [ { type: '主', stem: '庚', changsheng: '臨官', w: 9 }, { type: '餘', stem: '戊', changsheng: '帝旺', w: 4 }, { type: '中', stem: '壬', changsheng: '長生', w: 2 } ],
+      '酉': [ { type: '主', stem: '辛', changsheng: '臨官', w: 9 }, { type: '餘', stem: '庚', changsheng: '帝旺', w: 4 }, { type: '中', stem: '丁', changsheng: '長生', w: 2 } ],
+      '戌': [ { type: '主', stem: '戊', changsheng: '臨官', w: 9 }, { type: '餘', stem: '辛', changsheng: '冠帶', w: 4 }, { type: '中', stem: '丁', changsheng: '養',   w: 2 } ],
+      '亥': [ { type: '主', stem: '壬', changsheng: '臨官', w: 9 }, { type: '餘', stem: '戊', changsheng: '帝旺', w: 4 }, { type: '中', stem: '甲', changsheng: '長生', w: 2 } ],
+      '子': [ { type: '主', stem: '癸', changsheng: '臨官', w: 9 }, { type: '餘', stem: '壬', changsheng: '帝旺', w: 4 }, { type: '中', stem: '辛', changsheng: '長生', w: 2 } ],
+      '丑': [ { type: '主', stem: '己', changsheng: '臨官', w: 9 }, { type: '餘', stem: '癸', changsheng: '冠帶', w: 4 }, { type: '中', stem: '辛', changsheng: '養',   w: 2 } ]
     };
 
     const getElemClass = (char) => {
@@ -253,16 +300,23 @@ createApp({
       return '';
     };
 
+    const STEM_PROPS = {
+      '甲':{e:'木',y:0},'乙':{e:'木',y:1},'丙':{e:'火',y:0},'丁':{e:'火',y:1},'戊':{e:'土',y:0},
+      '己':{e:'土',y:1},'庚':{e:'金',y:0},'辛':{e:'金',y:1},'壬':{e:'水',y:0},'癸':{e:'水',y:1}
+    };
+
     const getShiShen = (dayStem, targetStem) => {
       if (!dayStem || !targetStem) return '';
       if (dayStem === targetStem) return '比肩';
-      const map = {
-        '甲':{e:'木',y:0},'乙':{e:'木',y:1},'丙':{e:'火',y:0},'丁':{e:'火',y:1},'戊':{e:'土',y:0},
-        '己':{e:'土',y:1},'庚':{e:'金',y:0},'辛':{e:'金',y:1},'壬':{e:'水',y:0},'癸':{e:'水',y:1}
+      const r = {
+        '木':{木:'劫',火:'傷',土:'財',金:'官',水:'印'},
+        '火':{火:'劫',土:'傷',金:'財',水:'官',木:'印'},
+        '土':{土:'劫',金:'傷',水:'財',木:'官',火:'印'},
+        '金':{金:'劫',水:'傷',木:'財',火:'官',土:'印'},
+        '水':{水:'劫',木:'傷',火:'財',土:'官',金:'印'}
       };
-      const r = {'木':{木:'劫',火:'傷',土:'財',金:'官',水:'印'},'火':{火:'劫',土:'傷',金:'財',水:'官',木:'印'},'土':{土:'劫',金:'傷',水:'財',木:'官',火:'印'},'金':{金:'劫',水:'傷',木:'財',火:'官',土:'印'},'水':{水:'劫',木:'傷',火:'財',土:'官',金:'印'}};
-      const cat = r[map[dayStem].e][map[targetStem].e];
-      const same = map[dayStem].y === map[targetStem].y;
+      const cat = r[STEM_PROPS[dayStem].e][STEM_PROPS[targetStem].e];
+      const same = STEM_PROPS[dayStem].y === STEM_PROPS[targetStem].y;
       return { '劫':same?'比肩':'劫財', '傷':same?'食神':'傷官', '財':same?'偏財':'正財', '官':same?'七殺':'正官', '印':same?'偏印':'正印' }[cat];
     };
 
@@ -271,6 +325,132 @@ createApp({
       return selectedDaYun.value.liuNianList.find(ln => ln.year === selectedLiuNian.value);
     });
 
+    // 量化身強弱指數計算器 (數論八字權重公式)
+    const calcQuantScore = () => {
+      if (!result.value) return;
+      const dayGan = result.value.dayGan;
+      const pillars = result.value.pillars; // 年、月、日、時
+      
+      const pillarMultipliers = [0.8, 3.0, 2.0, 1.0]; // 年, 月, 日, 時
+      
+      let allyScore = 0;
+      let diffScore = 0;
+
+      // 計算天干能量通根得分
+      pillars.forEach((p, pIdx) => {
+        const stem = p.gan;
+        const shishen = getShiShen(dayGan, stem);
+        const isAlly = ['比肩','劫財','正印','偏印'].includes(shishen) || p.isDayMaster;
+        
+        let stemEnergy = 1.0;
+        // 尋找全盤通根得分
+        pillars.forEach((bIdxP, bIdx) => {
+          const zhi = bIdxP.zhi;
+          const cangs = CUSTOM_CANG_GAN[zhi] || [];
+          const mult = pillarMultipliers[bIdx];
+
+          cangs.forEach(cg => {
+            if (STEM_PROPS[stem].e === STEM_PROPS[cg.stem].e) { // 同五行
+              let adjust = 0;
+              if (stem === cg.stem) adjust = 0; // 比肩不減
+              else adjust = -0.5; // 劫財次之
+              stemEnergy += (cg.w + adjust) * mult * 0.1;
+            } else if (getShiShen(stem, cg.stem) === '正印' || getShiShen(stem, cg.stem) === '偏印') { // 印星為根
+              let adjust = getShiShen(stem, cg.stem) === '偏印' ? -1.0 : -1.5;
+              stemEnergy += (cg.w + adjust) * mult * 0.05;
+            }
+          });
+        });
+
+        // 檢查「日主之合」
+        if (p.isDayMaster) {
+          pillars.forEach(otherP => {
+            if (!otherP.isDayMaster) {
+              const rel = getShiShen(dayGan, otherP.gan);
+              if ((STEM_PROPS[dayGan].y === 0 && rel === '正財') || (STEM_PROPS[dayGan].y === 1 && rel === '正官')) {
+                // 日主之合不化，轉為同黨能量
+                allyScore += 2.5;
+              }
+            }
+          });
+        }
+
+        if (isAlly) allyScore += stemEnergy;
+        else diffScore += stemEnergy;
+      });
+
+      const ratio = diffScore > 0 ? (allyScore / diffScore).toFixed(2) : allyScore.toFixed(2);
+      let verdict = '身中和';
+      if (ratio >= 2.5) verdict = '身過旺 (從旺/專旺)';
+      else if (ratio > 1.2) verdict = '身強';
+      else if (ratio >= 0.8) verdict = '身中和';
+      else if (ratio > 0.3) verdict = '身弱';
+      else verdict = '身過弱 (從弱格)';
+
+      quantScore.value = {
+        allyScore: allyScore.toFixed(1),
+        diffScore: diffScore.toFixed(1),
+        ratio,
+        verdict
+      };
+    };
+
+    // 電路診斷矩陣 (通根/透干/干支同氣/蓋頭/截腳)
+    const checkCircuitDiagnostics = () => {
+      if (!result.value) return;
+      const pillars = result.value.pillars;
+      let diags = [];
+
+      pillars.forEach(p => {
+        const gan = p.gan;
+        const zhi = p.zhi;
+        const cangs = CUSTOM_CANG_GAN[zhi] || [];
+        const primaryCang = cangs[0].stem;
+
+        // 干支同氣
+        if (STEM_PROPS[gan].e === STEM_PROPS[primaryCang].e) {
+          diags.push(`${p.name}干支同氣(${gan}${zhi})`);
+        }
+
+        // 截腳判定 (自坐地支完全無根/印)
+        const hasSelfRoot = cangs.some(cg => STEM_PROPS[gan].e === STEM_PROPS[cg.stem].e || getShiShen(gan, cg.stem) === '正印' || getShiShen(gan, cg.stem) === '偏印');
+        if (!hasSelfRoot) diags.push(`${p.name}截腳(${gan}無根)`);
+
+        // 蓋頭判定 (地支藏干全不透天干)
+        const allStems = pillars.map(x => x.gan);
+        const hasProtrusion = cangs.some(cg => allStems.includes(cg.stem));
+        if (!hasProtrusion) diags.push(`${p.name}蓋頭(${zhi}不透)`);
+      });
+
+      circuitDiagnostics.value = diags;
+    };
+
+    // 三層氣場傷損警報
+    const checkInjuryAlerts = () => {
+      if (!result.value) return;
+      let alerts = [];
+      
+      const dayGan = result.value.dayGan;
+      const allZhis = result.value.pillars.map(p => p.zhi);
+      if (selectedDaYun.value) allZhis.push(selectedDaYun.value.zhi);
+      if (currentLiuNianObj.value) allZhis.push(currentLiuNianObj.value.zhi);
+
+      // 1. 傷身 (七殺直剋日主或強根被拔)
+      if (selectedDaYun.value && getShiShen(dayGan, selectedDaYun.value.gan) === '七殺') {
+        alerts.push({ level: 'shen', desc: '⚠️ 大運見七殺直剋日主，嚴防健康意外 (傷身警報)' });
+      }
+      if (currentLiuNianObj.value && getShiShen(dayGan, currentLiuNianObj.value.gan) === '七殺') {
+        alerts.push({ level: 'shen', desc: '⚠️ 流年見七殺攻身，宜收斂防官非血光 (傷身警報)' });
+      }
+
+      // 2. 傷格 (地支六沖破壞格局主氣)
+      if (allZhis.includes('卯') && allZhis.includes('酉')) alerts.push({ level: 'ge', desc: '🔴 卯酉相沖，格局主氣受震蕩 (傷格警報)' });
+      if (allZhis.includes('寅') && allZhis.includes('申')) alerts.push({ level: 'ge', desc: '🔴 寅申相沖，長生逢沖主平台變動 (傷格警報)' });
+
+      injuryAlerts.value = alerts;
+    };
+
+    // 宮位地戰與刑沖合會
     const checkRelations = () => {
       if (!result.value) return [];
       const zhis = result.value.pillars.map(p => p.zhi);
@@ -289,9 +469,9 @@ createApp({
       const hui = [['寅','卯','辰','東方木局'],['巳','午','未','南方火局'],['申','酉','戌','西方金局'],['亥','子','丑','北方水局']];
       hui.forEach(h => { if(str.includes(h[0]) && str.includes(h[1]) && str.includes(h[2])) rels.push({type:'he', desc:`${h[0]}${h[1]}${h[2]} 三會方局 (${h[3]})`}) });
 
-      if (str.includes('寅') && str.includes('巳') && str.includes('申')) rels.push({type:'xing', desc:'寅巳申 三刑 (無恩)'});
-      if (str.includes('丑') && str.includes('戌') && str.includes('未')) rels.push({type:'xing', desc:'丑戌未 三刑 (恃勢)'});
-      if (str.includes('子') && str.includes('卯')) rels.push({type:'xing', desc:'子卯 相刑 (無禮)'});
+      if (str.includes('寅') && str.includes('巳') && str.includes('申')) rels.push({type:'xing', desc:'寅巳申 三刑 (無恩之刑)'});
+      if (str.includes('丑') && str.includes('戌') && str.includes('未')) rels.push({type:'xing', desc:'丑戌未 三刑 (恃勢之刑)'});
+      if (str.includes('子') && str.includes('卯')) rels.push({type:'xing', desc:'子卯 相刑 (無禮之刑)'});
       
       ['辰','午','酉','亥'].forEach(zx => {
         if (str.split(zx).length - 1 >= 2) rels.push({type:'xing', desc:`${zx}${zx} 自刑`});
@@ -300,10 +480,12 @@ createApp({
       relations.value = rels;
     };
 
-    watch([selectedDaYun, selectedLiuNian], () => checkRelations());
+    watch([selectedDaYun, selectedLiuNian], () => {
+      checkRelations();
+      checkInjuryAlerts();
+    });
 
     onMounted(() => {
-      // 讀取本地儲存的命例
       const saved = localStorage.getItem('bazi_records');
       if (saved) records.value = JSON.parse(saved);
 
@@ -313,7 +495,6 @@ createApp({
       setTimeout(calculate, 500); 
     });
 
-    // 命例庫功能
     const formatTime = (timeStr) => timeStr.replace('T', ' ');
     
     const saveRecord = () => {
@@ -324,9 +505,9 @@ createApp({
         gender: gender.value,
         birthTime: birthTime.value
       };
-      records.value.unshift(newRec); // 加入到陣列最前面
+      records.value.unshift(newRec);
       localStorage.setItem('bazi_records', JSON.stringify(records.value));
-      alert("✅ 命例儲存成功！可點擊「📂 命例庫」查看。");
+      alert("✅ 命例儲存成功！");
     };
 
     const loadRecord = (rec) => {
@@ -398,11 +579,17 @@ createApp({
 
       selectedDaYun.value = null;
       selectedLiuNian.value = null;
+
+      // 執行各項演算系統
+      calcQuantScore();
+      checkCircuitDiagnostics();
+      checkInjuryAlerts();
       checkRelations();
     };
 
     return { 
-      name, birthTime, gender, result, selectedDaYun, selectedLiuNian, currentLiuNianObj, relations, 
+      name, birthTime, gender, result, selectedDaYun, selectedLiuNian, currentLiuNianObj, 
+      relations, circuitDiagnostics, injuryAlerts, quantScore,
       records, showRecords, saveRecord, loadRecord, deleteRecord, formatTime,
       calculate, selectDaYun, getShiShen, getElemClass, getCustomCangGan: zhi => CUSTOM_CANG_GAN[zhi] || [] 
     };
