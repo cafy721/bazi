@@ -14,6 +14,13 @@
     .card-bg { background-color: #1e293b; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* 五行配色設定 */
+    .color-wood { color: #22c55e; }  /* 木 - 綠色 */
+    .color-fire { color: #ef4444; }  /* 火 - 紅色 */
+    .color-earth { color: #b8621b; } /* 土 - 深啡色 */
+    .color-metal { color: #facc15; } /* 金 - 黃色 */
+    .color-water { color: #38bdf8; } /* 水 - 藍色 */
   </style>
 </head>
 <body class="p-3 sm:p-6 max-w-2xl mx-auto min-h-screen">
@@ -78,17 +85,17 @@
 
         <!-- 天干 -->
         <div class="text-slate-400 self-center border-t border-slate-800 py-2">天干</div>
-        <div id="gan-0" class="border-t border-slate-800 py-2 text-xl font-bold text-rose-400"></div>
-        <div id="gan-1" class="border-t border-slate-800 py-2 text-xl font-bold text-rose-400"></div>
-        <div id="gan-2" class="border-t border-slate-800 py-2 text-xl font-bold text-rose-400"></div>
-        <div id="gan-3" class="border-t border-slate-800 py-2 text-xl font-bold text-rose-400"></div>
+        <div id="gan-0" class="border-t border-slate-800 py-2 text-xl font-bold"></div>
+        <div id="gan-1" class="border-t border-slate-800 py-2 text-xl font-bold"></div>
+        <div id="gan-2" class="border-t border-slate-800 py-2 text-xl font-bold"></div>
+        <div id="gan-3" class="border-t border-slate-800 py-2 text-xl font-bold"></div>
 
         <!-- 地支 -->
         <div class="text-slate-400 self-center border-t border-slate-800 py-2">地支</div>
-        <div id="zhi-0" class="border-t border-slate-800 py-2 text-xl font-bold text-sky-400"></div>
-        <div id="zhi-1" class="border-t border-slate-800 py-2 text-xl font-bold text-sky-400"></div>
-        <div id="zhi-2" class="border-t border-slate-800 py-2 text-xl font-bold text-sky-400"></div>
-        <div id="zhi-3" class="border-t border-slate-800 py-2 text-xl font-bold text-sky-400"></div>
+        <div id="zhi-0" class="border-t border-slate-800 py-2 text-xl font-bold"></div>
+        <div id="zhi-1" class="border-t border-slate-800 py-2 text-xl font-bold"></div>
+        <div id="zhi-2" class="border-t border-slate-800 py-2 text-xl font-bold"></div>
+        <div id="zhi-3" class="border-t border-slate-800 py-2 text-xl font-bold"></div>
 
         <!-- 自訂藏干 -->
         <div class="text-slate-400 border-t border-slate-800 py-2">自訂<br>藏干</div>
@@ -141,6 +148,22 @@
     '水': { '水': '比劫', '木': '食傷', '火': '財星', '土': '官殺', '金': '印星' }
   };
 
+  // 五行顏色 Class 判定機制
+  function getElemClass(char) {
+    const wood = ['甲', '乙', '寅', '卯'];
+    const fire = ['丙', '丁', '巳', '午'];
+    const earth = ['戊', '己', '辰', '戌', '丑', '未'];
+    const metal = ['庚', '辛', '申', '酉'];
+    const water = ['壬', '癸', '亥', '子'];
+
+    if (wood.includes(char)) return 'color-wood';
+    if (fire.includes(char)) return 'color-fire';
+    if (earth.includes(char)) return 'color-earth';
+    if (metal.includes(char)) return 'color-metal';
+    if (water.includes(char)) return 'color-water';
+    return '';
+  }
+
   function getShiShen(dayStem, targetStem) {
     if (dayStem === targetStem) return '比肩';
     const day = STEM_PROPS[dayStem];
@@ -162,11 +185,12 @@
     let html = '';
     list.forEach(item => {
       const shishen = getShiShen(dayGan, item.stem);
+      const stemColorClass = getElemClass(item.stem);
       html += `
         <div class="bg-slate-900/60 p-1 rounded flex justify-between items-center">
           <span>
             <span class="text-[9px] bg-slate-800 px-1 rounded text-slate-400">${item.type}</span>
-            <b class="text-slate-200 ml-0.5">${item.stem}</b>
+            <b class="${stemColorClass} ml-0.5">${item.stem}</b>
             <span class="text-[9px] text-slate-400">(${shishen})</span>
           </span>
           <span class="text-amber-500/80 text-[10px]">${item.changsheng}</span>
@@ -175,7 +199,6 @@
     return html;
   }
 
-  // 初始化預設時間
   window.onload = function() {
     const now = new Date();
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
@@ -201,7 +224,6 @@
       const dayGan = eightChar.getDayGan();
       const yun = eightChar.getYun(gender);
 
-      // 基本資訊與起運推算修復
       document.getElementById('solarStr').innerText = solar.toFullString();
       document.getElementById('lunarStr').innerText = lunar.toString();
 
@@ -216,18 +238,31 @@
 
       for (let i = 0; i < 4; i++) {
         if (i !== 2) document.getElementById(`shishen-${i}`).innerText = getShiShen(dayGan, gans[i]);
-        document.getElementById(`gan-${i}`).innerText = gans[i];
-        document.getElementById(`zhi-${i}`).innerText = zhis[i];
+        
+        const ganElem = getElemClass(gans[i]);
+        const zhiElem = getElemClass(zhis[i]);
+
+        const ganEl = document.getElementById(`gan-${i}`);
+        ganEl.innerText = gans[i];
+        ganEl.className = `border-t border-slate-800 py-2 text-xl font-bold ${ganElem}`;
+
+        const zhiEl = document.getElementById(`zhi-${i}`);
+        zhiEl.innerText = zhis[i];
+        zhiEl.className = `border-t border-slate-800 py-2 text-xl font-bold ${zhiElem}`;
+
         document.getElementById(`canggan-${i}`).innerHTML = renderCangGanBox(dayGan, zhis[i]);
       }
 
-      // 大運清單
+      // 大運列表
       const daYunList = daYunListAll.slice(1, 11);
       let dayunHtml = '';
       daYunList.forEach((dy, index) => {
         const gz = dy.getGanZhi();
         const g = gz.charAt(0);
         const z = gz.charAt(1);
+        const gColor = getElemClass(g);
+        const zColor = getElemClass(z);
+
         dayunHtml += `
           <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-3 w-32 text-center space-y-2">
             <div class="text-[10px] text-amber-500/80 font-bold">第 ${index + 1} 運</div>
@@ -235,7 +270,7 @@
             <div class="text-[10px] text-slate-500">${dy.getStartYear()} 年</div>
             <div class="text-xs text-slate-300 font-medium">${getShiShen(dayGan, g)}</div>
             <div class="text-lg font-bold">
-              <span class="text-rose-400">${g}</span><span class="text-sky-400">${z}</span>
+              <span class="${gColor}">${g}</span><span class="${zColor}">${z}</span>
             </div>
             <div class="space-y-1 text-[10px] text-left border-t border-slate-800 pt-1">
               ${renderCangGanBox(dayGan, z)}
