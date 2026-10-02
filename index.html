@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>專業八字排盤（ISO 全功能完整版）</title>
+  <title>專業八字排盤（ISO 標準全功能版）</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.min.js"></script>
@@ -41,7 +41,7 @@
 <div id="app" class="max-w-6xl mx-auto">
   <header class="text-center my-4">
     <h1 class="text-2xl font-bold tracking-wider gold-text">八字排盤系統</h1>
-    <p class="text-xs text-slate-400 mt-1">ISO 診斷 ‧ 三合局修復 ‧ 用神忌神定位 ‧ 電路彈窗</p>
+    <p class="text-xs text-slate-400 mt-1">ISO 診斷 ‧ 動態解蓋頭 ‧ 五行用神 ‧ 電路彈窗</p>
   </header>
 
   <!-- 輸入區 & 命例管理 -->
@@ -103,7 +103,7 @@
 
   <!-- 排盤結果區 -->
   <div v-if="result" class="space-y-6">
-    <!-- 基本資訊與用神忌神 -->
+    <!-- 基本資訊與用神忌神 (附帶金木水火土) -->
     <div class="card-bg p-4 rounded-2xl border border-slate-700/50 text-center text-xs text-slate-300 space-y-3">
       <div class="flex justify-center items-center gap-4 flex-wrap">
         <span class="text-amber-500 font-bold text-sm" v-if="result.name">{{ result.name }}</span>
@@ -125,7 +125,7 @@
         </span>
       </div>
 
-      <!-- 用神喜忌定位列 -->
+      <!-- 用神喜忌定位列 (附帶五行) -->
       <div v-if="godsInfo" class="flex justify-center items-center gap-2 flex-wrap text-xs pt-1">
         <span class="bg-indigo-950/60 text-indigo-300 px-2.5 py-1 rounded-md border border-indigo-800/60 font-bold">
           格神：{{ godsInfo.geShen }}
@@ -142,81 +142,9 @@
       </div>
     </div>
 
-    <!-- 天干地支沖合分欄 & 診斷警報 -->
-    <div class="card-bg p-4 rounded-2xl border border-slate-700/50 space-y-4">
-      <div class="border-b border-slate-700 pb-2 flex justify-between items-center">
-        <h3 class="text-sm font-bold gold-text">⚡ 八字氣場事件診斷 (原局自帶與歲運)</h3>
-        <span class="text-[10px] text-slate-400">已分開天干與地支獨立診斷</span>
-      </div>
-
-      <!-- 1. 天干交戰與合化 -->
-      <div class="space-y-1.5">
-        <h4 class="text-xs font-bold text-sky-400 flex items-center gap-1">
-          <span>🔴 天干事件 (電器層：五合 / 傷官見官 / 雙殺攻身)</span>
-        </h4>
-        <div v-if="stemRelations.length === 0" class="text-[11px] text-slate-500 italic pl-2">天干無顯著剋戰或合化</div>
-        <div class="flex flex-wrap gap-2">
-          <span v-for="sr in stemRelations" :key="sr.desc" class="relation-tag tag-stem">
-            {{ sr.desc }} <span class="ml-1 text-[9px] opacity-80">[{{ sr.source }}]</span>
-          </span>
-        </div>
-      </div>
-
-      <!-- 2. 地支六合、三合局與三會方局 -->
-      <div class="space-y-1.5 border-t border-slate-800/80 pt-2">
-        <h4 class="text-xs font-bold text-emerald-400 flex items-center gap-1">
-          <span>🟢 地支合局 (宮位層：三合水/木/火/金局 / 三會方局 / 六合)</span>
-        </h4>
-        <div v-if="branchCombos.length === 0" class="text-[11px] text-slate-500 italic pl-2">地支無合局或三會</div>
-        <div class="flex flex-wrap gap-2">
-          <span v-for="bc in branchCombos" :key="bc.desc" class="relation-tag tag-he">
-            {{ bc.desc }} <span class="ml-1 text-[9px] opacity-80">[{{ bc.source }}]</span>
-          </span>
-        </div>
-      </div>
-
-      <!-- 3. 地支六沖與三刑自刑 -->
-      <div class="space-y-1.5 border-t border-slate-800/80 pt-2">
-        <h4 class="text-xs font-bold text-rose-400 flex items-center gap-1">
-          <span>⚡ 地支沖刑 (宮位層：六沖 / 三刑 / 自刑)</span>
-        </h4>
-        <div v-if="branchClashes.length === 0" class="text-[11px] text-slate-500 italic pl-2">地支無六沖或刑剋</div>
-        <div class="flex flex-wrap gap-2">
-          <span v-for="bcl in branchClashes" :key="bcl.desc" 
-                :class="['relation-tag', bcl.type === 'chong' ? 'tag-chong' : 'tag-xing']">
-            {{ bcl.desc }} <span class="ml-1 text-[9px] opacity-80">[{{ bcl.source }}]</span>
-          </span>
-        </div>
-      </div>
-
-      <!-- 4. 三層氣場傷損警報 -->
-      <div v-if="injuryAlerts.length > 0" class="space-y-1.5 border-t border-slate-800/80 pt-2">
-        <h4 class="text-xs font-bold text-purple-400 flex items-center gap-1">
-          <span>🚨 歲運三層傷損警報 (傷相 / 傷格 / 傷身)</span>
-        </h4>
-        <div class="flex flex-wrap gap-2">
-          <span v-for="alt in injuryAlerts" :key="alt.desc" 
-                :class="['relation-tag text-xs px-2 py-1', alt.level === 'shen' ? 'tag-alert-shen' : (alt.level === 'ge' ? 'tag-alert-ge' : 'tag-alert-xiang')]">
-            {{ alt.desc }}
-          </span>
-        </div>
-      </div>
-
-      <!-- 5. 電路診斷矩陣 -->
-      <div v-if="circuitDiagnostics.length > 0" class="space-y-1.5 border-t border-slate-800/80 pt-2">
-        <h4 class="text-xs font-bold text-indigo-300">🔌 電路診斷總覽 (點擊原局天干地支可睇詳細電路)</h4>
-        <div class="flex flex-wrap gap-2">
-          <span v-for="cd in circuitDiagnostics" :key="cd" class="relation-tag tag-circuit">
-            {{ cd }}
-          </span>
-        </div>
-      </div>
-    </div>
-
-    <!-- 左右排版對照區 -->
+    <!-- 排位 1: 【 四柱原局 】 ＆ 【 大運與流年連動 】 -->
     <div class="flex flex-col lg:flex-row gap-4">
-      
-      <!-- 左側：原局（可點擊互動天干地支） -->
+      <!-- 四柱原局 -->
       <div class="card-bg p-4 rounded-2xl border border-slate-700/50 flex-[3] overflow-x-auto">
         <h2 class="text-sm font-bold text-slate-200 mb-1 border-b border-slate-700 pb-2 text-center flex justify-between items-center">
           <span>【 四柱原局 】</span>
@@ -301,7 +229,95 @@
       </div>
     </div>
 
-    <!-- ISO 批算六步文字報告卡 -->
+    <!-- 排位 2: 點擊選擇大運區 -->
+    <div class="card-bg p-4 rounded-2xl border border-slate-700/50 shadow-lg">
+      <h2 class="text-sm font-bold text-slate-200 mb-3 border-b border-slate-700 pb-2">點擊選擇大運：</h2>
+      <div class="flex overflow-x-auto no-scrollbar gap-2 pb-2">
+        <div v-for="(dy, index) in result.daYunList" :key="dy.startYear" @click="selectDaYun(dy)"
+             :class="['cursor-pointer border rounded-xl p-3 w-32 text-center flex-shrink-0 transition', 
+                      selectedDaYun?.startYear === dy.startYear ? 'border-amber-500 bg-amber-900/20 shadow-[0_0_10px_rgba(245,158,11,0.2)]' : 'border-slate-800 bg-slate-900/80 hover:bg-slate-700']">
+          <div class="text-[10px] text-amber-500/80 font-bold">第 {{ index + 1 }} 運</div>
+          <div class="text-xs text-slate-400">{{ dy.startAge }} - {{ dy.endAge }} 歲</div>
+          <div class="text-[10px] text-slate-500">{{ dy.startYear }} 年</div>
+          <div class="text-lg font-bold mt-1">
+            <span :class="getElemClass(dy.gan)">{{ dy.gan }}</span><span :class="getElemClass(dy.zhi)">{{ dy.zhi }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 排位 3: 八字氣場事件診斷 (原局自帶與歲運) -->
+    <div class="card-bg p-4 rounded-2xl border border-slate-700/50 space-y-4">
+      <div class="border-b border-slate-700 pb-2 flex justify-between items-center">
+        <h3 class="text-sm font-bold gold-text">⚡ 八字氣場事件診斷 (原局自帶與歲運)</h3>
+        <span class="text-[10px] text-slate-400">天干與地支沖合獨立分欄</span>
+      </div>
+
+      <!-- 天干事件 -->
+      <div class="space-y-1.5">
+        <h4 class="text-xs font-bold text-sky-400 flex items-center gap-1">
+          <span>🔴 天干事件 (電器層：五合 / 傷官見官 / 雙殺攻身)</span>
+        </h4>
+        <div v-if="stemRelations.length === 0" class="text-[11px] text-slate-500 italic pl-2">天干無顯著剋戰或合化</div>
+        <div class="flex flex-wrap gap-2">
+          <span v-for="sr in stemRelations" :key="sr.desc" class="relation-tag tag-stem">
+            {{ sr.desc }} <span class="ml-1 text-[9px] opacity-80">[{{ sr.source }}]</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- 地支合局 -->
+      <div class="space-y-1.5 border-t border-slate-800/80 pt-2">
+        <h4 class="text-xs font-bold text-emerald-400 flex items-center gap-1">
+          <span>🟢 地支合局 (宮位層：三合水/木/火/金局 / 三會方局 / 六合)</span>
+        </h4>
+        <div v-if="branchCombos.length === 0" class="text-[11px] text-slate-500 italic pl-2">地支無合局或三會</div>
+        <div class="flex flex-wrap gap-2">
+          <span v-for="bc in branchCombos" :key="bc.desc" class="relation-tag tag-he">
+            {{ bc.desc }} <span class="ml-1 text-[9px] opacity-80">[{{ bc.source }}]</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- 地支沖刑 -->
+      <div class="space-y-1.5 border-t border-slate-800/80 pt-2">
+        <h4 class="text-xs font-bold text-rose-400 flex items-center gap-1">
+          <span>⚡ 地支沖刑 (宮位層：六沖 / 三刑 / 自刑)</span>
+        </h4>
+        <div v-if="branchClashes.length === 0" class="text-[11px] text-slate-500 italic pl-2">地支無六沖或刑剋</div>
+        <div class="flex flex-wrap gap-2">
+          <span v-for="bcl in branchClashes" :key="bcl.desc" 
+                :class="['relation-tag', bcl.type === 'chong' ? 'tag-chong' : 'tag-xing']">
+            {{ bcl.desc }} <span class="ml-1 text-[9px] opacity-80">[{{ bcl.source }}]</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- 歲運傷損警報 -->
+      <div v-if="injuryAlerts.length > 0" class="space-y-1.5 border-t border-slate-800/80 pt-2">
+        <h4 class="text-xs font-bold text-purple-400 flex items-center gap-1">
+          <span>🚨 歲運三層傷損警報 (傷相 / 傷格 / 傷身)</span>
+        </h4>
+        <div class="flex flex-wrap gap-2">
+          <span v-for="alt in injuryAlerts" :key="alt.desc" 
+                :class="['relation-tag text-xs px-2 py-1', alt.level === 'shen' ? 'tag-alert-shen' : (alt.level === 'ge' ? 'tag-alert-ge' : 'tag-alert-xiang')]">
+            {{ alt.desc }}
+          </span>
+        </div>
+      </div>
+
+      <!-- 電路診斷矩陣 -->
+      <div v-if="circuitDiagnostics.length > 0" class="space-y-1.5 border-t border-slate-800/80 pt-2">
+        <h4 class="text-xs font-bold text-indigo-300">🔌 電路診斷總覽 (點擊原局天干地支可睇詳細電路)</h4>
+        <div class="flex flex-wrap gap-2">
+          <span v-for="cd in circuitDiagnostics" :key="cd" class="relation-tag tag-circuit">
+            {{ cd }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 排位 4: ISO 批算六步文字報告卡 -->
     <div class="card-bg p-5 rounded-2xl border border-amber-500/30 shadow-2xl space-y-4">
       <div class="flex justify-between items-center border-b border-slate-700 pb-2">
         <h2 class="text-base font-bold gold-text flex items-center gap-2">
@@ -339,23 +355,6 @@
         <div class="bg-slate-900/70 p-3 rounded-xl border border-slate-800 space-y-1">
           <div class="font-bold text-amber-400">第六步：歲運三層衝擊預判</div>
           <p class="text-slate-300">{{ isoReport.step6 }}</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- 大運選擇區 -->
-    <div class="card-bg p-4 rounded-2xl border border-slate-700/50 shadow-lg">
-      <h2 class="text-sm font-bold text-slate-200 mb-3 border-b border-slate-700 pb-2">點擊選擇大運：</h2>
-      <div class="flex overflow-x-auto no-scrollbar gap-2 pb-2">
-        <div v-for="(dy, index) in result.daYunList" :key="dy.startYear" @click="selectDaYun(dy)"
-             :class="['cursor-pointer border rounded-xl p-3 w-32 text-center flex-shrink-0 transition', 
-                      selectedDaYun?.startYear === dy.startYear ? 'border-amber-500 bg-amber-900/20 shadow-[0_0_10px_rgba(245,158,11,0.2)]' : 'border-slate-800 bg-slate-900/80 hover:bg-slate-700']">
-          <div class="text-[10px] text-amber-500/80 font-bold">第 {{ index + 1 }} 運</div>
-          <div class="text-xs text-slate-400">{{ dy.startAge }} - {{ dy.endAge }} 歲</div>
-          <div class="text-[10px] text-slate-500">{{ dy.startYear }} 年</div>
-          <div class="text-lg font-bold mt-1">
-            <span :class="getElemClass(dy.gan)">{{ dy.gan }}</span><span :class="getElemClass(dy.zhi)">{{ dy.zhi }}</span>
-          </div>
         </div>
       </div>
     </div>
@@ -485,12 +484,27 @@ createApp({
       return { '劫':same?'比肩':'劫財', '傷':same?'食神':'傷官', '財':same?'偏財':'正財', '官':same?'七殺':'正官', '印':same?'偏印':'正印' }[cat];
     };
 
+    const getTenGodElem = (dayGan, categoryName) => {
+      if (!dayGan) return '';
+      const dmElem = STEM_PROPS[dayGan].e;
+      const elemOrder = ['木', '火', '土', '金', '水'];
+      const idx = elemOrder.indexOf(dmElem);
+      const relMap = {
+        '比劫': elemOrder[idx], '比肩': elemOrder[idx], '劫財': elemOrder[idx],
+        '食傷': elemOrder[(idx + 1) % 5], '食神': elemOrder[(idx + 1) % 5], '傷官': elemOrder[(idx + 1) % 5],
+        '財星': elemOrder[(idx + 2) % 5], '正財': elemOrder[(idx + 2) % 5], '偏財': elemOrder[(idx + 2) % 5],
+        '官殺': elemOrder[(idx + 3) % 5], '正官': elemOrder[(idx + 3) % 5], '七殺': elemOrder[(idx + 3) % 5],
+        '印星': elemOrder[(idx + 4) % 5], '正印': elemOrder[(idx + 4) % 5], '偏印': elemOrder[(idx + 4) % 5],
+      };
+      return relMap[categoryName] || '';
+    };
+
     const currentLiuNianObj = computed(() => {
       if (!selectedDaYun.value || !selectedLiuNian.value) return null;
       return selectedDaYun.value.liuNianList.find(ln => ln.year === selectedLiuNian.value);
     });
 
-    // 推導用神喜忌
+    // 推導用神喜忌 (標註金木水火土)
     const godsInfo = computed(() => {
       if (!result.value || !quantScore.value) return null;
       const dayGan = result.value.dayGan;
@@ -498,30 +512,43 @@ createApp({
       const monthCangs = CUSTOM_CANG_GAN[monthZhi] || [];
       const allGans = result.value.pillars.map(p => p.gan);
       
-      // 檢查三合/三會局搶格
       const origZhis = result.value.pillars.map(p => p.zhi).join('');
       let geShen = '雜氣格';
-      if (origZhis.includes('申') && origZhis.includes('子') && origZhis.includes('辰')) geShen = '申子辰 三合水局(印局)';
-      else if (origZhis.includes('亥') && origZhis.includes('卯') && origZhis.includes('未')) geShen = '亥卯未 三合木局';
-      else if (origZhis.includes('寅') && origZhis.includes('午') && origZhis.includes('戌')) geShen = '寅午戌 三合火局';
-      else if (origZhis.includes('巳') && origZhis.includes('酉') && origZhis.includes('丑')) geShen = '巳酉丑 三合金局';
+      if (origZhis.includes('申') && origZhis.includes('子') && origZhis.includes('辰')) geShen = '申子辰 三合水局 (印局/水)';
+      else if (origZhis.includes('亥') && origZhis.includes('卯') && origZhis.includes('未')) geShen = '亥卯未 三合木局 (比劫局/木)';
+      else if (origZhis.includes('寅') && origZhis.includes('午') && origZhis.includes('戌')) geShen = '寅午戌 三合火局 (食傷局/火)';
+      else if (origZhis.includes('巳') && origZhis.includes('酉') && origZhis.includes('丑')) geShen = '巳酉丑 三合金局 (財局/金)';
       else {
         let protrudeCang = monthCangs.find(cg => allGans.includes(cg.stem));
-        if (protrudeCang) geShen = getShiShen(dayGan, protrudeCang.stem) + '格';
-        else geShen = getShiShen(dayGan, monthCangs[0].stem) + '格(月主立格)';
+        if (protrudeCang) {
+          const shishen = getShiShen(dayGan, protrudeCang.stem);
+          const elem = STEM_PROPS[protrudeCang.stem].e;
+          geShen = `${shishen}格 (${elem})`;
+        } else {
+          const mainStem = monthCangs[0].stem;
+          const shishen = getShiShen(dayGan, mainStem);
+          const elem = STEM_PROPS[mainStem].e;
+          geShen = `${shishen}格 [月主立格] (${elem})`;
+        }
       }
 
       const isStrong = quantScore.value.verdict.includes('強') || quantScore.value.verdict.includes('旺');
+      const eFood = getTenGodElem(dayGan, '食傷');
+      const eOfficer = getTenGodElem(dayGan, '官殺');
+      const eWealth = getTenGodElem(dayGan, '財星');
+      const eSeal = getTenGodElem(dayGan, '印星');
+      const eSelf = getTenGodElem(dayGan, '比劫');
+
       let yongShen = '', xiShen = '', jiShen = '';
 
       if (isStrong) {
-        yongShen = '食神 / 傷官 (吐秀通關) 或 官殺 (制劫)';
-        xiShen = '食傷、財星、官殺';
-        jiShen = '印星 (忌生身太過)、比劫 (忌爭財)';
+        yongShen = `食傷 (${eFood}) / 官殺 (${eOfficer})`;
+        xiShen = `食傷 (${eFood})、財星 (${eWealth})、官殺 (${eOfficer})`;
+        jiShen = `印星 (${eSeal})、比劫 (${eSelf})`;
       } else {
-        yongShen = '正印 / 偏印 (化殺生身) 或 比劫 (幫身扛財)';
-        xiShen = '印星、比劫';
-        jiShen = '財星 (忌壞印)、七殺 (忌攻身)';
+        yongShen = `印星 (${eSeal}) / 比劫 (${eSelf})`;
+        xiShen = `印星 (${eSeal})、比劫 (${eSelf})`;
+        jiShen = `財星 (${eWealth})、七殺 (${eOfficer})`;
       }
 
       return { geShen, yongShen, xiShen, jiShen };
@@ -653,11 +680,16 @@ createApp({
       quantScore.value = { allyScore: allyScore.toFixed(1), diffScore: diffScore.toFixed(1), ratio, verdict };
     };
 
-    // 電路診斷矩陣
+    // 動態電路診斷矩陣 (大運/流年透水自動解除蓋頭)
     const checkCircuitDiagnostics = () => {
       if (!result.value) return;
       const pillars = result.value.pillars;
       let diags = [];
+
+      const origGans = pillars.map(p => p.gan);
+      let curGans = [...origGans];
+      if (selectedDaYun.value) curGans.push(selectedDaYun.value.gan);
+      if (currentLiuNianObj.value) curGans.push(currentLiuNianObj.value.gan);
 
       pillars.forEach(p => {
         const gan = p.gan;
@@ -670,9 +702,11 @@ createApp({
         const hasSelfRoot = cangs.some(cg => STEM_PROPS[gan].e === STEM_PROPS[cg.stem].e || getShiShen(gan, cg.stem) === '正印' || getShiShen(gan, cg.stem) === '偏印');
         if (!hasSelfRoot) diags.push(`${p.name}截腳(${gan}無根)`);
 
-        const allStems = pillars.map(x => x.gan);
-        const hasProtrusion = cangs.some(cg => allStems.includes(cg.stem));
-        if (!hasProtrusion) diags.push(`${p.name}蓋頭(${zhi}不透)`);
+        // 動態蓋頭判定：若大運或流年透干成功通電，蓋頭自動解除！
+        const hasProtrusion = cangs.some(cg => curGans.includes(cg.stem));
+        if (!hasProtrusion) {
+          diags.push(`${p.name}蓋頭(${zhi}不透)`);
+        }
       });
 
       circuitDiagnostics.value = diags;
@@ -686,13 +720,11 @@ createApp({
       const origGans = result.value.pillars.map(p => p.gan);
       const origZhis = result.value.pillars.map(p => p.zhi);
 
-      // 原局天干雙七殺攻身警報
       const qiShaCount = origGans.filter(g => getShiShen(dayGan, g) === '七殺').length;
       if (qiShaCount >= 2) {
         alerts.push({ level: 'shen', desc: `⚠️ 原局天干雙透七殺 (${origGans.filter(g=>getShiShen(dayGan,g)==='七殺').join('')}攻身)，宜傷官駕殺或印星化殺 (原局自帶)` });
       }
 
-      // 原局傷官見官警報
       const origShiShens = origGans.map(g => getShiShen(dayGan, g));
       if (origShiShens.includes('傷官') && origShiShens.includes('正官')) {
         alerts.push({ level: 'ge', desc: '🔴 原局自帶「傷官見官」，主挑戰體制與職場波動 (原局自帶)' });
@@ -717,7 +749,7 @@ createApp({
       injuryAlerts.value = alerts;
     };
 
-    // 獨立計算天干地支沖合（天干、地支合局、地支沖刑獨立分欄）
+    // 獨立計算天干地支沖合
     const checkAllRelations = () => {
       if (!result.value) return;
 
@@ -749,7 +781,7 @@ createApp({
         return allOrig ? '原局自帶' : '歲運引動';
       };
 
-      // 1. 天干事件 (五合 / 傷官見官 / 官殺混雜 / 雙殺攻身)
+      // 1. 天干事件
       const stemHes = [['甲','己','合土'],['乙','庚','合金'],['丙','辛','合水'],['丁','壬','合木'],['戊','癸','合火']];
       stemHes.forEach(h => {
         if (stemStr.includes(h[0]) && stemStr.includes(h[1])) {
@@ -769,8 +801,7 @@ createApp({
         sRels.push({ desc: '天干「雙七殺攻身」', source: checkSource('七殺') });
       }
 
-      // 2. 地支合局 (三合局 / 三會方局 / 六合)
-      // 三合局 (重磅修復：申子辰水局、亥卯未木局、寅午戌火局、巳酉丑金局)
+      // 2. 地支合局 (重磅三合局修復)
       const bSanHes = [
         ['申','子','辰','三合水局'],
         ['亥','卯','未','三合木局'],
@@ -783,7 +814,6 @@ createApp({
         }
       });
 
-      // 三會方局
       const bHuis = [
         ['寅','卯','辰','東方木局'],
         ['巳','午','未','南方火局'],
@@ -796,7 +826,6 @@ createApp({
         }
       });
 
-      // 地支六合
       const bHes = [['子','丑','合土'],['寅','亥','合木'],['卯','戌','合火'],['辰','酉','合金'],['巳','申','合水'],['午','未','合土/火']];
       bHes.forEach(h => {
         if (branchStr.includes(h[0]) && branchStr.includes(h[1])) {
@@ -804,7 +833,7 @@ createApp({
         }
       });
 
-      // 3. 地支沖刑 (六沖 / 三刑 / 自刑)
+      // 3. 地支沖刑
       const bChongs = [['子','午'],['丑','未'],['寅','申'],['卯','酉'],['辰','戌'],['巳','亥']];
       bChongs.forEach(c => {
         if (branchStr.includes(c[0]) && branchStr.includes(c[1])) {
@@ -831,13 +860,13 @@ createApp({
       stemRelations.value = sRels;
       branchCombos.value = bCombos;
       branchClashes.value = bClashes;
-      
       relations.value = bCombos.concat(bClashes);
     };
 
     watch([selectedDaYun, selectedLiuNian], () => {
       checkAllRelations();
       checkInjuryAlerts();
+      checkCircuitDiagnostics();
     });
 
     onMounted(() => {
@@ -935,7 +964,6 @@ createApp({
       selectedDaYun.value = null;
       selectedLiuNian.value = null;
 
-      // 執行全套原局自動診斷
       calcQuantScore();
       checkCircuitDiagnostics();
       checkAllRelations();
