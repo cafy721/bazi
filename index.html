@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>專業八字排盤（ISO 終極合化變身版）</title>
+  <title>專業八字排盤（ISO 標準全功能版）</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.min.js"></script>
@@ -42,7 +42,7 @@
 <div id="app" class="max-w-6xl mx-auto">
   <header class="text-center my-4">
     <h1 class="text-2xl font-bold tracking-wider gold-text">八字排盤系統</h1>
-    <p class="text-xs text-slate-400 mt-1">ISO 診斷 ‧ 歲運天干合化修復 ‧ 動態分數重算</p>
+    <p class="text-xs text-slate-400 mt-1">ISO 診斷 ‧ 大運流年動態通根 ‧ 終極合化變身版</p>
   </header>
 
   <!-- 輸入區 & 命例管理 -->
@@ -390,20 +390,23 @@
         </div>
       </div>
 
-      <!-- 天干電器詳細資訊 -->
+      <!-- 天干電器詳細資訊 (含大運/流年連動) -->
       <div v-if="activeModal.type === 'gan'" class="space-y-2 text-xs">
         <div class="bg-slate-900 p-2 rounded-lg">
           <span class="text-slate-400">電器功能：</span>
           <span class="text-slate-200 font-semibold">{{ activeModal.ganDetails.functionDesc }}</span>
         </div>
         <div class="bg-slate-900 p-2 rounded-lg">
-          <span class="text-slate-400">通根供電電池：</span>
+          <span class="text-slate-400">通根供電電池 (含原局與歲運)：</span>
           <div class="mt-1 space-y-1">
             <div v-for="b in activeModal.ganDetails.batteries" :key="b.name" class="flex justify-between text-[11px]">
-              <span>{{ b.name }} ({{ b.zhi }}) - {{ b.cangType }}<b>{{ b.cangStem }}</b></span>
+              <span>
+                <span class="text-amber-400 font-bold">[{{ b.name }}]</span> 
+                ({{ b.zhi }}) - {{ b.cangType }}<b>{{ b.cangStem }}</b>
+              </span>
               <span class="text-emerald-400">+{{ b.power }} 分</span>
             </div>
-            <div v-if="activeModal.ganDetails.batteries.length === 0" class="text-rose-400">🚫 截腳無根：天干於地支完全無電池支援！</div>
+            <div v-if="activeModal.ganDetails.batteries.length === 0" class="text-rose-400">🚫 截腳無根：天干於當前原局與歲運地支完全無電池支援！</div>
           </div>
         </div>
       </div>
@@ -519,7 +522,6 @@ createApp({
       return relMap[categoryName] || '';
     };
 
-    // 變身後的四柱天干
     const effectivePillars = computed(() => {
       if (!result.value) return [];
       return result.value.pillars.map(p => {
@@ -627,7 +629,7 @@ createApp({
       return { step1, step2, step3, step4, step5, step6 };
     });
 
-    // 彈窗 Modal
+    // 彈窗 Modal (含大運/流年連動)
     const openCircuitModal = (type, pillarName, char) => {
       const dayGan = result.value.dayGan;
       const shishen = type === 'gan' ? (char === dayGan ? '日主' : getShiShen(dayGan, char)) : '地支宮位';
@@ -638,13 +640,26 @@ createApp({
       if (type === 'gan') {
         let batteries = [];
         const mults = [0.8, 3.0, 2.0, 1.0];
-        result.value.pillars.forEach((p, idx) => {
-          const cangs = CUSTOM_CANG_GAN[p.zhi] || [];
+
+        // 建立全盤掃描列表 (原局 + 大運 + 流年)
+        let branchPillars = result.value.pillars.map((p, idx) => ({
+          name: p.name, zhi: p.zhi, mult: mults[idx]
+        }));
+
+        if (selectedDaYun.value) {
+          branchPillars.push({ name: '大運', zhi: selectedDaYun.value.zhi, mult: 2.0 });
+        }
+        if (currentLiuNianObj.value) {
+          branchPillars.push({ name: '流年', zhi: currentLiuNianObj.value.zhi, mult: 1.0 });
+        }
+
+        branchPillars.forEach(bp => {
+          const cangs = CUSTOM_CANG_GAN[bp.zhi] || [];
           cangs.forEach(cg => {
             if (STEM_PROPS[char].e === STEM_PROPS[cg.stem].e) {
               batteries.push({
-                name: p.name, zhi: p.zhi, cangType: cg.type, cangStem: cg.stem,
-                power: (cg.w * mults[idx] * 0.1).toFixed(1)
+                name: bp.name, zhi: bp.zhi, cangType: cg.type, cangStem: cg.stem,
+                power: (cg.w * bp.mult * 0.1).toFixed(1)
               });
             }
           });
@@ -673,7 +688,6 @@ createApp({
 
       const dayGan = result.value.dayGan;
       
-      // 建立全部天干動態陣列 (原局 + 大運 + 流年)
       let allStemList = result.value.pillars.map(p => ({
         name: p.name,
         gan: p.gan,
@@ -682,20 +696,10 @@ createApp({
       }));
 
       if (selectedDaYun.value) {
-        allStemList.push({
-          name: '大運',
-          gan: selectedDaYun.value.gan,
-          isDayMaster: false,
-          isOrig: false
-        });
+        allStemList.push({ name: '大運', gan: selectedDaYun.value.gan, isDayMaster: false, isOrig: false });
       }
       if (currentLiuNianObj.value) {
-        allStemList.push({
-          name: '流年',
-          gan: currentLiuNianObj.value.gan,
-          isDayMaster: false,
-          isOrig: false
-        });
+        allStemList.push({ name: '流年', gan: currentLiuNianObj.value.gan, isDayMaster: false, isOrig: false });
       }
 
       const comboRules = [
@@ -709,7 +713,6 @@ createApp({
       let newTransStems = {};
       let sRels = [];
 
-      // 兩兩比對所有天干 (原局 + 大運 + 流年)
       for (let i = 0; i < allStemList.length; i++) {
         for (let j = i + 1; j < allStemList.length; j++) {
           const item1 = allStemList[i];
@@ -719,7 +722,6 @@ createApp({
           if (rule) {
             const sourceText = (item1.isOrig && item2.isOrig) ? '原局自帶' : '歲運引動';
 
-            // 法則一：日主之合不化
             if (item1.isDayMaster || item2.isDayMaster) {
               const other = item1.isDayMaster ? item2 : item1;
               const shishen = getShiShen(dayGan, other.gan);
@@ -731,7 +733,6 @@ createApp({
               continue;
             }
 
-            // 旁干相合：檢查障礙 1 (七殺隔絕 - 僅原局間檢查)
             let isBlocked = false;
             if (item1.isOrig && item2.isOrig) {
               for (let k = i + 1; k < j; k++) {
@@ -752,7 +753,6 @@ createApp({
               continue;
             }
 
-            // 旁干相合：成功觸發合化變身 (若發生在原局)
             if (item1.isOrig) {
               if (rule.s1 === '甲' && rule.s2 === '己') {
                 if (item1.gan === '甲') newTransStems[item1.name] = '己';
@@ -779,7 +779,6 @@ createApp({
 
       transformedStems.value = newTransStems;
 
-      // 檢查傷官見官、官殺混雜、雙殺攻身
       const curGans = allStemList.map(x => x.gan);
       const curShiShens = curGans.map(g => getShiShen(dayGan, g));
       const origGans = result.value.pillars.map(p => p.gan);
@@ -863,12 +862,13 @@ createApp({
         }
       });
 
+      stemRelations.value = sRels;
       branchCombos.value = bCombos;
       branchClashes.value = bClashes;
       relations.value = bCombos.concat(bClashes);
     };
 
-    // 身強弱計算器 (基於變身後天干實時重算)
+    // 身強弱計算器
     const calcQuantScore = () => {
       if (!result.value) return;
       const dayGan = result.value.dayGan;
@@ -926,16 +926,25 @@ createApp({
       quantScore.value = { allyScore: allyScore.toFixed(1), diffScore: diffScore.toFixed(1), ratio, verdict };
     };
 
-    // 動態電路診斷矩陣
+    // 動態電路診斷矩陣 (大運/流年通根動態消除截腳與蓋頭)
     const checkCircuitDiagnostics = () => {
       if (!result.value) return;
       const effPillars = effectivePillars.value;
       let diags = [];
 
       const origGans = result.value.pillars.map(p => p.gan);
+      const origZhis = result.value.pillars.map(p => p.zhi);
+      
       let curGans = [...origGans];
-      if (selectedDaYun.value) curGans.push(selectedDaYun.value.gan);
-      if (currentLiuNianObj.value) curGans.push(currentLiuNianObj.value.gan);
+      let curZhis = [...origZhis];
+      if (selectedDaYun.value) {
+        curGans.push(selectedDaYun.value.gan);
+        curZhis.push(selectedDaYun.value.zhi);
+      }
+      if (currentLiuNianObj.value) {
+        curGans.push(currentLiuNianObj.value.gan);
+        curZhis.push(currentLiuNianObj.value.zhi);
+      }
 
       effPillars.forEach(p => {
         const gan = p.effGan;
@@ -945,8 +954,18 @@ createApp({
 
         if (STEM_PROPS[gan].e === STEM_PROPS[primaryCang].e) diags.push(`${p.name}干支同氣(${gan}${zhi})`);
 
-        const hasSelfRoot = cangs.some(cg => STEM_PROPS[gan].e === STEM_PROPS[cg.stem].e || getShiShen(gan, cg.stem) === '正印' || getShiShen(gan, cg.stem) === '偏印');
-        if (!hasSelfRoot) diags.push(`${p.name}截腳(${gan}無根)`);
+        // 檢查通根 (原局 vs 歲運)
+        const hasOrigSelfRoot = cangs.some(cg => STEM_PROPS[gan].e === STEM_PROPS[cg.stem].e || getShiShen(gan, cg.stem) === '正印' || getShiShen(gan, cg.stem) === '偏印');
+        
+        let allActiveCangs = [];
+        curZhis.forEach(z => allActiveCangs.push(...(CUSTOM_CANG_GAN[z] || [])));
+        const hasActiveRoot = allActiveCangs.some(cg => STEM_PROPS[gan].e === STEM_PROPS[cg.stem].e || getShiShen(gan, cg.stem) === '正印' || getShiShen(gan, cg.stem) === '偏印');
+
+        if (!hasOrigSelfRoot && hasActiveRoot) {
+          diags.push(`${p.name}歲運通根(${gan})`);
+        } else if (!hasActiveRoot) {
+          diags.push(`${p.name}截腳(${gan}無根)`);
+        }
 
         const hasProtrusion = cangs.some(cg => curGans.includes(cg.stem));
         if (!hasProtrusion) {
