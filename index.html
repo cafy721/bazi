@@ -29,34 +29,71 @@
 <div id="app" class="max-w-6xl mx-auto">
   <header class="text-center my-4">
     <h1 class="text-2xl font-bold tracking-wider gold-text">八字排盤系統</h1>
-    <p class="text-xs text-slate-400 mt-1">專屬藏干 ‧ 流年連動 ‧ 刑沖合會自動推導</p>
+    <p class="text-xs text-slate-400 mt-1">專屬藏干 ‧ 流年連動 ‧ 命例庫</p>
   </header>
 
-  <!-- 輸入區 -->
+  <!-- 輸入區 & 命例管理 -->
   <div class="card-bg p-5 rounded-2xl shadow-xl border border-slate-700/50 mb-6 max-w-2xl mx-auto">
     <div class="space-y-4">
       <div>
-        <label class="block text-xs font-medium text-slate-400 mb-1">出生國曆時間</label>
-        <input type="datetime-local" v-model="birthTime" 
+        <label class="block text-xs font-medium text-slate-400 mb-1">姓名 (選填)</label>
+        <input type="text" v-model="name" placeholder="輸入命主姓名"
                class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 text-sm focus:outline-none focus:border-amber-500">
       </div>
-      <div>
-        <label class="block text-xs font-medium text-slate-400 mb-1">性別</label>
-        <select v-model="gender" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 text-sm focus:outline-none focus:border-amber-500">
-          <option :value="1">乾造 (男)</option>
-          <option :value="0">坤造 (女)</option>
-        </select>
+      
+      <div class="flex gap-3">
+        <div class="flex-[2]">
+          <label class="block text-xs font-medium text-slate-400 mb-1">出生國曆時間</label>
+          <input type="datetime-local" v-model="birthTime" 
+                 class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 text-sm focus:outline-none focus:border-amber-500">
+        </div>
+        <div class="flex-1">
+          <label class="block text-xs font-medium text-slate-400 mb-1">性別</label>
+          <select v-model="gender" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-100 text-sm focus:outline-none focus:border-amber-500">
+            <option :value="1">乾造(男)</option>
+            <option :value="0">坤造(女)</option>
+          </select>
+        </div>
       </div>
-      <button @click="calculate" 
-              class="w-full bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 text-slate-950 font-bold py-3.5 rounded-xl transition active:scale-95">
-        立即排盤
-      </button>
+
+      <!-- 按鈕區 -->
+      <div class="flex gap-2 pt-2">
+        <button @click="calculate" 
+                class="flex-[2] bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 text-slate-950 font-bold py-3 rounded-xl transition active:scale-95 shadow-lg">
+          立即排盤
+        </button>
+        <button @click="saveRecord" 
+                class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 rounded-xl transition active:scale-95 border border-slate-600">
+          💾 儲存
+        </button>
+        <button @click="showRecords = !showRecords" 
+                class="flex-1 bg-slate-800 hover:bg-slate-700 text-amber-500 font-bold py-3 rounded-xl transition active:scale-95 border border-slate-600">
+          📂 命例庫
+        </button>
+      </div>
+    </div>
+
+    <!-- 展開的命例庫清單 -->
+    <div v-if="showRecords" class="mt-4 p-3 bg-slate-900/80 rounded-xl border border-slate-700">
+      <h3 class="text-xs font-bold text-slate-400 mb-2 border-b border-slate-700 pb-2">已儲存命例 (點擊直接排盤)</h3>
+      <div v-if="records.length === 0" class="text-xs text-slate-500 text-center py-4">暫無儲存的命例</div>
+      <div v-else class="space-y-2 max-h-48 overflow-y-auto no-scrollbar">
+        <div v-for="rec in records" :key="rec.id" class="flex justify-between items-center bg-slate-800 p-2 rounded-lg hover:bg-slate-700 transition">
+          <div class="cursor-pointer flex-1" @click="loadRecord(rec)">
+            <div class="text-sm font-bold text-amber-400">{{ rec.name }} <span class="text-[10px] text-slate-400 ml-1">{{ rec.gender === 1 ? '乾' : '坤' }}</span></div>
+            <div class="text-[10px] text-slate-300">{{ formatTime(rec.birthTime) }}</div>
+          </div>
+          <button @click="deleteRecord(rec.id)" class="text-rose-400 hover:text-rose-300 text-xs px-3 py-1 bg-rose-950/30 rounded">刪除</button>
+        </div>
+      </div>
     </div>
   </div>
 
+  <!-- 排盤結果區 -->
   <div v-if="result" class="space-y-6">
     <!-- 基本資訊 -->
     <div class="card-bg p-4 rounded-2xl border border-slate-700/50 text-center text-xs text-slate-300">
+      <span class="mr-3 text-amber-500 font-bold text-sm" v-if="result.name">{{ result.name }}</span>
       <span class="mr-4">陽曆：{{ result.solarStr }}</span>
       <span class="mr-4">陰曆：{{ result.lunarStr }}</span>
       <span class="gold-text font-semibold">起運：{{ result.yunStr }}</span>
@@ -64,7 +101,7 @@
 
     <!-- 刑沖合會提示區 -->
     <div v-if="relations.length > 0" class="card-bg p-4 rounded-2xl border border-slate-700/50">
-      <h3 class="text-sm font-bold text-slate-200 mb-2">⚡ 刑沖合會檢測 (原局 + 目前大運/流年)</h3>
+      <h3 class="text-sm font-bold text-slate-200 mb-2">⚡ 刑沖合會檢測 (原局 + 大運/流年)</h3>
       <div class="flex flex-wrap gap-2">
         <span v-for="rel in relations" :key="rel.desc" 
               :class="['relation-tag text-xs px-2 py-1', rel.type === 'he' ? 'tag-he' : (rel.type === 'chong' ? 'tag-chong' : 'tag-xing')]">
@@ -77,7 +114,7 @@
     <div class="flex flex-col lg:flex-row gap-4">
       
       <!-- 左側：原局 -->
-      <div class="card-bg p-4 rounded-2xl border border-slate-700/50 flex-1 overflow-x-auto">
+      <div class="card-bg p-4 rounded-2xl border border-slate-700/50 flex-[3] overflow-x-auto">
         <h2 class="text-sm font-bold text-slate-200 mb-3 border-b border-slate-700 pb-2 text-center">【 四柱原局 】</h2>
         <div class="grid grid-cols-5 text-center text-xs gap-1 min-w-[350px]">
           <div class="text-slate-400 py-2">項目</div>
@@ -114,43 +151,39 @@
         </div>
       </div>
 
-      <!-- 右側：大運與流年連動 -->
-      <div class="card-bg p-4 rounded-2xl border border-slate-700/50 flex-1 overflow-x-auto">
+      <!-- 右側：大運與流年連動 (移除重複標籤) -->
+      <div class="card-bg p-4 rounded-2xl border border-slate-700/50 flex-[2] overflow-x-auto">
         <h2 class="text-sm font-bold text-slate-200 mb-3 border-b border-slate-700 pb-2 text-center">【 大運 ＆ 流年連動 】</h2>
         
         <div v-if="!selectedDaYun" class="text-center text-slate-400 py-10">請在下方選擇一步大運</div>
         
-        <div v-if="selectedDaYun" class="grid grid-cols-3 text-center text-xs gap-1 min-w-[300px]">
-          <div class="text-slate-400 py-2">項目</div>
+        <div v-if="selectedDaYun" class="grid grid-cols-2 text-center text-xs gap-1 min-w-[200px]">
+          <!-- 頂部標題列 -->
           <div class="text-amber-500 font-bold py-2">大運 ({{ selectedDaYun.startYear }}~)</div>
           <div class="text-sky-400 font-bold py-2">
-            <select v-model="selectedLiuNian" class="bg-slate-800 border-none text-sky-400 text-xs p-1 rounded outline-none">
+            <select v-model="selectedLiuNian" class="bg-slate-800 border-none text-sky-400 text-xs p-1 rounded outline-none cursor-pointer">
               <option v-for="ln in selectedDaYun.liuNianList" :value="ln.year">{{ ln.year }} 流年</option>
             </select>
           </div>
 
-          <div class="text-slate-400 border-t border-slate-800 py-2 self-center">十神</div>
+          <!-- 十神 -->
           <div class="border-t border-slate-800 py-2 text-slate-300">{{ getShiShen(result.dayGan, selectedDaYun.gan) }}</div>
           <div class="border-t border-slate-800 py-2 text-slate-300">{{ getShiShen(result.dayGan, currentLiuNianObj?.gan) }}</div>
 
-          <div class="text-slate-400 border-t border-slate-800 py-2 self-center">天干</div>
+          <!-- 天干 -->
           <div :class="['border-t border-slate-800 py-2 text-2xl font-bold', getElemClass(selectedDaYun.gan)]">{{ selectedDaYun.gan }}</div>
           <div :class="['border-t border-slate-800 py-2 text-2xl font-bold', getElemClass(currentLiuNianObj?.gan)]">{{ currentLiuNianObj?.gan }}</div>
 
-          <div class="text-slate-400 border-t border-slate-800 py-2 self-center">地支</div>
+          <!-- 地支 -->
           <div :class="['border-t border-slate-800 py-2 text-2xl font-bold', getElemClass(selectedDaYun.zhi)]">{{ selectedDaYun.zhi }}</div>
           <div :class="['border-t border-slate-800 py-2 text-2xl font-bold', getElemClass(currentLiuNianObj?.zhi)]">{{ currentLiuNianObj?.zhi }}</div>
 
-          <div class="text-slate-400 border-t border-slate-800 py-2">藏干</div>
-          
-          <!-- 大運藏干 -->
+          <!-- 藏干 -->
           <div class="border-t border-slate-800 py-2 text-left text-[11px] space-y-1">
             <div v-for="cg in getCustomCangGan(selectedDaYun.zhi)" class="bg-slate-900/60 p-1 rounded flex justify-between">
               <span><span class="text-[9px] bg-slate-800 px-1 rounded text-slate-400">{{ cg.type }}</span> <b :class="getElemClass(cg.stem)">{{ cg.stem }}</b> <span class="text-[9px] text-slate-400">({{ getShiShen(result.dayGan, cg.stem) }})</span></span>
             </div>
           </div>
-          
-          <!-- 流年藏干 -->
           <div class="border-t border-slate-800 py-2 text-left text-[11px] space-y-1">
             <div v-if="currentLiuNianObj" v-for="cg in getCustomCangGan(currentLiuNianObj.zhi)" class="bg-slate-900/60 p-1 rounded flex justify-between">
               <span><span class="text-[9px] bg-slate-800 px-1 rounded text-slate-400">{{ cg.type }}</span> <b :class="getElemClass(cg.stem)">{{ cg.stem }}</b> <span class="text-[9px] text-slate-400">({{ getShiShen(result.dayGan, cg.stem) }})</span></span>
@@ -166,7 +199,7 @@
       <div class="flex overflow-x-auto no-scrollbar gap-2 pb-2">
         <div v-for="(dy, index) in result.daYunList" @click="selectDaYun(dy)"
              :class="['cursor-pointer border rounded-xl p-3 w-32 text-center flex-shrink-0 transition', 
-                      selectedDaYun?.startYear === dy.startYear ? 'border-amber-500 bg-amber-900/20' : 'border-slate-800 bg-slate-900/80 hover:bg-slate-800']">
+                      selectedDaYun?.startYear === dy.startYear ? 'border-amber-500 bg-amber-900/20 shadow-[0_0_10px_rgba(245,158,11,0.2)]' : 'border-slate-800 bg-slate-900/80 hover:bg-slate-700']">
           <div class="text-[10px] text-amber-500/80 font-bold">第 {{ index + 1 }} 運</div>
           <div class="text-xs text-slate-400">{{ dy.startAge }} - {{ dy.endAge }} 歲</div>
           <div class="text-[10px] text-slate-500">{{ dy.startYear }} 年</div>
@@ -184,12 +217,17 @@ const { createApp, ref, computed, watch, onMounted } = Vue;
 
 createApp({
   setup() {
+    const name = ref('');
     const birthTime = ref('');
     const gender = ref(1);
     const result = ref(null);
     const selectedDaYun = ref(null);
     const selectedLiuNian = ref(null);
     const relations = ref([]);
+    
+    // 命例庫狀態
+    const records = ref([]);
+    const showRecords = ref(false);
 
     const CUSTOM_CANG_GAN = {
       '寅': [ { type: '主', stem: '甲', changsheng: '臨官' }, { type: '中', stem: '丙', changsheng: '長生' }, { type: '餘', stem: '己', changsheng: '帝旺' } ],
@@ -233,7 +271,6 @@ createApp({
       return selectedDaYun.value.liuNianList.find(ln => ln.year === selectedLiuNian.value);
     });
 
-    // 刑沖合會判斷引擎
     const checkRelations = () => {
       if (!result.value) return [];
       const zhis = result.value.pillars.map(p => p.zhi);
@@ -243,22 +280,18 @@ createApp({
       const str = zhis.join('');
       let rels = [];
 
-      // 六合
       const he = [['子','丑','合土'],['寅','亥','合木'],['卯','戌','合火'],['辰','酉','合金'],['巳','申','合水'],['午','未','合土/火']];
       he.forEach(h => { if(str.includes(h[0]) && str.includes(h[1])) rels.push({type:'he', desc:`${h[0]}${h[1]} 六合 (${h[2]})`}) });
 
-      // 六沖
       const chong = [['子','午'],['丑','未'],['寅','申'],['卯','酉'],['辰','戌'],['巳','亥']];
       chong.forEach(c => { if(str.includes(c[0]) && str.includes(c[1])) rels.push({type:'chong', desc:`${c[0]}${c[1]} 六沖`}) });
 
-      // 三會 / 方局
       const hui = [['寅','卯','辰','東方木局'],['巳','午','未','南方火局'],['申','酉','戌','西方金局'],['亥','子','丑','北方水局']];
       hui.forEach(h => { if(str.includes(h[0]) && str.includes(h[1]) && str.includes(h[2])) rels.push({type:'he', desc:`${h[0]}${h[1]}${h[2]} 三會方局 (${h[3]})`}) });
 
-      // 三刑與自刑
-      if (str.includes('寅') && str.includes('巳') && str.includes('申')) rels.push({type:'xing', desc:'寅巳申 三刑 (無恩之刑)'});
-      if (str.includes('丑') && str.includes('戌') && str.includes('未')) rels.push({type:'xing', desc:'丑戌未 三刑 (恃勢之刑)'});
-      if (str.includes('子') && str.includes('卯')) rels.push({type:'xing', desc:'子卯 相刑 (無禮之刑)'});
+      if (str.includes('寅') && str.includes('巳') && str.includes('申')) rels.push({type:'xing', desc:'寅巳申 三刑 (無恩)'});
+      if (str.includes('丑') && str.includes('戌') && str.includes('未')) rels.push({type:'xing', desc:'丑戌未 三刑 (恃勢)'});
+      if (str.includes('子') && str.includes('卯')) rels.push({type:'xing', desc:'子卯 相刑 (無禮)'});
       
       ['辰','午','酉','亥'].forEach(zx => {
         if (str.split(zx).length - 1 >= 2) rels.push({type:'xing', desc:`${zx}${zx} 自刑`});
@@ -270,15 +303,49 @@ createApp({
     watch([selectedDaYun, selectedLiuNian], () => checkRelations());
 
     onMounted(() => {
+      // 讀取本地儲存的命例
+      const saved = localStorage.getItem('bazi_records');
+      if (saved) records.value = JSON.parse(saved);
+
       const now = new Date();
       now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
       birthTime.value = now.toISOString().slice(0, 16);
-      setTimeout(calculate, 500); // 等待 Lunar 庫載入
+      setTimeout(calculate, 500); 
     });
+
+    // 命例庫功能
+    const formatTime = (timeStr) => timeStr.replace('T', ' ');
+    
+    const saveRecord = () => {
+      if (!birthTime.value) return alert("請先選擇出生時間！");
+      const newRec = {
+        id: Date.now(),
+        name: name.value.trim() || '未命名命例',
+        gender: gender.value,
+        birthTime: birthTime.value
+      };
+      records.value.unshift(newRec); // 加入到陣列最前面
+      localStorage.setItem('bazi_records', JSON.stringify(records.value));
+      alert("✅ 命例儲存成功！可點擊「📂 命例庫」查看。");
+    };
+
+    const loadRecord = (rec) => {
+      name.value = rec.name === '未命名命例' ? '' : rec.name;
+      gender.value = rec.gender;
+      birthTime.value = rec.birthTime;
+      showRecords.value = false;
+      calculate();
+    };
+
+    const deleteRecord = (id) => {
+      if(!confirm("確定要刪除這筆命例嗎？")) return;
+      records.value = records.value.filter(r => r.id !== id);
+      localStorage.setItem('bazi_records', JSON.stringify(records.value));
+    };
 
     const selectDaYun = (dy) => {
       selectedDaYun.value = dy;
-      selectedLiuNian.value = dy.startYear; // 預設選第一年流年
+      selectedLiuNian.value = dy.startYear;
     };
 
     const calculate = () => {
@@ -305,13 +372,10 @@ createApp({
 
       const daYunList = daYunListAll.slice(1, 11).map(dy => {
         const gz = dy.getGanZhi();
-        
-        // 獲取該大運的 10 年流年
         const lnList = dy.getLiuNian().map(ln => {
            const lngz = ln.getGanZhi();
            return { year: ln.getYear(), gan: lngz.charAt(0), zhi: lngz.charAt(1) };
         });
-
         return {
           startAge: dy.getStartAge(),
           endAge: dy.getEndAge(),
@@ -323,6 +387,7 @@ createApp({
       });
 
       result.value = {
+        name: name.value.trim(),
         solarStr: solar.toFullString(),
         lunarStr: lunar.toString(),
         yunStr: `${yun.getStartYear()}年${yun.getStartMonth()}個月起運（約${startAge}歲）`,
@@ -336,7 +401,11 @@ createApp({
       checkRelations();
     };
 
-    return { birthTime, gender, result, selectedDaYun, selectedLiuNian, currentLiuNianObj, relations, calculate, selectDaYun, getShiShen, getElemClass, getCustomCangGan: zhi => CUSTOM_CANG_GAN[zhi] || [] };
+    return { 
+      name, birthTime, gender, result, selectedDaYun, selectedLiuNian, currentLiuNianObj, relations, 
+      records, showRecords, saveRecord, loadRecord, deleteRecord, formatTime,
+      calculate, selectDaYun, getShiShen, getElemClass, getCustomCangGan: zhi => CUSTOM_CANG_GAN[zhi] || [] 
+    };
   }
 }).mount('#app');
 </script>
