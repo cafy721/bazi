@@ -6,7 +6,7 @@
   <title>專業八字排盤（自訂藏干版）</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- 採用更穩定的 jsDelivr CDN -->
+  <!-- jsDelivr CDN (Lunar JS) -->
   <script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.min.js"></script>
   <style>
     body { background-color: #0f172a; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -109,7 +109,7 @@
   </div>
 
 <script>
-  // 1. 專屬藏干對照表
+  // 專屬藏干對照表
   const CUSTOM_CANG_GAN = {
     '寅': [ { type: '主', stem: '甲', changsheng: '臨官' }, { type: '中', stem: '丙', changsheng: '長生' }, { type: '餘', stem: '己', changsheng: '帝旺' } ],
     '卯': [ { type: '主', stem: '乙', changsheng: '臨官' }, { type: '中', stem: '癸', changsheng: '長生' }, { type: '餘', stem: '甲', changsheng: '帝旺' } ],
@@ -175,7 +175,7 @@
     return html;
   }
 
-  // 初始化時間
+  // 初始化預設時間
   window.onload = function() {
     const now = new Date();
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
@@ -186,7 +186,7 @@
   function calculate() {
     try {
       if (typeof Solar === 'undefined') {
-        alert("萬年曆組件正在載入中，請稍候再試或重設頁面！");
+        alert("萬年曆組件正在載入中，請稍候再試或重置頁面！");
         return;
       }
 
@@ -201,10 +201,15 @@
       const dayGan = eightChar.getDayGan();
       const yun = eightChar.getYun(gender);
 
-      // 填入基本資訊
+      // 基本資訊與起運推算修復
       document.getElementById('solarStr').innerText = solar.toFullString();
       document.getElementById('lunarStr').innerText = lunar.toString();
-      document.getElementById('yunStr').innerText = `出生後 ${yun.getStartYear()} 年 ${yun.getStartMonth()} 個月起運（約 ${yun.getStartAge()} 歲交大運）`;
+
+      const daYunListAll = yun.getDaYun();
+      const firstRealYun = daYunListAll.length > 1 ? daYunListAll[1] : null;
+      const startAgeText = firstRealYun ? firstRealYun.getStartAge() : yun.getStartYear();
+
+      document.getElementById('yunStr').innerText = `出生後 ${yun.getStartYear()} 年 ${yun.getStartMonth()} 個月 ${yun.getStartDay()} 天起運（約 ${startAgeText} 歲交大運）`;
 
       const gans = [eightChar.getYearGan(), eightChar.getMonthGan(), dayGan, eightChar.getTimeGan()];
       const zhis = [eightChar.getYearZhi(), eightChar.getMonthZhi(), eightChar.getDayZhi(), eightChar.getTimeZhi()];
@@ -216,8 +221,8 @@
         document.getElementById(`canggan-${i}`).innerHTML = renderCangGanBox(dayGan, zhis[i]);
       }
 
-      // 填入大運
-      const daYunList = yun.getDaYun().slice(1, 11);
+      // 大運清單
+      const daYunList = daYunListAll.slice(1, 11);
       let dayunHtml = '';
       daYunList.forEach((dy, index) => {
         const gz = dy.getGanZhi();
