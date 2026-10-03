@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>專業八字排盤（ISO 月令主角 ＆ 六神腳數終極版）</title>
+  <title>專業八字排盤（ISO 十神圓環生剋圖版）</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.min.js"></script>
@@ -42,7 +42,7 @@
 <div id="app" class="max-w-6xl mx-auto">
   <header class="text-center my-4">
     <h1 class="text-2xl font-bold tracking-wider gold-text">八字排盤系統</h1>
-    <p class="text-xs text-slate-400 mt-1">ISO 診斷 ‧ 月令主角精準格局 ‧ 六神無主腳數引擎</p>
+    <p class="text-xs text-slate-400 mt-1">ISO 診斷 ‧ 五行十神同/異性圓環生剋圖 ‧ 五行不全診斷</p>
   </header>
 
   <!-- 輸入區 & 命例管理 -->
@@ -143,53 +143,175 @@
       </div>
     </div>
 
-    <!-- 🎯 十神攻防戰術矩陣 ＆「六神無主」腳數診斷卡 -->
+    <!-- 🌐 專屬新功能：五行十神生剋同/異性圓環圖 (完全復刻筆記原圖) -->
     <div v-if="tenGodsTactics" class="card-bg p-5 rounded-2xl border border-amber-500/40 shadow-2xl space-y-4">
       <div class="flex justify-between items-center border-b border-slate-700 pb-2">
         <h2 class="text-sm font-bold gold-text flex items-center gap-2">
-          <span>🎯 十神攻防戰術矩陣 (月令主角 ＆ 腳數診斷)</span>
+          <span>🔮 五行十神同/異性生剋圓環圖</span>
         </h2>
-        <span class="text-xs text-amber-400 font-semibold">{{ tenGodsTactics.tacticalPrinciple }}</span>
+        <span class="text-xs text-amber-400 font-semibold">【專題：五行不全 vs 五行全齊】</span>
       </div>
 
-      <!-- 十神五大陣營同性/異性結構圖 (依據古圖) -->
-      <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center text-xs">
-        <div v-for="cat in tenGodsTactics.categories" :key="cat.name"
-             :class="['p-3 rounded-xl border flex flex-col justify-between transition', cat.cardBg]">
-          <div class="flex justify-between items-center text-[10px] opacity-80 mb-1">
-            <span>{{ cat.elem }}</span>
-            <span class="font-bold px-1.5 py-0.5 rounded" :class="cat.roleBadgeBg">{{ cat.roleTag }}</span>
-          </div>
-          <div class="text-base font-bold my-1" :class="cat.textColor">{{ cat.name }}</div>
-          
-          <!-- 同性/異性細分 -->
-          <div class="text-[10px] text-slate-400 space-y-0.5 my-1 bg-slate-950/40 p-1 rounded">
-            <div>同性: <b class="text-slate-200">{{ cat.sameSexName }}</b></div>
-            <div>異性: <b class="text-slate-200">{{ cat.diffSexName }}</b></div>
-          </div>
+      <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+        
+        <!-- SVG 動態互動圓環圖 -->
+        <div class="w-full md:w-1/2 flex justify-center py-2">
+          <svg viewBox="0 0 500 500" class="w-full max-w-[420px] h-auto drop-shadow-2xl select-none">
+            
+            <defs>
+              <!-- 相生箭頭 (藍色) -->
+              <marker id="arrow-sheng" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 1 L 10 5 L 0 9 z" fill="#38bdf8" />
+              </marker>
+              <!-- 相剋箭頭 (紅色) -->
+              <marker id="arrow-ke" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 1 L 10 5 L 0 9 z" fill="#ef4444" />
+              </marker>
+            </defs>
 
-          <div class="text-xs font-bold bg-slate-900/80 py-1 rounded border border-slate-800/50">
-            能量: {{ cat.score }} 分
+            <!-- 1. 五行相生外圈 (弧形/圓形連線) -->
+            <path d="M 250 110 A 130 130 0 0 1 373 180" fill="none" stroke="#38bdf8" stroke-width="2.5" marker-end="url(#arrow-sheng)" stroke-dasharray="4 2"/>
+            <path d="M 373 210 A 130 130 0 0 1 325 330" fill="none" stroke="#38bdf8" stroke-width="2.5" marker-end="url(#arrow-sheng)" stroke-dasharray="4 2"/>
+            <path d="M 300 345 A 130 130 0 0 1 200 345" fill="none" stroke="#38bdf8" stroke-width="2.5" marker-end="url(#arrow-sheng)" stroke-dasharray="4 2"/>
+            <path d="M 175 330 A 130 130 0 0 1 127 210" fill="none" stroke="#38bdf8" stroke-width="2.5" marker-end="url(#arrow-sheng)" stroke-dasharray="4 2"/>
+            <path d="M 127 180 A 130 130 0 0 1 250 110" fill="none" stroke="#38bdf8" stroke-width="2.5" marker-end="url(#arrow-sheng)" stroke-dasharray="4 2"/>
+
+            <!-- 相生文字 -->
+            <text x="325" y="130" fill="#38bdf8" font-size="12" font-weight="bold">生</text>
+            <text x="370" y="275" fill="#38bdf8" font-size="12" font-weight="bold">生</text>
+            <text x="245" y="375" fill="#38bdf8" font-size="12" font-weight="bold">生</text>
+            <text x="120" y="275" fill="#38bdf8" font-size="12" font-weight="bold">生</text>
+            <text x="165" y="130" fill="#38bdf8" font-size="12" font-weight="bold">生</text>
+
+            <!-- 2. 五行相剋五角星內線 (相剋) -->
+            <!-- 印梟 (250,130) -> 食傷 (325,320) -->
+            <line x1="250" y1="150" x2="315" y2="300" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arrow-ke)"/>
+            <!-- 食傷 (325,320) -> 官殺 (145,200) -->
+            <line x1="305" y1="310" x2="165" y2="210" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arrow-ke)"/>
+            <!-- 官殺 (145,200) -> 比劫 (355,200) -->
+            <line x1="170" y1="200" x2="330" y2="200" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arrow-ke)"/>
+            <!-- 比劫 (355,200) -> 財 (175,320) -->
+            <line x1="340" y1="210" x2="195" y2="310" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arrow-ke)"/>
+            <!-- 財 (175,320) -> 印梟 (250,130) -->
+            <line x1="185" y1="300" x2="240" y2="150" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arrow-ke)"/>
+
+            <!-- 3. 五大主氣泡 (印梟、比劫、食傷、財、官殺) -->
+            <!-- 印梟 (頂部) -->
+            <g :opacity="godsMap['印星']?.score > 0 ? 1 : 0.35">
+              <circle cx="250" cy="130" r="28" fill="#1e293b" stroke="#38bdf8" stroke-width="3" />
+              <text x="250" y="135" text-anchor="middle" fill="#f8fafc" font-size="14" font-weight="bold">印梟</text>
+            </g>
+
+            <!-- 比劫 (右上) -->
+            <g :opacity="godsMap['比劫']?.score > 0 ? 1 : 0.35">
+              <circle cx="355" cy="200" r="28" fill="#1e293b" stroke="#22c55e" stroke-width="3" />
+              <text x="355" y="205" text-anchor="middle" fill="#f8fafc" font-size="14" font-weight="bold">比劫</text>
+            </g>
+
+            <!-- 食傷 (右下) -->
+            <g :opacity="godsMap['食傷']?.score > 0 ? 1 : 0.35">
+              <circle cx="325" cy="320" r="28" fill="#1e293b" stroke="#ef4444" stroke-width="3" />
+              <text x="325" y="325" text-anchor="middle" fill="#f8fafc" font-size="14" font-weight="bold">食傷</text>
+            </g>
+
+            <!-- 財 (左下) -->
+            <g :opacity="godsMap['財星']?.score > 0 ? 1 : 0.35">
+              <circle cx="175" cy="320" r="28" fill="#1e293b" stroke="#b8621b" stroke-width="3" />
+              <text x="175" y="325" text-anchor="middle" fill="#f8fafc" font-size="14" font-weight="bold">財</text>
+            </g>
+
+            <!-- 官殺 (左上) -->
+            <g :opacity="godsMap['官殺']?.score > 0 ? 1 : 0.35">
+              <circle cx="145" cy="200" r="28" fill="#1e293b" stroke="#facc15" stroke-width="3" />
+              <text x="145" y="205" text-anchor="middle" fill="#f8fafc" font-size="14" font-weight="bold">官殺</text>
+            </g>
+
+            <!-- 4. 外圍放射子氣泡 (同性/異性十神) -->
+            <!-- 印梟 分支 -->
+            <line x1="230" y1="110" x2="200" y2="65" stroke="#64748b" stroke-width="1.5" />
+            <text x="208" y="90" fill="#94a3b8" font-size="9">同性</text>
+            <circle cx="190" cy="50" r="20" fill="#0f172a" stroke="#64748b" stroke-width="1.5" />
+            <text x="190" y="54" text-anchor="middle" fill="#e2e8f0" font-size="11">梟神</text>
+
+            <line x1="270" y1="110" x2="300" y2="65" stroke="#64748b" stroke-width="1.5" />
+            <text x="280" y="90" fill="#94a3b8" font-size="9">異性</text>
+            <circle cx="310" cy="50" r="20" fill="#0f172a" stroke="#64748b" stroke-width="1.5" />
+            <text x="310" y="54" text-anchor="middle" fill="#e2e8f0" font-size="11">正印</text>
+
+            <!-- 比劫 分支 -->
+            <line x1="380" y1="190" x2="425" y2="155" stroke="#64748b" stroke-width="1.5" />
+            <text x="400" y="168" fill="#94a3b8" font-size="9">同性</text>
+            <circle cx="440" cy="145" r="20" fill="#0f172a" stroke="#64748b" stroke-width="1.5" />
+            <text x="440" y="149" text-anchor="middle" fill="#e2e8f0" font-size="11">比肩</text>
+
+            <line x1="380" y1="210" x2="435" y2="225" stroke="#64748b" stroke-width="1.5" />
+            <text x="400" y="230" fill="#94a3b8" font-size="9">異性</text>
+            <circle cx="450" cy="235" r="20" fill="#0f172a" stroke="#64748b" stroke-width="1.5" />
+            <text x="450" y="239" text-anchor="middle" fill="#e2e8f0" font-size="11">劫財</text>
+
+            <!-- 食傷 分支 -->
+            <line x1="345" y1="335" x2="410" y2="365" stroke="#64748b" stroke-width="1.5" />
+            <text x="370" y="360" fill="#94a3b8" font-size="9">同性</text>
+            <circle cx="425" cy="375" r="20" fill="#0f172a" stroke="#64748b" stroke-width="1.5" />
+            <text x="425" y="379" text-anchor="middle" fill="#e2e8f0" font-size="11">食神</text>
+
+            <line x1="325" y1="350" x2="325" y2="415" stroke="#64748b" stroke-width="1.5" />
+            <text x="330" y="385" fill="#94a3b8" font-size="9">異性</text>
+            <circle cx="325" cy="435" r="20" fill="#0f172a" stroke="#64748b" stroke-width="1.5" />
+            <text x="325" y="439" text-anchor="middle" fill="#e2e8f0" font-size="11">傷官</text>
+
+            <!-- 財 分支 -->
+            <line x1="175" y1="350" x2="175" y2="415" stroke="#64748b" stroke-width="1.5" />
+            <text x="180" y="385" fill="#94a3b8" font-size="9">異性</text>
+            <circle cx="175" cy="435" r="20" fill="#0f172a" stroke="#64748b" stroke-width="1.5" />
+            <text x="175" y="439" text-anchor="middle" fill="#e2e8f0" font-size="11">正財</text>
+
+            <line x1="155" y1="335" x2="90" y2="365" stroke="#64748b" stroke-width="1.5" />
+            <text x="120" y="360" fill="#94a3b8" font-size="9">同性</text>
+            <circle cx="75" cy="375" r="20" fill="#0f172a" stroke="#64748b" stroke-width="1.5" />
+            <text x="75" y="379" text-anchor="middle" fill="#e2e8f0" font-size="11">偏財</text>
+
+            <!-- 官殺 分支 -->
+            <line x1="120" y1="210" x2="65" y2="225" stroke="#64748b" stroke-width="1.5" />
+            <text x="90" y="230" fill="#94a3b8" font-size="9">異性</text>
+            <circle cx="50" cy="235" r="20" fill="#0f172a" stroke="#64748b" stroke-width="1.5" />
+            <text x="50" y="239" text-anchor="middle" fill="#e2e8f0" font-size="11">正官</text>
+
+            <line x1="120" y1="190" x2="75" y2="155" stroke="#64748b" stroke-width="1.5" />
+            <text x="90" y="168" fill="#94a3b8" font-size="9">同性</text>
+            <circle cx="60" cy="145" r="20" fill="#0f172a" stroke="#64748b" stroke-width="1.5" />
+            <text x="60" y="149" text-anchor="middle" fill="#e2e8f0" font-size="11">七殺</text>
+
+          </svg>
+        </div>
+
+        <!-- 右側：五行全齊 vs 五行不全 文字即時診斷 -->
+        <div class="w-full md:w-1/2 space-y-3 text-xs">
+          <div class="bg-slate-900/90 p-4 rounded-xl border border-slate-700 space-y-2">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+              <span class="font-bold text-amber-400">📊 原命五行全齊/不全診斷：</span>
+              <span :class="['px-2 py-0.5 rounded font-bold text-[11px]', isFiveElementsComplete ? 'bg-emerald-950 text-emerald-300 border border-emerald-700' : 'bg-rose-950 text-rose-300 border border-rose-700']">
+                {{ isFiveElementsComplete ? '五行全齊 (五氣流通)' : '五行不全 (局有缺失)' }}
+              </span>
+            </div>
+
+            <p class="text-slate-300 leading-relaxed pt-1">
+              {{ fiveElementsReport }}
+            </p>
+
+            <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/80">
+              <div class="bg-slate-950/60 p-2 rounded">
+                <span class="text-slate-400 block">局中現存五行：</span>
+                <b class="text-emerald-400">{{ presentElementsStr }}</b>
+              </div>
+              <div class="bg-slate-950/60 p-2 rounded">
+                <span class="text-slate-400 block">局中缺失五行：</span>
+                <b class="text-rose-400">{{ missingElementsStr || '無 (五行齊全)' }}</b>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- 六神無主與格局腳數診斷 -->
-      <div class="bg-slate-900/90 p-3.5 rounded-xl border border-slate-700 space-y-2 text-xs">
-        <div class="flex items-center justify-between font-bold border-b border-slate-800 pb-2">
-          <span class="text-amber-400 flex items-center gap-1">
-            <span>📌 月令主角與「六神腳數」診斷：</span>
-          </span>
-          <span class="bg-indigo-950 text-indigo-300 px-2 py-0.5 rounded border border-indigo-700 text-[11px]">
-            {{ tenGodsTactics.feetStatus }}
-          </span>
-        </div>
-        <p class="text-slate-300 leading-relaxed pt-1">
-          <b>【格局主角】</b>：{{ tenGodsTactics.mainCharacterReport }}
-        </p>
-        <p class="text-slate-300 leading-relaxed">
-          <b>【日主高/低調與身強需求】</b>：{{ tenGodsTactics.feetReport }}
-        </p>
       </div>
     </div>
 
@@ -626,16 +748,58 @@ createApp({
       }
     };
 
-    // 🎯 九大混淆格局與「六神無主」腳數診斷卡
+    // 快速查詢十神能量 Map
+    const godsMap = computed(() => {
+      if (!tenGodsTactics.value) return {};
+      let m = {};
+      tenGodsTactics.value.categories.forEach(c => {
+        m[c.name] = c;
+      });
+      return m;
+    });
+
+    // 五行全齊 vs 五行不全 診斷計算
+    const presentElements = computed(() => {
+      if (!result.value) return [];
+      const dayGan = result.value.dayGan;
+      const allGans = effectivePillars.value.map(p => p.effGan);
+      const allZhis = result.value.pillars.map(p => p.zhi);
+
+      let elemSet = new Set();
+      allGans.forEach(g => elemSet.add(STEM_PROPS[g].e));
+      allZhis.forEach(z => {
+        const cangs = CUSTOM_CANG_GAN[z] || [];
+        cangs.forEach(cg => elemSet.add(STEM_PROPS[cg.stem].e));
+      });
+
+      return Array.from(elemSet);
+    });
+
+    const missingElements = computed(() => {
+      const allElems = ['木', '火', '土', '金', '水'];
+      return allElems.filter(e => !presentElements.value.includes(e));
+    });
+
+    const isFiveElementsComplete = computed(() => missingElements.value.length === 0);
+
+    const presentElementsStr = computed(() => presentElements.value.join('、'));
+    const missingElementsStr = computed(() => missingElements.value.join('、'));
+
+    const fiveElementsReport = computed(() => {
+      if (isFiveElementsComplete.value) {
+        return '原局四柱地支與天干五行俱全，【五行全齊】！氣場源源不絕、首尾相生，抗風險能力極強。';
+      } else {
+        return `原局【五行不全】，缺乏五行【${missingElementsStr.value}】！氣場喺傳導過程中會出現斷層，大運流年補足缺失五行時，該運勢會出現劇烈轉變。`;
+      }
+    });
+
+    // 🎯 精準分拆：四吉神順用 ＆ 四凶神逆用戰術矩陣引擎
     const tenGodsTactics = computed(() => {
       if (!result.value || !godsInfo.value) return null;
       const dayGan = result.value.dayGan;
-      const effGans = effectivePillars.value.map(p => p.effGan);
-      const monthZhi = result.value.pillars[1].zhi;
-      const monthCangs = CUSTOM_CANG_GAN[monthZhi] || [];
+      const geShenFull = godsInfo.value.geShen;
       const isYangDM = STEM_PROPS[dayGan].y === 0;
 
-      // 1. 十神能量與同性異性名表
       let scores = { '比劫': 0, '食傷': 0, '財星': 0, '官殺': 0, '印星': 0 };
       const pillarMultipliers = [0.8, 3.0, 2.0, 1.0];
 
@@ -659,18 +823,18 @@ createApp({
         });
       });
 
-      // 2. 「月令為王」九大格局精準對照
       const nonDmGans = effectivePillars.value.filter(p => !p.isDayMaster).map(p => p.effGan);
       const nonDmShiShens = nonDmGans.map(g => getShiShen(dayGan, g));
 
+      const monthZhi = result.value.pillars[1].zhi;
+      const monthCangs = CUSTOM_CANG_GAN[monthZhi] || [];
       let protrudeCang = monthCangs.find(cg => nonDmGans.includes(cg.stem));
       let mainGod = protrudeCang ? getShiShen(dayGan, protrudeCang.stem) : getShiShen(dayGan, monthCangs[0].stem);
-      
+
       let patternName = godsInfo.value.geShen;
       let tacticalPrinciple = '月令透干定主角';
       let mainCharacterReport = '';
 
-      // 九大格局對照邏輯
       if (mainGod === '正官') {
         if (nonDmShiShens.includes('正印') || nonDmShiShens.includes('偏印')) {
           patternName = '正官佩印格';
@@ -735,23 +899,6 @@ createApp({
         mainCharacterReport = '月令透傷官為主角立格【傷官格】。喜佩印制其戾氣或生財化戾，最忌劫財生扶傷官。';
       }
 
-      // 檢查是否「官印雙全」或「上等殺印相生」（雙通根月令）
-      const monthCangStems = monthCangs.map(c => c.stem);
-      const monthCangShiShens = monthCangStems.map(s => getShiShen(dayGan, s));
-      if (monthCangShiShens.includes('正官') && (monthCangShiShens.includes('正印') || monthCangShiShens.includes('偏印'))) {
-        if (nonDmShiShens.includes('正官') && (nonDmShiShens.includes('正印') || nonDmShiShens.includes('偏印'))) {
-          patternName = '上等官印雙全格 (雙通根月令)';
-          mainCharacterReport = '官星與印星同時同根於月令並雙透天干，此乃真正【官印雙全】，兩者皆為主角，極貴！';
-        }
-      }
-      if (monthCangShiShens.includes('七殺') && (monthCangShiShens.includes('正印') || monthCangShiShens.includes('偏印'))) {
-        if (nonDmShiShens.includes('七殺') && (nonDmShiShens.includes('正印') || nonDmShiShens.includes('偏印'))) {
-          patternName = '上等殺印相生格 (雙通根月令)';
-          mainCharacterReport = '七殺與印星同時同根於月令兼雙透天干，此乃【上等殺印相生】，有情有力，頂級權貴！';
-        }
-      }
-
-      // 3. 「六神無主」與腳數（三腳 vs 雙腳）診斷
       const distinctActiveCats = [...new Set(nonDmShiShens.map(s => {
         if (['食神','傷官'].includes(s)) return '食傷';
         if (['正財','偏財'].includes(s)) return '財星';
@@ -774,15 +921,6 @@ createApp({
         feetStatus = '單神獨透 (不夠腳/不成正格)';
         feetReport = `天干僅得 1 個十神陣營，正格不夠腳（如傷官無財，雖巧猶貧），缺乏配角連鎖，需歲運補足腳數。`;
       }
-
-      // 4. 同性/異性圖表數據 (依據古圖)
-      const sameDiffMap = {
-        '比劫': { same: '比肩 (同性)', diff: '劫財 (異性)' },
-        '食傷': { same: '食神 (同性)', diff: '傷官 (異性)' },
-        '財星': { same: '偏財 (同性)', diff: '正財 (異性)' },
-        '官殺': { same: '七殺 (同性)', diff: '正官 (異性)' },
-        '印星': { same: '梟神 (同性)', diff: '正印 (異性)' }
-      };
 
       return {
         patternName,
@@ -865,8 +1003,6 @@ createApp({
     // ISO 6-Step 報告生成引擎
     const isoReport = computed(() => {
       if (!result.value || !quantScore.value || !godsInfo.value || !tenGodsTactics.value) return {};
-      const dayGan = result.value.dayGan;
-      const monthZhi = result.value.pillars[1].zhi;
 
       let step1 = `【月令為王，透干定主角】：確定為【${tenGodsTactics.value.patternName}】。${tenGodsTactics.value.mainCharacterReport}`;
 
@@ -1396,7 +1532,8 @@ createApp({
 
     return { 
       name, birthTime, gender, result, selectedDaYun, selectedLiuNian, currentLiuNianObj, effectivePillars,
-      stemRelations, branchCombos, branchClashes, relations, circuitDiagnostics, injuryAlerts, quantScore, godsInfo, tenGodsTactics, isoReport, activeModal,
+      stemRelations, branchCombos, branchClashes, relations, circuitDiagnostics, injuryAlerts, quantScore, godsInfo, tenGodsTactics, godsMap,
+      isFiveElementsComplete, presentElementsStr, missingElementsStr, fiveElementsReport, isoReport, activeModal,
       records, showRecords, saveRecord, loadRecord, deleteRecord, formatTime, openCircuitModal, selectDaYun,
       calculate, getShiShen, getElemClass, get12ChangSheng, getCustomCangGan: zhi => CUSTOM_CANG_GAN[zhi] || [] 
     };
