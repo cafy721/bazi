@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>專業八字排盤（ISO 十神圓環生剋圖版）</title>
+  <title>專業八字排盤（ISO 真八字虛線合化 ＆ 根能量診斷版）</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.min.js"></script>
@@ -26,7 +26,7 @@
     .tag-chong { background-color: #7f1d1d; color: #fca5a5; border: 1px solid #dc2626; }
     .tag-xing { background-color: #701a75; color: #f0abfc; border: 1px solid #c026d3; }
     .tag-stem { background-color: #1e3a8a; color: #93c5fd; border: 1px solid #2563eb; }
-    .tag-trans { background-color: #312e81; color: #c084fc; border: 1px solid #7e22ce; }
+    .tag-trans { background-color: #312e81; color: #c084fc; border: 1px dashed #a855f7; }
     .tag-circuit { background-color: #1e1b4b; color: #818cf8; border: 1px solid #4338ca; }
     
     .tag-alert-xiang { background-color: #854d0e; color: #fef08a; }
@@ -35,6 +35,16 @@
     
     .interactive-char { cursor: pointer; transition: transform 0.15s ease, filter 0.15s ease; }
     .interactive-char:hover { transform: scale(1.15); filter: brightness(1.2); }
+
+    /* 虛線相連合化樣式 */
+    .dotted-combo-box {
+      border: 1.5px dashed #a855f7;
+      background-color: rgba(168, 85, 247, 0.1);
+      border-radius: 8px;
+      padding: 2px 4px;
+      margin-top: 2px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body class="p-3 sm:p-6 min-h-screen">
@@ -42,7 +52,7 @@
 <div id="app" class="max-w-6xl mx-auto">
   <header class="text-center my-4">
     <h1 class="text-2xl font-bold tracking-wider gold-text">八字排盤系統</h1>
-    <p class="text-xs text-slate-400 mt-1">ISO 診斷 ‧ 五行十神同/異性圓環生剋圖 ‧ 五行不全診斷</p>
+    <p class="text-xs text-slate-400 mt-1">ISO 診斷 ‧ 真八字虛線合化 ‧ 化神根能量評估</p>
   </header>
 
   <!-- 輸入區 & 命例管理 -->
@@ -143,7 +153,7 @@
       </div>
     </div>
 
-    <!-- 🌐 專屬新功能：五行十神生剋同/異性圓環圖 (完全復刻筆記原圖) -->
+    <!-- 🌐 專屬新功能：五行十神生剋同/異性圓環圖 -->
     <div v-if="tenGodsTactics" class="card-bg p-5 rounded-2xl border border-amber-500/40 shadow-2xl space-y-4">
       <div class="flex justify-between items-center border-b border-slate-700 pb-2">
         <h2 class="text-sm font-bold gold-text flex items-center gap-2">
@@ -159,75 +169,61 @@
           <svg viewBox="0 0 500 500" class="w-full max-w-[420px] h-auto drop-shadow-2xl select-none">
             
             <defs>
-              <!-- 相生箭頭 (藍色) -->
               <marker id="arrow-sheng" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
                 <path d="M 0 1 L 10 5 L 0 9 z" fill="#38bdf8" />
               </marker>
-              <!-- 相剋箭頭 (紅色) -->
               <marker id="arrow-ke" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
                 <path d="M 0 1 L 10 5 L 0 9 z" fill="#ef4444" />
               </marker>
             </defs>
 
-            <!-- 1. 五行相生外圈 (弧形/圓形連線) -->
+            <!-- 1. 五行相生外圈 -->
             <path d="M 250 110 A 130 130 0 0 1 373 180" fill="none" stroke="#38bdf8" stroke-width="2.5" marker-end="url(#arrow-sheng)" stroke-dasharray="4 2"/>
             <path d="M 373 210 A 130 130 0 0 1 325 330" fill="none" stroke="#38bdf8" stroke-width="2.5" marker-end="url(#arrow-sheng)" stroke-dasharray="4 2"/>
             <path d="M 300 345 A 130 130 0 0 1 200 345" fill="none" stroke="#38bdf8" stroke-width="2.5" marker-end="url(#arrow-sheng)" stroke-dasharray="4 2"/>
             <path d="M 175 330 A 130 130 0 0 1 127 210" fill="none" stroke="#38bdf8" stroke-width="2.5" marker-end="url(#arrow-sheng)" stroke-dasharray="4 2"/>
             <path d="M 127 180 A 130 130 0 0 1 250 110" fill="none" stroke="#38bdf8" stroke-width="2.5" marker-end="url(#arrow-sheng)" stroke-dasharray="4 2"/>
 
-            <!-- 相生文字 -->
             <text x="325" y="130" fill="#38bdf8" font-size="12" font-weight="bold">生</text>
             <text x="370" y="275" fill="#38bdf8" font-size="12" font-weight="bold">生</text>
             <text x="245" y="375" fill="#38bdf8" font-size="12" font-weight="bold">生</text>
             <text x="120" y="275" fill="#38bdf8" font-size="12" font-weight="bold">生</text>
             <text x="165" y="130" fill="#38bdf8" font-size="12" font-weight="bold">生</text>
 
-            <!-- 2. 五行相剋五角星內線 (相剋) -->
-            <!-- 印梟 (250,130) -> 食傷 (325,320) -->
+            <!-- 2. 五行相剋五角星內線 -->
             <line x1="250" y1="150" x2="315" y2="300" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arrow-ke)"/>
-            <!-- 食傷 (325,320) -> 官殺 (145,200) -->
             <line x1="305" y1="310" x2="165" y2="210" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arrow-ke)"/>
-            <!-- 官殺 (145,200) -> 比劫 (355,200) -->
             <line x1="170" y1="200" x2="330" y2="200" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arrow-ke)"/>
-            <!-- 比劫 (355,200) -> 財 (175,320) -->
             <line x1="340" y1="210" x2="195" y2="310" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arrow-ke)"/>
-            <!-- 財 (175,320) -> 印梟 (250,130) -->
             <line x1="185" y1="300" x2="240" y2="150" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arrow-ke)"/>
 
-            <!-- 3. 五大主氣泡 (印梟、比劫、食傷、財、官殺) -->
-            <!-- 印梟 (頂部) -->
+            <!-- 3. 五大主氣泡 -->
             <g :opacity="godsMap['印星']?.score > 0 ? 1 : 0.35">
               <circle cx="250" cy="130" r="28" fill="#1e293b" stroke="#38bdf8" stroke-width="3" />
               <text x="250" y="135" text-anchor="middle" fill="#f8fafc" font-size="14" font-weight="bold">印梟</text>
             </g>
 
-            <!-- 比劫 (右上) -->
             <g :opacity="godsMap['比劫']?.score > 0 ? 1 : 0.35">
               <circle cx="355" cy="200" r="28" fill="#1e293b" stroke="#22c55e" stroke-width="3" />
               <text x="355" y="205" text-anchor="middle" fill="#f8fafc" font-size="14" font-weight="bold">比劫</text>
             </g>
 
-            <!-- 食傷 (右下) -->
             <g :opacity="godsMap['食傷']?.score > 0 ? 1 : 0.35">
               <circle cx="325" cy="320" r="28" fill="#1e293b" stroke="#ef4444" stroke-width="3" />
               <text x="325" y="325" text-anchor="middle" fill="#f8fafc" font-size="14" font-weight="bold">食傷</text>
             </g>
 
-            <!-- 財 (左下) -->
             <g :opacity="godsMap['財星']?.score > 0 ? 1 : 0.35">
               <circle cx="175" cy="320" r="28" fill="#1e293b" stroke="#b8621b" stroke-width="3" />
               <text x="175" y="325" text-anchor="middle" fill="#f8fafc" font-size="14" font-weight="bold">財</text>
             </g>
 
-            <!-- 官殺 (左上) -->
             <g :opacity="godsMap['官殺']?.score > 0 ? 1 : 0.35">
               <circle cx="145" cy="200" r="28" fill="#1e293b" stroke="#facc15" stroke-width="3" />
               <text x="145" y="205" text-anchor="middle" fill="#f8fafc" font-size="14" font-weight="bold">官殺</text>
             </g>
 
-            <!-- 4. 外圍放射子氣泡 (同性/異性十神) -->
-            <!-- 印梟 分支 -->
+            <!-- 4. 外圍放射子氣泡 -->
             <line x1="230" y1="110" x2="200" y2="65" stroke="#64748b" stroke-width="1.5" />
             <text x="208" y="90" fill="#94a3b8" font-size="9">同性</text>
             <circle cx="190" cy="50" r="20" fill="#0f172a" stroke="#64748b" stroke-width="1.5" />
@@ -238,7 +234,6 @@
             <circle cx="310" cy="50" r="20" fill="#0f172a" stroke="#64748b" stroke-width="1.5" />
             <text x="310" y="54" text-anchor="middle" fill="#e2e8f0" font-size="11">正印</text>
 
-            <!-- 比劫 分支 -->
             <line x1="380" y1="190" x2="425" y2="155" stroke="#64748b" stroke-width="1.5" />
             <text x="400" y="168" fill="#94a3b8" font-size="9">同性</text>
             <circle cx="440" cy="145" r="20" fill="#0f172a" stroke="#64748b" stroke-width="1.5" />
@@ -249,7 +244,6 @@
             <circle cx="450" cy="235" r="20" fill="#0f172a" stroke="#64748b" stroke-width="1.5" />
             <text x="450" y="239" text-anchor="middle" fill="#e2e8f0" font-size="11">劫財</text>
 
-            <!-- 食傷 分支 -->
             <line x1="345" y1="335" x2="410" y2="365" stroke="#64748b" stroke-width="1.5" />
             <text x="370" y="360" fill="#94a3b8" font-size="9">同性</text>
             <circle cx="425" cy="375" r="20" fill="#0f172a" stroke="#64748b" stroke-width="1.5" />
@@ -260,7 +254,6 @@
             <circle cx="325" cy="435" r="20" fill="#0f172a" stroke="#64748b" stroke-width="1.5" />
             <text x="325" y="439" text-anchor="middle" fill="#e2e8f0" font-size="11">傷官</text>
 
-            <!-- 財 分支 -->
             <line x1="175" y1="350" x2="175" y2="415" stroke="#64748b" stroke-width="1.5" />
             <text x="180" y="385" fill="#94a3b8" font-size="9">異性</text>
             <circle cx="175" cy="435" r="20" fill="#0f172a" stroke="#64748b" stroke-width="1.5" />
@@ -271,7 +264,6 @@
             <circle cx="75" cy="375" r="20" fill="#0f172a" stroke="#64748b" stroke-width="1.5" />
             <text x="75" y="379" text-anchor="middle" fill="#e2e8f0" font-size="11">偏財</text>
 
-            <!-- 官殺 分支 -->
             <line x1="120" y1="210" x2="65" y2="225" stroke="#64748b" stroke-width="1.5" />
             <text x="90" y="230" fill="#94a3b8" font-size="9">異性</text>
             <circle cx="50" cy="235" r="20" fill="#0f172a" stroke="#64748b" stroke-width="1.5" />
@@ -285,7 +277,7 @@
           </svg>
         </div>
 
-        <!-- 右側：五行全齊 vs 五行不全 文字即時診斷 -->
+        <!-- 右側：五行全齊 vs 五行不全 文字診斷 -->
         <div class="w-full md:w-1/2 space-y-3 text-xs">
           <div class="bg-slate-900/90 p-4 rounded-xl border border-slate-700 space-y-2">
             <div class="flex items-center justify-between border-b border-slate-800 pb-2">
@@ -315,13 +307,13 @@
       </div>
     </div>
 
-    <!-- 排位 1: 【 四柱原局 】 ＆ 【 大運與流年連動 】 -->
+    <!-- 排位 1: 【 四柱原局 (顯示真八字 + 虛線合化標籤) 】 ＆ 【 大運與流年連動 】 -->
     <div class="flex flex-col lg:flex-row gap-4">
       <!-- 四柱原局 -->
       <div class="card-bg p-4 rounded-2xl border border-slate-700/50 flex-[3] overflow-x-auto">
         <h2 class="text-sm font-bold text-slate-200 mb-1 border-b border-slate-700 pb-2 text-center flex justify-between items-center">
           <span>【 四柱原局 】</span>
-          <span class="text-[10px] text-amber-500 font-normal">💡 點擊干支查看電路診斷</span>
+          <span class="text-[10px] text-amber-500 font-normal">💡 顯示真八字，點擊干支可睇合化與根能量</span>
         </h2>
         <div class="grid grid-cols-5 text-center text-xs gap-1 min-w-[350px]">
           <div class="text-slate-400 py-2">項目</div>
@@ -331,17 +323,24 @@
           <div class="text-slate-400 py-2">時柱</div>
 
           <div class="text-slate-400 border-t border-slate-800 py-2 self-center">十神</div>
-          <div v-for="p in effectivePillars" :key="p.name" class="border-t border-slate-800 py-2 text-slate-300">
+          <div v-for="p in result.pillars" :key="p.name" class="border-t border-slate-800 py-2 text-slate-300">
             {{ p.isDayMaster ? '日主' : p.shishen }}
           </div>
 
-          <!-- 天干 -->
+          <!-- 天干（保持真八字原干，若有合化顯示虛線框標籤） -->
           <div class="text-slate-400 border-t border-slate-800 py-2 self-center">天干<br><span class="text-[9px] text-indigo-400">(電器)</span></div>
-          <div v-for="p in effectivePillars" :key="p.name" 
-               @click="openCircuitModal('gan', p.name, p.effGan)"
-               :class="['border-t border-slate-800 py-2 text-2xl font-bold interactive-char', getElemClass(p.effGan)]">
-            {{ p.effGan }}
-            <span v-if="p.isTransformed" class="text-[9px] block text-purple-400 font-normal">({{ p.origGan }}化)</span>
+          <div v-for="p in result.pillars" :key="p.name" 
+               @click="openCircuitModal('gan', p.name, p.gan)"
+               class="border-t border-slate-800 py-2 flex flex-col items-center justify-center interactive-char">
+            <span :class="['text-2xl font-bold', getElemClass(p.gan)]">{{ p.gan }}</span>
+            
+            <!-- 虛線相連合化標籤 -->
+            <div v-if="transformedInfo[p.name]" 
+                 @click.stop="openComboDetailModal(p.name)"
+                 class="dotted-combo-box text-[9px] text-purple-300 hover:text-purple-200 font-normal">
+              <span v-if="transformedInfo[p.name].isSuccess">┄ 化[{{ transformedInfo[p.name].targetName }}] ┄</span>
+              <span v-else class="text-rose-400">┄ 隔絕不化 ┄</span>
+            </div>
           </div>
 
           <!-- 地支 -->
@@ -454,14 +453,14 @@
     <!-- 排位 3: 八字氣場事件診斷 -->
     <div class="card-bg p-4 rounded-2xl border border-slate-700/50 space-y-4">
       <div class="border-b border-slate-700 pb-2 flex justify-between items-center">
-        <h3 class="text-sm font-bold gold-text">⚡ 八字氣場事件診斷 (含滴天髓衰沖旺結果)</h3>
+        <h3 class="text-sm font-bold gold-text">⚡ 八字氣場事件診斷 (含虛線合化與勝負結果)</h3>
         <span class="text-[10px] text-slate-400">依據日主十二長生定沖局勝負</span>
       </div>
 
       <!-- 天干事件 -->
       <div class="space-y-1.5">
         <h4 class="text-xs font-bold text-sky-400 flex items-center gap-1">
-          <span>🔴 天干事件 (五合去留變身 / 傷官見官 / 雙殺攻身)</span>
+          <span>🔴 天干事件 (五合去留變身 / 中間相剋隔絕診斷)</span>
         </h4>
         <div v-if="stemRelations.length === 0" class="text-[11px] text-slate-500 italic pl-2">天干無顯著剋戰或合化</div>
         <div class="flex flex-wrap gap-2">
@@ -570,53 +569,97 @@
     <div class="card-bg border border-amber-500/40 rounded-2xl p-5 max-w-md w-full space-y-4 shadow-2xl relative">
       <button @click="activeModal = null" class="absolute top-3 right-3 text-slate-400 hover:text-white text-lg">✕</button>
       
-      <div class="border-b border-slate-700 pb-2">
-        <div class="text-xs text-amber-400 font-bold">{{ activeModal.pillarName }} · {{ activeModal.type === 'gan' ? '天干電器診斷' : '地支電池診斷' }}</div>
-        <div class="text-2xl font-bold flex items-center gap-2 mt-1">
-          <span :class="getElemClass(activeModal.char)">{{ activeModal.char }}</span>
-          <span class="text-xs text-slate-300 font-normal">({{ activeModal.shishen }})</span>
+      <!-- 普通電路彈窗 -->
+      <div v-if="activeModal.modalType !== 'combo'" class="space-y-4">
+        <div class="border-b border-slate-700 pb-2">
+          <div class="text-xs text-amber-400 font-bold">{{ activeModal.pillarName }} · {{ activeModal.type === 'gan' ? '天干電器診斷' : '地支電池診斷' }}</div>
+          <div class="text-2xl font-bold flex items-center gap-2 mt-1">
+            <span :class="getElemClass(activeModal.char)">{{ activeModal.char }}</span>
+            <span class="text-xs text-slate-300 font-normal">({{ activeModal.shishen }})</span>
+          </div>
         </div>
-      </div>
 
-      <!-- 天干電器詳細資訊 -->
-      <div v-if="activeModal.type === 'gan'" class="space-y-2 text-xs">
-        <div class="bg-slate-900 p-2 rounded-lg">
-          <span class="text-slate-400">電器功能：</span>
-          <span class="text-slate-200 font-semibold">{{ activeModal.ganDetails.functionDesc }}</span>
-        </div>
-        <div class="bg-slate-900 p-2 rounded-lg">
-          <span class="text-slate-400">通根供電電池 (含原局與歲運)：</span>
-          <div class="mt-1 space-y-1">
-            <div v-for="b in activeModal.ganDetails.batteries" :key="b.name" class="flex justify-between text-[11px]">
-              <span>
-                <span class="text-amber-400 font-bold">[{{ b.name }}]</span> 
-                ({{ b.zhi }}) - {{ b.cangType }}<b>{{ b.cangStem }}</b>
-              </span>
-              <span class="text-emerald-400">+{{ b.power }} 分</span>
+        <div v-if="activeModal.type === 'gan'" class="space-y-2 text-xs">
+          <div class="bg-slate-900 p-2 rounded-lg">
+            <span class="text-slate-400">電器功能：</span>
+            <span class="text-slate-200 font-semibold">{{ activeModal.ganDetails.functionDesc }}</span>
+          </div>
+          <div class="bg-slate-900 p-2 rounded-lg">
+            <span class="text-slate-400">通根供電電池 (含原局與歲運)：</span>
+            <div class="mt-1 space-y-1">
+              <div v-for="b in activeModal.ganDetails.batteries" :key="b.name" class="flex justify-between text-[11px]">
+                <span>
+                  <span class="text-amber-400 font-bold">[{{ b.name }}]</span> 
+                  ({{ b.zhi }}) - {{ b.cangType }}<b>{{ b.cangStem }}</b>
+                </span>
+                <span class="text-emerald-400">+{{ b.power }} 分</span>
+              </div>
+              <div v-if="activeModal.ganDetails.batteries.length === 0" class="text-rose-400">🚫 截腳無根：天干於當前原局與歲運地支完全無電池支援！</div>
             </div>
-            <div v-if="activeModal.ganDetails.batteries.length === 0" class="text-rose-400">🚫 截腳無根：天干於當前原局與歲運地支完全無電池支援！</div>
+          </div>
+        </div>
+
+        <div v-if="activeModal.type === 'zhi'" class="space-y-2 text-xs">
+          <div class="bg-slate-900 p-2 rounded-lg">
+            <span class="text-slate-400">福袋三氣儲能 (主 > 餘 > 中)：</span>
+            <div class="mt-1 space-y-1">
+              <div v-for="cg in activeModal.zhiDetails.cangs" :key="cg.type" class="flex justify-between text-[11px]">
+                <span><b class="text-slate-400">{{ cg.type }}氣:</b> <b :class="getElemClass(cg.stem)">{{ cg.stem }}</b> ({{ getShiShen(result.dayGan, cg.stem) }})</span>
+                <span class="text-amber-400">{{ cg.w }} 分 ({{ cg.changsheng }})</span>
+              </div>
+            </div>
+          </div>
+          <div class="bg-slate-900 p-2 rounded-lg">
+            <span class="text-slate-400">透干插電狀態：</span>
+            <p class="text-slate-200 mt-1">{{ activeModal.zhiDetails.protrudeDesc }}</p>
           </div>
         </div>
       </div>
 
-      <!-- 地支電池詳細資訊 -->
-      <div v-if="activeModal.type === 'zhi'" class="space-y-2 text-xs">
-        <div class="bg-slate-900 p-2 rounded-lg">
-          <span class="text-slate-400">福袋三氣儲能 (主 > 餘 > 中)：</span>
-          <div class="mt-1 space-y-1">
-            <div v-for="cg in activeModal.zhiDetails.cangs" :key="cg.type" class="flex justify-between text-[11px]">
-              <span><b class="text-slate-400">{{ cg.type }}氣:</b> <b :class="getElemClass(cg.stem)">{{ cg.stem }}</b> ({{ getShiShen(result.dayGan, cg.stem) }})</span>
-              <span class="text-amber-400">{{ cg.w }} 分 ({{ cg.changsheng }})</span>
+      <!-- 🎯 全新：合化與化神根能量專屬診斷彈窗 -->
+      <div v-else class="space-y-4 text-xs">
+        <div class="border-b border-slate-700 pb-2">
+          <div class="text-xs text-purple-400 font-bold">天干五合 ‧ 化神根能量評估</div>
+          <div class="text-xl font-bold flex items-center gap-2 mt-1 text-slate-100">
+            <span>{{ activeModal.comboInfo.pairStr }} 天干五合</span>
+          </div>
+        </div>
+
+        <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-2">
+          <div class="flex justify-between items-center">
+            <span class="text-slate-400">合化狀態：</span>
+            <span :class="['font-bold px-2 py-0.5 rounded', activeModal.comboInfo.isSuccess ? 'bg-purple-950 text-purple-300 border border-purple-700' : 'bg-rose-950 text-rose-300 border border-rose-700']">
+              {{ activeModal.comboInfo.isSuccess ? '合化成功' : '合化不成功 / 阻斷' }}
+            </span>
+          </div>
+
+          <div class="text-slate-300">
+            <b>分析報告：</b> {{ activeModal.comboInfo.report }}
+          </div>
+        </div>
+
+        <!-- 化神地支通根得分 (證明合化有力) -->
+        <div v-if="activeModal.comboInfo.isSuccess" class="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-2">
+          <div class="font-bold text-amber-400 flex justify-between">
+            <span>化神【{{ activeModal.comboInfo.targetName }}】地支通根供電評估：</span>
+            <span class="text-emerald-400">總計: {{ activeModal.comboInfo.totalRootPower }} 分</span>
+          </div>
+
+          <div class="space-y-1 pt-1">
+            <div v-for="rb in activeModal.comboInfo.rootBatteries" :key="rb.pillar" class="flex justify-between text-[11px] bg-slate-950/60 p-1.5 rounded">
+              <span><b>{{ rb.pillar }}</b> ({{ rb.zhi }}) - {{ rb.cangType }}氣【<b>{{ rb.cangStem }}</b>】</span>
+              <span class="text-emerald-400">+{{ rb.power }} 分</span>
+            </div>
+            <div v-if="activeModal.comboInfo.rootBatteries.length === 0" class="text-rose-400 text-[11px]">
+              ⚠️ 徒具虛名：化神於全盤地支完全無根氣，屬「無根合化」，能量虛浮！
             </div>
           </div>
         </div>
-        <div class="bg-slate-900 p-2 rounded-lg">
-          <span class="text-slate-400">透干插電狀態：</span>
-          <p class="text-slate-200 mt-1">{{ activeModal.zhiDetails.protrudeDesc }}</p>
-        </div>
+
+        <button @click="activeModal = null" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 py-2 rounded-xl text-xs font-bold">關閉診斷</button>
       </div>
 
-      <button @click="activeModal = null" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 py-2 rounded-xl text-xs font-bold">關閉診斷</button>
+      <button v-if="activeModal.modalType !== 'combo'" @click="activeModal = null" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 py-2 rounded-xl text-xs font-bold">關閉診斷</button>
     </div>
   </div>
 
@@ -634,7 +677,6 @@ createApp({
     const selectedDaYun = ref(null);
     const selectedLiuNian = ref(null);
     
-    // 分類神煞與警報
     const stemRelations = ref([]);
     const branchCombos = ref([]);
     const branchClashes = ref([]);
@@ -644,8 +686,8 @@ createApp({
     const quantScore = ref(null);
     const activeModal = ref(null);
 
-    // 變身後天干陣列
-    const transformedStems = ref({});
+    // 虛線合化資訊 Map
+    const transformedInfo = ref({});
 
     const records = ref([]);
     const showRecords = ref(false);
@@ -722,10 +764,21 @@ createApp({
       return relMap[categoryName] || '';
     };
 
+    // 五行是否相剋判斷 Helper
+    const isFiveElemClash = (stemA, stemB) => {
+      const eA = STEM_PROPS[stemA].e;
+      const eB = STEM_PROPS[stemB].e;
+      const clashPairs = [
+        ['木','土'],['土','水'],['水','火'],['火','金'],['金','木']
+      ];
+      return clashPairs.some(p => (p[0] === eA && p[1] === eB) || (p[1] === eA && p[0] === eB));
+    };
+
     const effectivePillars = computed(() => {
       if (!result.value) return [];
       return result.value.pillars.map(p => {
-        const effGan = transformedStems.value[p.name] || p.gan;
+        const info = transformedInfo.value[p.name];
+        const effGan = (info && info.isSuccess) ? info.targetStem : p.gan;
         return {
           ...p, effGan, isTransformed: effGan !== p.gan, origGan: p.gan,
           shishen: p.isDayMaster ? '日主' : getShiShen(result.value.dayGan, effGan)
@@ -748,7 +801,6 @@ createApp({
       }
     };
 
-    // 快速查詢十神能量 Map
     const godsMap = computed(() => {
       if (!tenGodsTactics.value) return {};
       let m = {};
@@ -758,10 +810,8 @@ createApp({
       return m;
     });
 
-    // 五行全齊 vs 五行不全 診斷計算
     const presentElements = computed(() => {
       if (!result.value) return [];
-      const dayGan = result.value.dayGan;
       const allGans = effectivePillars.value.map(p => p.effGan);
       const allZhis = result.value.pillars.map(p => p.zhi);
 
@@ -793,12 +843,258 @@ createApp({
       }
     });
 
-    // 🎯 精準分拆：四吉神順用 ＆ 四凶神逆用戰術矩陣引擎
+    // 點擊虛線標籤，開啟「化神根能量」彈窗
+    const openComboDetailModal = (pillarName) => {
+      const info = transformedInfo.value[pillarName];
+      if (!info) return;
+
+      activeModal.value = {
+        modalType: 'combo',
+        pillarName,
+        comboInfo: info
+      };
+    };
+
+    // 🎯 終極天干合化變身、中間相剋隔絕與化神根能量引擎
+    const checkAllRelations = () => {
+      if (!result.value) return;
+
+      const dayGan = result.value.dayGan;
+      
+      let allStemList = result.value.pillars.map(p => ({
+        name: p.name, gan: p.gan, isDayMaster: p.isDayMaster, isOrig: true
+      }));
+
+      if (selectedDaYun.value) {
+        allStemList.push({ name: '大運', gan: selectedDaYun.value.gan, isDayMaster: false, isOrig: false });
+      }
+      if (currentLiuNianObj.value) {
+        allStemList.push({ name: '流年', gan: currentLiuNianObj.value.gan, isDayMaster: false, isOrig: false });
+      }
+
+      const comboRules = [
+        { s1:'甲', s2:'己', res:'己', targetName:'土' },
+        { s1:'乙', s2:'庚', res:'庚', targetName:'金' },
+        { s1:'丙', s2:'辛', res:'壬', targetName:'水' },
+        { s1:'丁', s2:'壬', res:'甲', targetName:'木' },
+        { s1:'戊', s2:'癸', res:'丙', targetName:'火' }
+      ];
+
+      let newTransInfo = {};
+      let sRels = [];
+
+      for (let i = 0; i < allStemList.length; i++) {
+        for (let j = i + 1; j < allStemList.length; j++) {
+          const item1 = allStemList[i];
+          const item2 = allStemList[j];
+          const rule = comboRules.find(r => (r.s1 === item1.gan && r.s2 === item2.gan) || (r.s2 === item1.gan && r.s1 === item2.gan));
+
+          if (rule) {
+            const sourceText = (item1.isOrig && item2.isOrig) ? '原局自帶' : '歲運引動';
+            const pairStr = `${item1.gan}${item2.gan}`;
+
+            // 法則一：日主之合不化
+            if (item1.isDayMaster || item2.isDayMaster) {
+              const other = item1.isDayMaster ? item2 : item1;
+              const shishen = getShiShen(dayGan, other.gan);
+              sRels.push({
+                desc: `${pairStr} 天干五合 (${shishen}情向日主 / 日主之合不化)`,
+                isTrans: false, source: sourceText
+              });
+              continue;
+            }
+
+            // 障礙：檢查中間是否有天干與相合兩干「相剋/七殺隔絕」
+            let isBlockedByClash = false;
+            let blockReason = '';
+
+            if (item1.isOrig && item2.isOrig) {
+              for (let k = i + 1; k < j; k++) {
+                const midGan = allStemList[k].gan;
+                if (isFiveElemClash(midGan, item1.gan) || isFiveElemClash(midGan, item2.gan)) {
+                  isBlockedByClash = true;
+                  blockReason = `因中間【${allStemList[k].name} ${midGan}】相剋隔絕`;
+                  break;
+                }
+              }
+            }
+
+            if (isBlockedByClash) {
+              sRels.push({
+                desc: `${pairStr} 合化不成 (${blockReason})`,
+                isTrans: false, source: sourceText
+              });
+
+              if (item1.isOrig) newTransInfo[item1.name] = { isSuccess: false, pairStr, report: `與【${item2.name} ${item2.gan}】相合，但${blockReason}，合化失敗。` };
+              if (item2.isOrig) newTransInfo[item2.name] = { isSuccess: false, pairStr, report: `與【${item1.name} ${item1.gan}】相合，但${blockReason}，合化失敗。` };
+              continue;
+            }
+
+            // 計算化神的「地支通根能量」(證明合化有力)
+            const targetElem = STEM_PROPS[rule.res].e;
+            let rootBatteries = [];
+            let totalRootPower = 0;
+            const mults = [0.8, 3.0, 2.0, 1.0];
+
+            result.value.pillars.forEach((bp, bIdx) => {
+              const cangs = CUSTOM_CANG_GAN[bp.zhi] || [];
+              cangs.forEach(cg => {
+                if (STEM_PROPS[cg.stem].e === targetElem) {
+                  const power = parseFloat((cg.w * mults[bIdx] * 0.1).toFixed(1));
+                  totalRootPower += power;
+                  rootBatteries.push({
+                    pillar: bp.name, zhi: bp.zhi, cangType: cg.type, cangStem: cg.stem, power
+                  });
+                }
+              });
+            });
+
+            totalRootPower = parseFloat(totalRootPower.toFixed(1));
+            const isPowerful = totalRootPower >= 1.5;
+
+            const successReport = `${pairStr} 五合化【${rule.targetName}】！地支化神根能量達 ${totalRootPower} 分，${isPowerful ? '合化有力成功！' : '化神根氣薄弱，屬無根合化。'}`;
+
+            if (item1.isOrig) {
+              newTransInfo[item1.name] = {
+                isSuccess: true, pairStr, targetName: rule.targetName, targetStem: rule.res,
+                report: successReport, totalRootPower, rootBatteries
+              };
+            }
+            if (item2.isOrig) {
+              newTransInfo[item2.name] = {
+                isSuccess: true, pairStr, targetName: rule.targetName, targetStem: rule.res,
+                report: successReport, totalRootPower, rootBatteries
+              };
+            }
+
+            sRels.push({
+              desc: `${pairStr} 合化成功 ➔ 虛線連結化【${rule.targetName}】(根能量: ${totalRootPower}分)`,
+              isTrans: true, source: sourceText
+            });
+          }
+        }
+      }
+
+      transformedInfo.value = newTransInfo;
+
+      const curGans = allStemList.map(x => x.gan);
+      const curShiShens = curGans.map(g => getShiShen(dayGan, g));
+      const origGans = result.value.pillars.map(p => p.gan);
+      const checkSource = (chars) => chars.split('').every(c => origGans.includes(c)) ? '原局自帶' : '歲運引動';
+
+      if (curShiShens.includes('傷官') && curShiShens.includes('正官')) {
+        sRels.push({ desc: '天干「傷官見官」', isTrans: false, source: checkSource('傷官正官') });
+      }
+      if (curShiShens.includes('正官') && curShiShens.includes('七殺')) {
+        sRels.push({ desc: '天干「官殺混雜」', isTrans: false, source: checkSource('正官七殺') });
+      }
+      if (curShiShens.filter(s => s === '七殺').length >= 2) {
+        sRels.push({ desc: '天干「雙七殺攻身」', isTrans: false, source: checkSource('七殺') });
+      }
+
+      stemRelations.value = sRels;
+
+      // 地支合局與沖刑診斷
+      const origZhis = result.value.pillars.map(p => p.zhi);
+      let activeZhis = result.value.pillars.map(p => ({ name: p.name, zhi: p.zhi, isOrig: true }));
+      
+      if (selectedDaYun.value) activeZhis.push({ name: '大運', zhi: selectedDaYun.value.zhi, isOrig: false });
+      if (currentLiuNianObj.value) activeZhis.push({ name: '流年', zhi: currentLiuNianObj.value.zhi, isOrig: false });
+
+      const branchStr = activeZhis.map(x => x.zhi).join('');
+      let bCombos = [];
+      let bClashes = [];
+
+      const checkBranchSource = (chars) => chars.split('').every(c => origZhis.includes(c)) ? '原局自帶' : '歲運引動';
+
+      const bSanHes = [
+        ['申','子','辰','三合水局'],
+        ['亥','卯','未','三合木局'],
+        ['寅','午','戌','三合火局'],
+        ['巳','酉','丑','三合金局']
+      ];
+      bSanHes.forEach(sh => {
+        if (branchStr.includes(sh[0]) && branchStr.includes(sh[1]) && branchStr.includes(sh[2])) {
+          bCombos.push({ desc: `${sh[0]}${sh[1]}${sh[2]} ${sh[3]}`, source: checkBranchSource(sh[0]+sh[1]+sh[2]) });
+        }
+      });
+
+      const bHuis = [
+        ['寅','卯','辰','東方木局'],
+        ['巳','午','未','南方火局'],
+        ['申','酉','戌','西方金局'],
+        ['亥','子','丑','北方水局']
+      ];
+      bHuis.forEach(h => {
+        if (branchStr.includes(h[0]) && branchStr.includes(h[1]) && branchStr.includes(h[2])) {
+          bCombos.push({ desc: `${h[0]}${h[1]}${h[2]} 三會方局 (${h[3]})`, source: checkBranchSource(h[0]+h[1]+h[2]) });
+        }
+      });
+
+      const bHes = [['子','丑','合土'],['寅','亥','合木'],['卯','戌','合火'],['辰','酉','合金'],['巳','申','合水'],['午','未','合土/火']];
+      bHes.forEach(h => {
+        if (branchStr.includes(h[0]) && branchStr.includes(h[1])) {
+          bCombos.push({ desc: `${h[0]}${h[1]} 六合 (${h[2]})`, source: checkBranchSource(h[0]+h[1]) });
+        }
+      });
+
+      const bChongs = [['子','午'],['丑','未'],['寅','申'],['卯','酉'],['辰','戌'],['巳','亥']];
+      const strongStages = ['長生','冠帶','臨官','帝旺'];
+
+      for (let i = 0; i < activeZhis.length; i++) {
+        for (let j = i + 1; j < activeZhis.length; j++) {
+          const z1 = activeZhis[i];
+          const z2 = activeZhis[j];
+          
+          const isClash = bChongs.some(c => (c[0] === z1.zhi && c[1] === z2.zhi) || (c[1] === z1.zhi && c[0] === z2.zhi));
+          if (isClash) {
+            const cs1 = get12ChangSheng(dayGan, z1.zhi);
+            const cs2 = get12ChangSheng(dayGan, z2.zhi);
+            const is1Strong = strongStages.includes(cs1);
+            const is2Strong = strongStages.includes(cs2);
+
+            let resultNote = '';
+            if (!is1Strong && is2Strong) {
+              resultNote = `(衰沖旺 ➔ 旺神發！${z2.zhi}${cs2} 旺上加旺/供電爆發)`;
+            } else if (is1Strong && !is2Strong) {
+              resultNote = `(旺沖衰 ➔ 衰者拔！${z2.zhi}${cs2} 根氣徹底被拔除)`;
+            } else if (is1Strong && is2Strong) {
+              resultNote = `(兩強相沖，宮位大震蕩)`;
+            } else {
+              resultNote = `(兩弱相沖，互相損耗)`;
+            }
+
+            const srcText = (z1.isOrig && z2.isOrig) ? '原局自帶' : '歲運引動';
+            bClashes.push({ type: 'chong', desc: `${z1.zhi}${z2.zhi} 六沖 ${resultNote}`, source: srcText });
+          }
+        }
+      }
+
+      if (branchStr.includes('寅') && branchStr.includes('巳') && branchStr.includes('申')) {
+        bClashes.push({ type: 'xing', desc: '寅巳申 三刑 (無恩之刑)', source: checkBranchSource('寅巳申') });
+      }
+      if (branchStr.includes('丑') && branchStr.includes('戌') && branchStr.includes('未')) {
+        bClashes.push({ type: 'xing', desc: '丑戌未 三刑 (恃勢之刑)', source: checkBranchSource('丑戌未') });
+      }
+      if (branchStr.includes('子') && branchStr.includes('卯')) {
+        bClashes.push({ type: 'xing', desc: '子卯 相刑 (無禮之刑)', source: checkBranchSource('子卯') });
+      }
+      
+      ['辰','午','酉','亥'].forEach(zx => {
+        if (branchStr.split(zx).length - 1 >= 2) {
+          bClashes.push({ type: 'xing', desc: `${zx}${zx} 地支自刑`, source: checkBranchSource(zx+zx) });
+        }
+      });
+
+      branchCombos.value = bCombos;
+      branchClashes.value = bClashes;
+      relations.value = bCombos.concat(bClashes);
+    };
+
     const tenGodsTactics = computed(() => {
       if (!result.value || !godsInfo.value) return null;
       const dayGan = result.value.dayGan;
       const geShenFull = godsInfo.value.geShen;
-      const isYangDM = STEM_PROPS[dayGan].y === 0;
 
       let scores = { '比劫': 0, '食傷': 0, '財星': 0, '官殺': 0, '印星': 0 };
       const pillarMultipliers = [0.8, 3.0, 2.0, 1.0];
@@ -836,67 +1132,29 @@ createApp({
       let mainCharacterReport = '';
 
       if (mainGod === '正官') {
-        if (nonDmShiShens.includes('正印') || nonDmShiShens.includes('偏印')) {
-          patternName = '正官佩印格';
-          tacticalPrinciple = '吉神順用 (正官為主，印護正官)';
-          mainCharacterReport = '月令透正官為主角立格【正官佩印】。正官為主，印星保護正官防傷官損害。';
-        } else {
-          patternName = '正官格';
-          tacticalPrinciple = '吉神順用 (正官為主)';
-          mainCharacterReport = '月令透正官為主角立格【正官格】。喜財生官，忌食傷剋官。';
-        }
+        patternName = nonDmShiShens.includes('正印') || nonDmShiShens.includes('偏印') ? '正官佩印格' : '正官格';
+        tacticalPrinciple = '吉神順用 (正官為主)';
+        mainCharacterReport = '月令透正官為主角立格【正官格】。喜財生官，忌食傷剋官。';
       } else if (mainGod === '正印' || mainGod === '偏印') {
-        if (nonDmShiShens.includes('正官') || nonDmShiShens.includes('七殺')) {
-          patternName = '印綬用官格';
-          tacticalPrinciple = '吉神順用 (印綬為主，官生旺印)';
-          mainCharacterReport = '月令透印星為主角立格【印綬用官】。印星為主，官星生旺印星，貴氣自天成。';
-        } else if (mainGod === '偏印' && nonDmShiShens.includes('食神')) {
-          patternName = '偏印透食格 (梟印奪食)';
-          tacticalPrinciple = '凶神逆用 (梟印為主，忌財壞印)';
-          mainCharacterReport = '月令透偏印為主角立格【偏印透食】。梟印為主角（梟印奪食），古人忌見財星壞印傷官途！';
-        } else {
-          patternName = '印綬格';
-          tacticalPrinciple = '吉神順用';
-          mainCharacterReport = '月令透印星為主角立格【印綬格】。喜官殺生印，忌財星壞印。';
-        }
+        patternName = nonDmShiShens.includes('正官') || nonDmShiShens.includes('七殺') ? '印綬用官格' : '印綬格';
+        tacticalPrinciple = '吉神順用';
+        mainCharacterReport = '月令透印星為主角立格【印綬格】。喜官殺生印，忌財星壞印。';
       } else if (mainGod === '正財' || mainGod === '偏財') {
-        if (nonDmShiShens.includes('食神') || nonDmShiShens.includes('傷官')) {
-          patternName = '財逢食生格';
-          tacticalPrinciple = '吉神順用 (財星為主，食為生財工具)';
-          mainCharacterReport = '月令透財星為主角立格【財逢食生】。財格為主，食神只是生財工具，官星可防比劫奪財！';
-        } else {
-          patternName = '財格';
-          tacticalPrinciple = '吉神順用';
-          mainCharacterReport = '月令透財星為主角立格【財格】。喜食傷生財，忌比劫奪財。';
-        }
+        patternName = '財格';
+        tacticalPrinciple = '吉神順用';
+        mainCharacterReport = '月令透財星為主角立格【財格】。喜食傷生財，忌比劫奪財。';
       } else if (mainGod === '食神') {
-        if (nonDmShiShens.includes('正財') || nonDmShiShens.includes('偏財')) {
-          patternName = '食神生財格';
-          tacticalPrinciple = '吉神順用 (食神為主，財星通關)';
-          mainCharacterReport = '月令透食神為主角立格【食神生財】。食神才為男主角，財星為通關保護財源。';
-        } else if (nonDmShiShens.includes('偏印')) {
-          patternName = '食神逢梟格';
-          tacticalPrinciple = '吉神順用 (食神為主，喜財制梟保福)';
-          mainCharacterReport = '月令透食神為主角立格【食神逢梟】。食神福祉被梟印所奪，喜天干透財星制梟保平安！';
-        } else {
-          patternName = '食神格';
-          tacticalPrinciple = '吉神順用';
-          mainCharacterReport = '月令透食神為主角立格【食神格】。喜身旺生食，忌梟印奪食。';
-        }
+        patternName = '食神格';
+        tacticalPrinciple = '吉神順用';
+        mainCharacterReport = '月令透食神為主角立格【食神格】。喜身旺生食，忌梟印奪食。';
       } else if (mainGod === '七殺') {
-        if (nonDmShiShens.includes('食神') && (nonDmShiShens.includes('正印') || nonDmShiShens.includes('偏印'))) {
-          patternName = '殺逢食制露印格 (去食就殺印)';
-          tacticalPrinciple = '凶神逆用 (去食就殺印，放棄食制專走殺印)';
-          mainCharacterReport = '月令透七殺，同透食神與印星！食印衝突（印剋食），必須【去食就殺印】，專心走殺印相生大貴路線！';
-        } else {
-          patternName = '七殺格';
-          tacticalPrinciple = '凶神逆用 (食神制殺 / 印星化殺)';
-          mainCharacterReport = '月令透七殺為主角立格【七殺格】。喜食神制殺或印星化殺，最忌財生殺凶上加凶！';
-        }
-      } else if (mainGod === '傷官') {
+        patternName = '七殺格';
+        tacticalPrinciple = '凶神逆用';
+        mainCharacterReport = '月令透七殺為主角立格【七殺格】。喜食神制殺或印星化殺，最忌財生殺！';
+      } else {
         patternName = '傷官格';
-        tacticalPrinciple = '凶神逆用 (傷官佩印 / 傷官生財)';
-        mainCharacterReport = '月令透傷官為主角立格【傷官格】。喜佩印制其戾氣或生財化戾，最忌劫財生扶傷官。';
+        tacticalPrinciple = '凶神逆用';
+        mainCharacterReport = '月令透傷官為主角立格【傷官格】。喜佩印制其戾氣或生財化戾。';
       }
 
       const distinctActiveCats = [...new Set(nonDmShiShens.map(s => {
@@ -908,26 +1166,13 @@ createApp({
       }))];
 
       const feetCount = distinctActiveCats.length;
-      let feetStatus = '三神完備格 (夠腳)';
-      let feetReport = '';
-
-      if (feetCount >= 3) {
-        feetStatus = '三神完備格 (夠腳)';
-        feetReport = `天干包含 3 個或以上十神陣營 (${distinctActiveCats.join('+')})，【格局夠腳】！日主可轉為低調內斂，交由十神電路自動運轉成格。`;
-      } else if (feetCount === 2) {
-        feetStatus = '雙神成格 (缺一腳/需日主撐場)';
-        feetReport = `天干僅得 2 個十神陣營 (${distinctActiveCats.join('+')})，【不夠腳】！日主必須轉為高調撐場，極度依賴「身強/日主有根」方能成格發揮威力！`;
-      } else {
-        feetStatus = '單神獨透 (不夠腳/不成正格)';
-        feetReport = `天干僅得 1 個十神陣營，正格不夠腳（如傷官無財，雖巧猶貧），缺乏配角連鎖，需歲運補足腳數。`;
-      }
+      let feetStatus = feetCount >= 3 ? '三神完備格 (夠腳)' : '雙神成格 (缺一腳/需日主撐場)';
+      let feetReport = feetCount >= 3 ? 
+        `天干包含 3 個十神陣營，【格局夠腳】！日主可轉低調，交由十神自動運轉成格。` :
+        `天干僅得 2 個十神陣營，【缺一腳】！日主必須轉為高調撐場，極度依賴「身強/日主有根」！`;
 
       return {
-        patternName,
-        feetStatus,
-        tacticalPrinciple,
-        mainCharacterReport,
-        feetReport,
+        patternName, feetStatus, tacticalPrinciple, mainCharacterReport, feetReport,
         categories: [
           { name: '印星', catKey: '印星', elem: getTenGodElem(dayGan, '印星'), sameSexName: '梟神', diffSexName: '正印' },
           { name: '比劫', catKey: '比劫', elem: getTenGodElem(dayGan, '比劫'), sameSexName: '比肩', diffSexName: '劫財' },
@@ -950,7 +1195,6 @@ createApp({
       };
     });
 
-    // 推導用神喜忌
     const godsInfo = computed(() => {
       if (!result.value || !quantScore.value) return null;
       const dayGan = result.value.dayGan;
@@ -985,43 +1229,28 @@ createApp({
       const eSeal = getTenGodElem(dayGan, '印星');
       const eSelf = getTenGodElem(dayGan, '比劫');
 
-      let yongShen = '', xiShen = '', jiShen = '';
-
-      if (isStrong) {
-        yongShen = `食傷 (${eFood}) / 官殺 (${eOfficer})`;
-        xiShen = `食傷 (${eFood})、財星 (${eWealth})、官殺 (${eOfficer})`;
-        jiShen = `印星 (${eSeal})、比劫 (${eSelf})`;
-      } else {
-        yongShen = `印星 (${eSeal}) / 比劫 (${eSelf})`;
-        xiShen = `印星 (${eSeal})、比劫 (${eSelf})`;
-        jiShen = `財星 (${eWealth})、七殺 (${eOfficer})`;
-      }
+      let yongShen = isStrong ? `食傷 (${eFood}) / 官殺 (${eOfficer})` : `印星 (${eSeal}) / 比劫 (${eSelf})`;
+      let xiShen = isStrong ? `食傷 (${eFood})、財星 (${eWealth})、官殺 (${eOfficer})` : `印星 (${eSeal})、比劫 (${eSelf})`;
+      let jiShen = isStrong ? `印星 (${eSeal})、比劫 (${eSelf})` : `財星 (${eWealth})、七殺 (${eOfficer})`;
 
       return { geShen, yongShen, xiShen, jiShen };
     });
 
-    // ISO 6-Step 報告生成引擎
     const isoReport = computed(() => {
       if (!result.value || !quantScore.value || !godsInfo.value || !tenGodsTactics.value) return {};
 
       let step1 = `【月令為王，透干定主角】：確定為【${tenGodsTactics.value.patternName}】。${tenGodsTactics.value.mainCharacterReport}`;
-
       let step2 = `同黨能量 ${quantScore.value.allyScore} 分 vs 異黨能量 ${quantScore.value.diffScore} 分 (比率 ${quantScore.value.ratio})，判定為【${quantScore.value.verdict}】。${tenGodsTactics.value.feetReport}`;
-
       let step3 = `用神(相神/樞紐)鎖定為【${godsInfo.value.yongShen}】。喜神：${godsInfo.value.xiShen}；忌神：${godsInfo.value.jiShen}。`;
-
       let step4 = circuitDiagnostics.value.length > 0 ? circuitDiagnostics.value.join('；') : '全盤電路運作平穩，無極端蓋頭或截腳。';
-      
       let allStemStr = stemRelations.value.map(s => s.desc).join('；');
       let allBranchStr = branchCombos.value.concat(branchClashes.value).map(b => b.desc).join('；');
       let step5 = `天干事件：${allStemStr || '無'}；地支戰場：${allBranchStr || '無'}。`;
-
       let step6 = injuryAlerts.value.length > 0 ? injuryAlerts.value.map(a => a.desc).join('；') : '當前歲運未引發傷相、傷格或傷身之三層重大危機。';
 
       return { step1, step2, step3, step4, step5, step6 };
     });
 
-    // 彈窗 Modal
     const openCircuitModal = (type, pillarName, char) => {
       const dayGan = result.value.dayGan;
       const shishen = type === 'gan' ? (char === dayGan ? '日主' : getShiShen(dayGan, char)) : '地支宮位';
@@ -1056,234 +1285,18 @@ createApp({
           });
         });
 
-        ganDetails = {
-          functionDesc: `${shishen} 電器，主動外顯發揮社交與事業功能。`,
-          batteries
-        };
+        ganDetails = { functionDesc: `${shishen} 電器，主動外顯發揮社交與事業功能。`, batteries };
       } else {
         const cangs = CUSTOM_CANG_GAN[char] || [];
         const effGans = effectivePillars.value.map(p => p.effGan);
         const protrudes = cangs.filter(cg => effGans.includes(cg.stem)).map(cg => cg.stem);
-        
         let protrudeDesc = protrudes.length > 0 ? `成功向上插電透干：${protrudes.join(', ')}` : '🚫 蓋頭不透：福袋藏干未能在天干顯現！';
-
         zhiDetails = { cangs, protrudeDesc };
       }
 
-      activeModal.value = { type, pillarName, char, shishen, ganDetails, zhiDetails };
+      activeModal.value = { modalType: 'normal', type, pillarName, char, shishen, ganDetails, zhiDetails };
     };
 
-    // 獨立全天干掃描（含大運流年）
-    const checkAllRelations = () => {
-      if (!result.value) return;
-
-      const dayGan = result.value.dayGan;
-      
-      let allStemList = result.value.pillars.map(p => ({
-        name: p.name, gan: p.gan, isDayMaster: p.isDayMaster, isOrig: true
-      }));
-
-      if (selectedDaYun.value) {
-        allStemList.push({ name: '大運', gan: selectedDaYun.value.gan, isDayMaster: false, isOrig: false });
-      }
-      if (currentLiuNianObj.value) {
-        allStemList.push({ name: '流年', gan: currentLiuNianObj.value.gan, isDayMaster: false, isOrig: false });
-      }
-
-      const comboRules = [
-        { s1:'甲', s2:'己', res:'己', targetName:'己土' },
-        { s1:'乙', s2:'庚', res:'庚', targetName:'庚金' },
-        { s1:'丙', s2:'辛', res:'壬', targetName:'壬水' },
-        { s1:'丁', s2:'壬', res:'甲', targetName:'甲木' },
-        { s1:'戊', s2:'癸', res:'丙', targetName:'丙火' }
-      ];
-
-      let newTransStems = {};
-      let sRels = [];
-
-      for (let i = 0; i < allStemList.length; i++) {
-        for (let j = i + 1; j < allStemList.length; j++) {
-          const item1 = allStemList[i];
-          const item2 = allStemList[j];
-          const rule = comboRules.find(r => (r.s1 === item1.gan && r.s2 === item2.gan) || (r.s2 === item1.gan && r.s1 === item2.gan));
-
-          if (rule) {
-            const sourceText = (item1.isOrig && item2.isOrig) ? '原局自帶' : '歲運引動';
-
-            if (item1.isDayMaster || item2.isDayMaster) {
-              const other = item1.isDayMaster ? item2 : item1;
-              const shishen = getShiShen(dayGan, other.gan);
-              sRels.push({
-                desc: `${item1.gan}${item2.gan} 天干五合 (${shishen}情向日主 / 日主之合不化)`,
-                isTrans: false, source: sourceText
-              });
-              continue;
-            }
-
-            let isBlocked = false;
-            if (item1.isOrig && item2.isOrig) {
-              for (let k = i + 1; k < j; k++) {
-                const midGan = allStemList[k].gan;
-                if (getShiShen(item1.gan, midGan) === '七殺' || getShiShen(item2.gan, midGan) === '七殺') {
-                  isBlocked = true;
-                  break;
-                }
-              }
-            }
-
-            if (isBlocked) {
-              sRels.push({
-                desc: `${item1.gan}${item2.gan} 合化失敗 (因中間七殺隔絕)`,
-                isTrans: false, source: sourceText
-              });
-              continue;
-            }
-
-            if (item1.isOrig) {
-              if (rule.s1 === '甲' && rule.s2 === '己') {
-                if (item1.gan === '甲') newTransStems[item1.name] = '己';
-              } else {
-                newTransStems[item1.name] = rule.res;
-              }
-            }
-            if (item2.isOrig) {
-              if (rule.s1 === '甲' && rule.s2 === '己') {
-                if (item2.gan === '甲') newTransStems[item2.name] = '己';
-              } else {
-                newTransStems[item2.name] = rule.res;
-              }
-            }
-
-            sRels.push({
-              desc: `${item1.gan}${item2.gan} 合化成功 ➔ 去留變身【${rule.targetName}】`,
-              isTrans: true, source: sourceText
-            });
-          }
-        }
-      }
-
-      transformedStems.value = newTransStems;
-
-      const curGans = allStemList.map(x => x.gan);
-      const curShiShens = curGans.map(g => getShiShen(dayGan, g));
-      const origGans = result.value.pillars.map(p => p.gan);
-      const checkSource = (chars) => chars.split('').every(c => origGans.includes(c)) ? '原局自帶' : '歲運引動';
-
-      if (curShiShens.includes('傷官') && curShiShens.includes('正官')) {
-        sRels.push({ desc: '天干「傷官見官」', isTrans: false, source: checkSource('傷官正官') });
-      }
-      if (curShiShens.includes('正官') && curShiShens.includes('七殺')) {
-        sRels.push({ desc: '天干「官殺混雜」', isTrans: false, source: checkSource('正官七殺') });
-      }
-      if (curShiShens.filter(s => s === '七殺').length >= 2) {
-        sRels.push({ desc: '天干「雙七殺攻身」', isTrans: false, source: checkSource('七殺') });
-      }
-
-      stemRelations.value = sRels;
-
-      // 地支合局與滴天髓沖刑勝負診斷
-      const origZhis = result.value.pillars.map(p => p.zhi);
-      let activeZhis = result.value.pillars.map(p => ({ name: p.name, zhi: p.zhi, isOrig: true }));
-      
-      if (selectedDaYun.value) activeZhis.push({ name: '大運', zhi: selectedDaYun.value.zhi, isOrig: false });
-      if (currentLiuNianObj.value) activeZhis.push({ name: '流年', zhi: currentLiuNianObj.value.zhi, isOrig: false });
-
-      const branchStr = activeZhis.map(x => x.zhi).join('');
-      let bCombos = [];
-      let bClashes = [];
-
-      const checkBranchSource = (chars) => chars.split('').every(c => origZhis.includes(c)) ? '原局自帶' : '歲運引動';
-
-      // 三合局
-      const bSanHes = [
-        ['申','子','辰','三合水局'],
-        ['亥','卯','未','三合木局'],
-        ['寅','午','戌','三合火局'],
-        ['巳','酉','丑','三合金局']
-      ];
-      bSanHes.forEach(sh => {
-        if (branchStr.includes(sh[0]) && branchStr.includes(sh[1]) && branchStr.includes(sh[2])) {
-          bCombos.push({ desc: `${sh[0]}${sh[1]}${sh[2]} ${sh[3]}`, source: checkBranchSource(sh[0]+sh[1]+sh[2]) });
-        }
-      });
-
-      // 三會方局
-      const bHuis = [
-        ['寅','卯','辰','東方木局'],
-        ['巳','午','未','南方火局'],
-        ['申','酉','戌','西方金局'],
-        ['亥','子','丑','北方水局']
-      ];
-      bHuis.forEach(h => {
-        if (branchStr.includes(h[0]) && branchStr.includes(h[1]) && branchStr.includes(h[2])) {
-          bCombos.push({ desc: `${h[0]}${h[1]}${h[2]} 三會方局 (${h[3]})`, source: checkBranchSource(h[0]+h[1]+h[2]) });
-        }
-      });
-
-      // 地支六合
-      const bHes = [['子','丑','合土'],['寅','亥','合木'],['卯','戌','合火'],['辰','酉','合金'],['巳','申','合水'],['午','未','合土/火']];
-      bHes.forEach(h => {
-        if (branchStr.includes(h[0]) && branchStr.includes(h[1])) {
-          bCombos.push({ desc: `${h[0]}${h[1]} 六合 (${h[2]})`, source: checkBranchSource(h[0]+h[1]) });
-        }
-      });
-
-      // 滴天髓地支六沖力量引擎
-      const bChongs = [['子','午'],['丑','未'],['寅','申'],['卯','酉'],['辰','戌'],['巳','亥']];
-      const strongStages = ['長生','冠帶','臨官','帝旺'];
-
-      for (let i = 0; i < activeZhis.length; i++) {
-        for (let j = i + 1; j < activeZhis.length; j++) {
-          const z1 = activeZhis[i];
-          const z2 = activeZhis[j];
-          
-          const isClash = bChongs.some(c => (c[0] === z1.zhi && c[1] === z2.zhi) || (c[1] === z1.zhi && c[0] === z2.zhi));
-          if (isClash) {
-            const cs1 = get12ChangSheng(dayGan, z1.zhi);
-            const cs2 = get12ChangSheng(dayGan, z2.zhi);
-            const is1Strong = strongStages.includes(cs1);
-            const is2Strong = strongStages.includes(cs2);
-
-            let resultNote = '';
-            if (!is1Strong && is2Strong) {
-              resultNote = `(衰沖旺 ➔ 旺神發！${z2.zhi}${cs2} 旺上加旺/供電爆發)`;
-            } else if (is1Strong && !is2Strong) {
-              resultNote = `(旺沖衰 ➔ 衰者拔！${z2.zhi}${cs2} 根氣徹底被拔除)`;
-            } else if (is1Strong && is2Strong) {
-              resultNote = `(兩強相沖，宮位大震蕩)`;
-            } else {
-              resultNote = `(兩弱相沖，互相損耗)`;
-            }
-
-            const srcText = (z1.isOrig && z2.isOrig) ? '原局自帶' : '歲運引動';
-            bClashes.push({ type: 'chong', desc: `${z1.zhi}${z2.zhi} 六沖 ${resultNote}`, source: srcText });
-          }
-        }
-      }
-
-      // 地支三刑與自刑
-      if (branchStr.includes('寅') && branchStr.includes('巳') && branchStr.includes('申')) {
-        bClashes.push({ type: 'xing', desc: '寅巳申 三刑 (無恩之刑)', source: checkBranchSource('寅巳申') });
-      }
-      if (branchStr.includes('丑') && branchStr.includes('戌') && branchStr.includes('未')) {
-        bClashes.push({ type: 'xing', desc: '丑戌未 三刑 (恃勢之刑)', source: checkBranchSource('丑戌未') });
-      }
-      if (branchStr.includes('子') && branchStr.includes('卯')) {
-        bClashes.push({ type: 'xing', desc: '子卯 相刑 (無禮之刑)', source: checkBranchSource('子卯') });
-      }
-      
-      ['辰','午','酉','亥'].forEach(zx => {
-        if (branchStr.split(zx).length - 1 >= 2) {
-          bClashes.push({ type: 'xing', desc: `${zx}${zx} 地支自刑`, source: checkBranchSource(zx+zx) });
-        }
-      });
-
-      branchCombos.value = bCombos;
-      branchClashes.value = bClashes;
-      relations.value = bCombos.concat(bClashes);
-    };
-
-    // 身強弱計算器
     const calcQuantScore = () => {
       if (!result.value) return;
       const dayGan = result.value.dayGan;
@@ -1341,7 +1354,6 @@ createApp({
       quantScore.value = { allyScore: allyScore.toFixed(1), diffScore: diffScore.toFixed(1), ratio, verdict };
     };
 
-    // 動態電路診斷矩陣
     const checkCircuitDiagnostics = () => {
       if (!result.value) return;
       const effPillars = effectivePillars.value;
@@ -1390,7 +1402,6 @@ createApp({
       circuitDiagnostics.value = diags;
     };
 
-    // 三層氣場傷損警報
     const checkInjuryAlerts = () => {
       if (!result.value) return;
       let alerts = [];
@@ -1400,28 +1411,26 @@ createApp({
 
       const qiShaCount = effGans.filter(g => getShiShen(dayGan, g) === '七殺').length;
       if (qiShaCount >= 2) {
-        alerts.push({ level: 'shen', desc: `⚠️ 天干雙透七殺 (${effGans.filter(g=>getShiShen(dayGan,g)==='七殺').join('')}攻身)，宜傷官駕殺或印星化殺 (原局變身)` });
+        alerts.push({ level: 'shen', desc: `⚠️ 天干雙透七殺 (${effGans.filter(g=>getShiShen(dayGan,g)==='七殺').join('')}攻身)，宜傷官駕殺或印星化殺` });
       }
 
       const effShiShens = effGans.map(g => getShiShen(dayGan, g));
       if (effShiShens.includes('傷官') && effShiShens.includes('正官')) {
-        alerts.push({ level: 'ge', desc: '🔴 天干「傷官見官」，主挑戰體制與職場波動 (原局變身)' });
+        alerts.push({ level: 'ge', desc: '🔴 天干「傷官見官」，主挑戰體制與職場波動' });
       }
 
-      if (selectedDaYun.value && getShiShen(dayGan, selectedDaYun.value.gan) === '七殺') alerts.push({ level: 'shen', desc: '⚠️ 大運見七殺直剋日主，嚴防健康意外 (歲運引動)' });
-      if (currentLiuNianObj.value && getShiShen(dayGan, currentLiuNianObj.value.gan) === '七殺') alerts.push({ level: 'shen', desc: '⚠️ 流年見七殺攻身，宜收斂防官非血光 (歲運引動)' });
+      if (selectedDaYun.value && getShiShen(dayGan, selectedDaYun.value.gan) === '七殺') alerts.push({ level: 'shen', desc: '⚠️ 大運見七殺直剋日主，嚴防健康意外' });
+      if (currentLiuNianObj.value && getShiShen(dayGan, currentLiuNianObj.value.gan) === '七殺') alerts.push({ level: 'shen', desc: '⚠️️ 流年見七殺攻身，宜收斂防官非血光' });
 
       const allZhis = [...origZhis];
       if (selectedDaYun.value) allZhis.push(selectedDaYun.value.zhi);
       if (currentLiuNianObj.value) allZhis.push(currentLiuNianObj.value.zhi);
 
       if (allZhis.includes('卯') && allZhis.includes('酉')) {
-        const isOrig = origZhis.includes('卯') && origZhis.includes('酉');
-        alerts.push({ level: 'ge', desc: `🔴 卯酉相沖，格局主氣受震蕩 (${isOrig ? '原局自帶' : '歲運引動'})` });
+        alerts.push({ level: 'ge', desc: `🔴 卯酉相沖，格局主氣受震蕩 (${origZhis.includes('卯') && origZhis.includes('酉') ? '原局自帶' : '歲運引動'})` });
       }
       if (allZhis.includes('寅') && allZhis.includes('申')) {
-        const isOrig = origZhis.includes('寅') && origZhis.includes('申');
-        alerts.push({ level: 'ge', desc: `🔴 寅申相沖，長生逢沖主平台變動 (${isOrig ? '原局自帶' : '歲運引動'})` });
+        alerts.push({ level: 'ge', desc: `🔴 寅申相沖，長生逢沖主平台變動 (${origZhis.includes('寅') && origZhis.includes('申') ? '原局自帶' : '歲運引動'})` });
       }
 
       injuryAlerts.value = alerts;
@@ -1531,10 +1540,10 @@ createApp({
     };
 
     return { 
-      name, birthTime, gender, result, selectedDaYun, selectedLiuNian, currentLiuNianObj, effectivePillars,
+      name, birthTime, gender, result, selectedDaYun, selectedLiuNian, currentLiuNianObj, effectivePillars, transformedInfo,
       stemRelations, branchCombos, branchClashes, relations, circuitDiagnostics, injuryAlerts, quantScore, godsInfo, tenGodsTactics, godsMap,
       isFiveElementsComplete, presentElementsStr, missingElementsStr, fiveElementsReport, isoReport, activeModal,
-      records, showRecords, saveRecord, loadRecord, deleteRecord, formatTime, openCircuitModal, selectDaYun,
+      records, showRecords, saveRecord, loadRecord, deleteRecord, formatTime, openCircuitModal, openComboDetailModal, selectDaYun,
       calculate, getShiShen, getElemClass, get12ChangSheng, getCustomCangGan: zhi => CUSTOM_CANG_GAN[zhi] || [] 
     };
   }
