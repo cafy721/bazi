@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>專業八字排盤（六柱順序 ＆ 矩陣精算終極版）</title>
+  <title>專業八字排盤（五行全缺精算 ＆ 矩陣終極版）</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.min.js"></script>
@@ -123,11 +123,11 @@
     </div>
 
     <!-- ============================================== -->
-    <!-- 1. 核心盤面：四柱與歲運六柱並排 (從左至右排版) -->
+    <!-- 1. 核心盤面：四柱與歲運六柱並排 (由左至右: 年 月 日 時 大運 流年) -->
     <!-- ============================================== -->
     <div class="card-bg p-5 rounded-2xl border border-slate-700/50 shadow-xl overflow-x-auto relative">
       <h2 class="text-sm font-bold text-slate-200 mb-3 border-b border-slate-700 pb-2 flex justify-between items-center">
-        <span>【 {{ selectedDaYun ? '六柱全息連動盤' : '四柱原命盤' }} 】</span>
+        <span>【 {{ selectedDaYun ? '六柱全息連動盤' : '四柱原命盤' }} ＆ 能量得分 】</span>
         <span class="text-[10px] text-amber-500 font-normal">💡 點擊「選干」切換下方取根明細</span>
       </h2>
       
@@ -180,7 +180,7 @@
           <span class="text-[10px] bg-slate-700 text-slate-300 px-1.5 rounded-full">{{ getChangShengScore(get12ChangSheng(result.dayGan, p.zhi)) }}</span>
         </div>
 
-        <!-- 得分按鈕 (僅四柱有分數，觸發矩陣更新) -->
+        <!-- 得分按鈕 (僅四柱有分數) -->
         <div class="text-slate-400 font-bold self-center bg-slate-800/30 py-4 rounded-bl-lg pl-2">得分</div>
         <div v-for="p in displayPillars" :key="'sc'+p.role" :class="['py-2 mx-1 rounded-b-lg flex flex-col items-center justify-center', p.isCore ? 'bg-slate-800/30' : 'bg-purple-900/10']">
           <button v-if="p.isCore" @click="selectedMatrixPillar = p.role" 
@@ -361,10 +361,13 @@
     <!-- 五行圓圖 ＆ 攻守道 -->
     <!-- ============================================== -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- 修復版：只計天干與地支主氣的五行圓圖 -->
       <div v-if="godsInfo" class="card-bg p-5 rounded-2xl border border-slate-700/50 shadow-xl space-y-4">
         <div class="flex justify-between items-center border-b border-slate-700 pb-2">
           <h2 class="text-sm font-bold gold-text">🔮 五行十神生剋圓圖</h2>
-          <span class="text-[10px] text-emerald-400 font-bold border border-emerald-800 bg-emerald-950/30 px-2 py-0.5 rounded">{{ isFiveElementsComplete ? '五行全齊' : '五行不全' }}</span>
+          <span :class="['text-[10px] font-bold border px-2 py-0.5 rounded', isFiveElementsComplete ? 'text-emerald-400 border-emerald-800 bg-emerald-950/30' : 'text-rose-400 border-rose-800 bg-rose-950/30']">
+            {{ isFiveElementsComplete ? '五行全齊' : '五行不全' }}
+          </span>
         </div>
         <div class="flex justify-center py-2">
            <svg viewBox="0 0 500 500" class="w-full max-w-[340px] h-auto drop-shadow-2xl select-none">
@@ -524,9 +527,8 @@ createApp({
     const birthTime = ref('');
     const gender = ref(1);
     const result = ref(null);
-    const viewMode = ref('original');
-    const selectedScorePillar = ref('日柱'); // 預設打開日柱明細
-    const selectedMatrixPillar = ref('日柱'); // 預設高亮日柱
+    const selectedScorePillar = ref('日柱'); 
+    const selectedMatrixPillar = ref('日柱'); 
     const activeModal = ref(null);
 
     const selectedDaYun = ref(null);
@@ -984,7 +986,7 @@ createApp({
         for (let j = i + 1; j < activeZhis.length; j++) {
           const z1 = activeZhis[i]; const z2 = activeZhis[j];
           if (bChongs.some(c => (c[0] === z1.zhi && c[1] === z2.zhi) || (c[1] === z1.zhi && c[0] === z2.zhi))) {
-            let res = ((z1.zhi === '辰' && z2.zhi === '戌') || (z1.zhi === '戌' && z2.zhi === '辰')) ? '(辰戌土宮震盪！)' : '';
+            let res = ((z1.zhi === '辰' && z2.zhi === '戌') || (z1.zhi === '戌' && z2.zhi === '辰')) ? '(辰戌土宮大震盪！)' : '';
             bClashes.push({ type: 'chong', desc: `${z1.zhi}${z2.zhi} 六沖 ${res}`, source: (z1.isOrig && z2.isOrig) ? '原局自帶' : '歲運引動' });
           }
         }
@@ -1077,13 +1079,18 @@ createApp({
       return '「比劫」視角：官殺為比劫嘅【七殺(強力約束)】；食傷為比劫嘅【食傷(才華釋放)】。';
     });
 
+    // 🎯 修正版五行圓圖：僅計算「天干」與「地支主氣」
     const presentElements = computed(() => {
       if (!result.value) return [];
       const allGans = effectivePillars.value.map(p => p.effGan);
       const allZhis = result.value.pillars.map(p => p.zhi);
       let elemSet = new Set();
+      
       allGans.forEach(g => { if(STEM_PROPS[g]) elemSet.add(STEM_PROPS[g].e); });
-      allZhis.forEach(z => { (CUSTOM_CANG_GAN[z] || []).forEach(cg => { if(STEM_PROPS[cg.stem]) elemSet.add(STEM_PROPS[cg.stem].e); }); });
+      allZhis.forEach(z => { 
+        const mainQi = getMainQi(z);
+        if(mainQi && STEM_PROPS[mainQi]) elemSet.add(STEM_PROPS[mainQi].e); 
+      });
       return Array.from(elemSet);
     });
 
@@ -1091,9 +1098,8 @@ createApp({
     const isFiveElementsComplete = computed(() => missingElements.value.length === 0);
     const presentElementsStr = computed(() => presentElements.value.join('、'));
     const missingElementsStr = computed(() => missingElements.value.join('、'));
-    const fiveElementsReport = computed(() => isFiveElementsComplete.value ? '原局五行俱全，【五行全齊】！氣場源源不絕、首尾相生。' : `原局【五行不全】，缺乏五行【${missingElementsStr.value}】！`);
+    const fiveElementsReport = computed(() => isFiveElementsComplete.value ? '原局五行俱全，【五行全齊】！氣場源源不絕、首尾相生。' : `原局【五行不全】，缺乏五行【${missingElementsStr.value}】！氣場傳導易有斷層。`);
 
-    // 🎯 復原被誤刪除之函數 1：電路診斷
     const checkCircuitDiagnostics = () => {
       if (!result.value) return;
       let diags = [];
@@ -1115,20 +1121,12 @@ createApp({
       circuitDiagnostics.value = diags;
     };
 
-    // 🎯 復原被誤刪除之函數 2：傷損警報
     const checkInjuryAlerts = () => {
       if (!result.value) return;
       let alerts = [];
       const dayGan = result.value.dayGan;
       const effGans = effectivePillars.value.map(p => p.effGan);
       if (effGans.filter(g => getShiShen(dayGan, g) === '七殺').length >= 2) alerts.push({ level: 'shen', desc: `⚠️ 天干雙透七殺攻身` });
-      
-      const effShiShens = effGans.map(g => getShiShen(dayGan, g));
-      if (effShiShens.includes('傷官') && effShiShens.includes('正官')) alerts.push({ level: 'ge', desc: '🔴 天干「傷官見官」' });
-
-      if (selectedDaYun.value && getShiShen(dayGan, selectedDaYun.value.gan) === '七殺') alerts.push({ level: 'shen', desc: '⚠️ 大運見七殺攻身' });
-      if (currentLiuNianObj.value && getShiShen(dayGan, currentLiuNianObj.value.gan) === '七殺') alerts.push({ level: 'shen', desc: '⚠️ 流年見七殺攻身' });
-
       injuryAlerts.value = alerts;
     };
 
@@ -1163,7 +1161,6 @@ createApp({
         }
       } catch(e) {
         console.error("Local Storage Error", e);
-        localStorage.removeItem('bazi_records');
         records.value = [];
       }
       const now = new Date();
@@ -1182,7 +1179,6 @@ createApp({
     const loadRecord = (rec) => { name.value = rec.name === '未命名' ? '' : rec.name; gender.value = rec.gender; birthTime.value = rec.birthTime; showRecords.value = false; calculate(); };
     const deleteRecord = (id) => { if(confirm("確定刪除？")) { records.value = records.value.filter(r => r.id !== id); localStorage.setItem('bazi_records', JSON.stringify(records.value)); } };
 
-    // 🎯 復原被誤刪除之函數 3：打開合化彈窗
     const openComboDetailModal = (pillarName) => {
       const info = transformedInfo.value[pillarName];
       if (!info) return;
@@ -1217,12 +1213,7 @@ createApp({
         };
 
         selectedDaYun.value = null; selectedLiuNian.value = null; selectedMatrixPillar.value = '日柱'; selectedScorePillar.value = null;
-        
-        checkAllRelations(); 
-        calcQuantScore(); 
-        checkCircuitDiagnostics(); 
-        checkInjuryAlerts();
-        
+        checkAllRelations(); calcQuantScore(); checkCircuitDiagnostics(); checkInjuryAlerts();
       } catch (error) {
         console.error("Calculation Error:", error);
         alert("計算時發生錯誤，請檢查資料或重試。");
@@ -1230,7 +1221,7 @@ createApp({
     };
 
     return { 
-      name, birthTime, gender, result, viewMode, selectedDaYun, selectedLiuNian, currentLiuNianObj, selectedScorePillar, selectedMatrixPillar,
+      name, birthTime, gender, result, selectedDaYun, selectedLiuNian, currentLiuNianObj, selectedScorePillar, selectedMatrixPillar,
       effectivePillars, transformedInfo, pillarScores, strengthBarPercent, getPillarByRole, getPillarScoreDetail, getMainQi, displayPillars, getPillarWeightLabel,
       perspectiveRole, perspectivePillars, perspectiveTacticalReport,
       stemRelations, branchCombos, branchClashes, relations, circuitDiagnostics, injuryAlerts, quantScore, godsInfo, tenGodsTactics,
