@@ -147,7 +147,7 @@
       </div>
     </div>
 
-    <!-- 🎯 1. 參考圖片 UX/UI：【 四柱盤面 】 -->
+    <!-- 🎯 1. 四柱盤面 (四柱天干與得分卡片) -->
     <div class="card-bg p-5 rounded-2xl border border-slate-700/50 shadow-xl space-y-5">
       <div class="flex justify-between items-center border-b border-slate-700 pb-2">
         <h2 class="text-sm font-bold text-slate-200 flex items-center gap-2">
@@ -200,7 +200,7 @@
         </div>
       </div>
 
-      <!-- 🎯 2. 參考圖片 UX/UI：【 身強弱結論 Bar 】 -->
+      <!-- 🎯 2. 身強弱結論 Bar -->
       <div v-if="quantScore" class="pt-4 border-t border-slate-800 space-y-3">
         <h3 class="text-sm font-bold text-slate-200">身強弱結論</h3>
 
@@ -224,7 +224,7 @@
             <div class="w-[20%] bg-indigo-500/80" title="偏旺候選"></div>
           </div>
 
-          <!-- 刻度與標籤 -->
+          <!-- 刻度標籤 -->
           <div class="flex justify-between text-[10px] text-slate-400 mt-1 font-mono">
             <span>0.45</span>
             <span>0.90</span>
@@ -243,8 +243,8 @@
         </div>
       </div>
 
-      <!-- 🎯 3. 參考圖片 UX/UI：【 四柱取根明細矩陣 ( Matrix Table ) 】 -->
-      <div v-if="selectedMatrixPillar" class="bg-slate-900/90 rounded-2xl p-4 border border-purple-500/30 shadow-2xl space-y-3 text-xs animate-fade-in">
+      <!-- 🎯 3. 四柱取根明細矩陣 ( Matrix Table ) -->
+      <div v-if="selectedMatrixPillar" class="bg-slate-900/90 rounded-2xl p-4 border border-purple-500/30 shadow-2xl space-y-3 text-xs">
         <!-- 矩陣頂欄：當前選中柱天干 -->
         <div class="grid grid-cols-5 text-center border-b border-slate-800 pb-2 font-bold">
           <div class="flex flex-col items-center justify-center">
@@ -329,7 +329,7 @@
     </div>
 
     <!-- 🌐 歲運連動與氣場診斷 (於「四柱 + 歲運」模式下並列展示) -->
-    <div v-if="viewMode === 'transit'" class="space-y-6 animate-fade-in">
+    <div v-if="viewMode === 'transit'" class="space-y-6">
       <!-- 大運選擇區 -->
       <div class="card-bg p-4 rounded-2xl border border-purple-500/40 shadow-xl">
         <div class="flex justify-between items-center border-b border-slate-700 pb-2 mb-3">
@@ -696,35 +696,76 @@ createApp({
       });
     });
 
-    const pillarScores = computed(() => {
-      if (!result.value || effectivePillars.value.length === 0) return [];
-      const dayGan = result.value.dayGan;
-      const mults = { '年柱': 0.8, '月柱': 3.0, '日柱': 2.0, '時柱': 1.0 };
-      
-      return effectivePillars.value.map(p => {
-        const stem = p.effGan;
-        const shishen = p.isDayMaster ? '日主' : getShiShen(dayGan, stem);
-        const isAlly = ['比肩','劫財','正印','偏印'].includes(shishen) || p.isDayMaster;
-        
-        let energy = 0;
-        result.value.pillars.forEach(bIdxP => {
-          const zhi = bIdxP.zhi;
-          const cangs = CUSTOM_CANG_GAN[zhi] || [];
-          const mult = mults[bIdxP.name] || 1.0;
+    // 🎯 1. 柱權重對照表 (時柱 x1.0, 日柱 x2.0, 月柱 x3.0, 年柱 x0.8)
+    const PILLAR_WEIGHTS = { '時柱': 1.0, '日柱': 2.0, '月柱': 3.0, '年柱': 0.8 };
 
-          cangs.forEach(cg => {
-            if (STEM_PROPS[stem].e === STEM_PROPS[cg.stem].e) {
-              let factor = (stem === cg.stem) ? 1.0 : 0.8;
-              energy += cg.w * mult * factor * 0.5;
-            } else if (getShiShen(stem, cg.stem) === '正印' || getShiShen(stem, cg.stem) === '偏印') {
-              energy += cg.w * mult * 0.25;
-            }
+    // 🎯 2. 單格藏干能量計算 (含印比扣減與同柱 Double Up x2)
+    const getMatrixCangDetail = (selectedPillar, targetBranchPillar, cangType) => {
+      if (!result.value) return { stem: '-', roleTag: '', score: '0', isFire: false };
+      const selectedGan = getPillarByRole(selectedPillar).effGan;
+      const targetZhi = getPillarByRole(targetBranchPillar).zhi;
+
+      const cangs = CUSTOM_CANG_GAN[targetZhi] || [];
+      const cang = cangs.find(c => c.type === cangType);
+      if (!cang) return { stem: '-', roleTag: '', score: '0', isFire: false };
+
+      const dayGan = result.value.dayGan;
+      const roleTag = getShiShen(dayGan, cang.stem);
+
+      // 判斷選定天干與該藏干之十神關係 (比肩/劫財/偏印/正印)
+      const rel = getShiShen(selectedGan, cang.stem);
+      let deduction = -1;
+      if (rel === '比肩') deduction = 0;       // 比肩不扣分 (9, 2, 4)
+      else if (rel === '劫財') deduction = 0.5; // 劫財減 0.5 (8.5, 1.5, 3.5)
+      else if (rel === '偏印') deduction = 1.0; // 梟印減 1.0 (8.0, 1.0, 3.0)
+      else if (rel === '正印') deduction = 1.5; // 正印減 1.5 (7.5, 0.5, 2.5)
+
+      if (deduction === -1) {
+        return { stem: cang.stem, roleTag, score: '0', isFire: false };
+      }
+
+      let base = cang.w - deduction;
+      if (base <= 0) return { stem: cang.stem, roleTag, score: '0', isFire: false };
+
+      const weight = PILLAR_WEIGHTS[targetBranchPillar] || 1.0;
+      let score = base * weight;
+
+      // 核心邏輯：同柱取根 Double up (x2)
+      if (selectedPillar === targetBranchPillar) {
+        score *= 2;
+      }
+
+      return { stem: cang.stem, roleTag, score: score.toFixed(1), isFire: score >= 12 };
+    };
+
+    // 🎯 3. 四柱天干 4x4 完整矩陣總分計算
+    const pillarScores = computed(() => {
+      if (!result.value) return [];
+      const dayGan = result.value.dayGan;
+      const roles = ['時柱', '日柱', '月柱', '年柱'];
+
+      return roles.map(stemRole => {
+        const stemPillar = getPillarByRole(stemRole);
+        const stem = stemPillar.effGan;
+        const shishen = stemPillar.isDayMaster ? '日主' : getShiShen(dayGan, stem);
+        const isAlly = ['比肩', '劫財', '正印', '偏印'].includes(shishen) || stemPillar.isDayMaster;
+
+        let totalEnergy = 0;
+
+        roles.forEach(branchRole => {
+          ['主', '中', '餘'].forEach(cangType => {
+            const detail = getMatrixCangDetail(stemRole, branchRole, cangType);
+            totalEnergy += parseFloat(detail.score) || 0;
           });
         });
 
-        if (p.isDayMaster) energy += 10.0; // 日主基本能量加成
-
-        return { name: p.name, gan: stem, shishen, isAlly, energy: parseFloat(energy.toFixed(1)) };
+        return {
+          name: stemRole,
+          gan: stem,
+          shishen,
+          isAlly,
+          energy: parseFloat(totalEnergy.toFixed(1))
+        };
       });
     });
 
@@ -743,36 +784,6 @@ createApp({
       if (ratio <= 2.50) return 60 + ((ratio - 1.25) / 1.25) * 20;
       return Math.min(95, 80 + ((ratio - 2.50) / 2.50) * 20);
     });
-
-    // 🎯 矩陣細項計算：針對選定 Pillar 天干，算其在特定 Pillar 地支藏干的得分
-    const getMatrixCangDetail = (selectedPillar, targetBranchPillar, cangType) => {
-      if (!result.value) return { stem: '-', roleTag: '', score: '0', isFire: false };
-      const selectedGan = getPillarByRole(selectedPillar).effGan;
-      const targetZhi = getPillarByRole(targetBranchPillar).zhi;
-      const mults = { '年柱': 0.8, '月柱': 3.0, '日柱': 2.0, '時柱': 1.0 };
-      
-      const cangs = CUSTOM_CANG_GAN[targetZhi] || [];
-      const cang = cangs.find(c => c.type === cangType);
-      if (!cang) return { stem: '-', roleTag: '', score: '0', isFire: false };
-
-      const dayGan = result.value.dayGan;
-      const roleTag = getShiShen(dayGan, cang.stem);
-      let score = 0;
-      let isFire = false;
-
-      const mult = mults[targetBranchPillar] || 1.0;
-
-      if (STEM_PROPS[selectedGan].e === STEM_PROPS[cang.stem].e) {
-        let factor = (selectedGan === cang.stem) ? 1.0 : 0.8;
-        score = cang.w * mult * factor;
-        if (score >= 12) isFire = true;
-      } else if (getShiShen(selectedGan, cang.stem) === '正印' || getShiShen(selectedGan, cang.stem) === '偏印') {
-        score = cang.w * mult * 0.5;
-        if (score >= 12) isFire = true;
-      }
-
-      return { stem: cang.stem, roleTag, score: score.toFixed(1), isFire };
-    };
 
     const getMatrixColumnSubtotal = (selectedPillar, targetBranchPillar) => {
       const main = parseFloat(getMatrixCangDetail(selectedPillar, targetBranchPillar, '主').score) || 0;
