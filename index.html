@@ -206,7 +206,7 @@
         </div>
       </div>
 
-      <!-- 身強弱結論指標 Bar (完美復刻 UI) -->
+      <!-- 身強弱結論指標 Bar -->
       <div v-if="quantScore" class="pt-6 border-t border-slate-800">
         <div class="flex justify-between items-end mb-4">
           <h3 class="text-sm font-bold text-slate-200">身強弱結論</h3>
@@ -482,7 +482,7 @@ createApp({
     };
 
     const getShiShen = (dayStem, targetStem) => {
-      if (!dayStem || !targetStem) return '';
+      if (!dayStem || !targetStem || !STEM_PROPS[dayStem] || !STEM_PROPS[targetStem]) return '';
       if (dayStem === targetStem) return '比肩';
       const r = {
         '木':{木:'劫',火:'傷',土:'財',金:'官',水:'印'},
@@ -499,7 +499,7 @@ createApp({
     const getSecondLayerTenGod = (baseStem, targetStem) => getShiShen(baseStem, targetStem);
 
     const getTenGodElem = (dayGan, categoryName) => {
-      if (!dayGan) return '';
+      if (!dayGan || !STEM_PROPS[dayGan]) return '';
       const dmElem = STEM_PROPS[dayGan].e;
       const elemOrder = ['木', '火', '土', '金', '水'];
       const idx = elemOrder.indexOf(dmElem);
@@ -924,8 +924,8 @@ createApp({
       const allGans = effectivePillars.value.map(p => p.effGan);
       const allZhis = result.value.pillars.map(p => p.zhi);
       let elemSet = new Set();
-      allGans.forEach(g => elemSet.add(STEM_PROPS[g].e));
-      allZhis.forEach(z => { (CUSTOM_CANG_GAN[z] || []).forEach(cg => elemSet.add(STEM_PROPS[cg.stem].e)); });
+      allGans.forEach(g => { if(STEM_PROPS[g]) elemSet.add(STEM_PROPS[g].e); });
+      allZhis.forEach(z => { (CUSTOM_CANG_GAN[z] || []).forEach(cg => { if(STEM_PROPS[cg.stem]) elemSet.add(STEM_PROPS[cg.stem].e); }); });
       return Array.from(elemSet);
     });
 
@@ -947,9 +947,9 @@ createApp({
       effPillars.forEach(p => {
         const gan = p.effGan; const zhi = p.zhi;
         const cangs = CUSTOM_CANG_GAN[zhi] || [];
-        if (cangs.length > 0 && STEM_PROPS[gan].e === STEM_PROPS[cangs[0].stem].e) diags.push(`${p.name}干支同氣`);
+        if (cangs.length > 0 && STEM_PROPS[gan] && STEM_PROPS[cangs[0].stem] && STEM_PROPS[gan].e === STEM_PROPS[cangs[0].stem].e) diags.push(`${p.name}干支同氣`);
         let hasActiveRoot = false;
-        curZhis.forEach(z => { (CUSTOM_CANG_GAN[z] || []).forEach(cg => { if (STEM_PROPS[gan].e === STEM_PROPS[cg.stem].e || ['正印','偏印'].includes(getShiShen(gan, cg.stem))) hasActiveRoot = true; }); });
+        curZhis.forEach(z => { (CUSTOM_CANG_GAN[z] || []).forEach(cg => { if (STEM_PROPS[gan] && STEM_PROPS[cg.stem] && (STEM_PROPS[gan].e === STEM_PROPS[cg.stem].e || ['正印','偏印'].includes(getShiShen(gan, cg.stem)))) hasActiveRoot = true; }); });
         if (!hasActiveRoot) diags.push(`${p.name}截腳(無根)`);
         if (!cangs.some(cg => curGans.includes(cg.stem))) diags.push(`${p.name}蓋頭(不透)`);
       });
@@ -977,6 +977,15 @@ createApp({
         step6: `【喜忌說明】：喜神為【${godsInfo.value.xiShen}】；忌神為【${godsInfo.value.jiShen}】。`,
         step7: `【大運指引】：歲運逢喜用神吉，逢忌神宜保守應對。`
       };
+    });
+
+    // 監聽大運與流年變化，連動重新計算診斷結果
+    watch([selectedDaYun, selectedLiuNian], () => {
+      if (result.value) {
+        checkAllRelations();
+        checkCircuitDiagnostics();
+        checkInjuryAlerts();
+      }
     });
 
     onMounted(() => {
@@ -1046,7 +1055,7 @@ createApp({
       effectivePillars, transformedInfo, pillarScores, strengthBarPercent, getPillarByRole, getPillarScoreDetail, getMainQi, displayPillars,
       perspectiveRole, perspectivePillars, perspectiveTacticalReport,
       stemRelations, branchCombos, branchClashes, relations, circuitDiagnostics, injuryAlerts, quantScore, godsInfo, tenGodsTactics,
-      isFiveElementsComplete, presentElementsStr, missingElementsStr, fiveElementsReport, iso7Report, activeModal,
+      isFiveElementsComplete, presentElementsStr, missingElementsStr, fiveElementsReport, iso7Report,
       records, showRecords, saveRecord, loadRecord, deleteRecord, formatTime, selectDaYun,
       calculate, getShiShen, getSecondLayerTenGod, getElemClass, get12ChangSheng, getChangShengScore, getCategoryElemInfo,
       getCustomCangGan: zhi => CUSTOM_CANG_GAN[zhi] || [] 
