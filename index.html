@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>專業八字排盤（六柱連動 ＆ 能量計分終極版）</title>
+  <title>專業八字排盤（六柱連動 ＆ 能量計分修復版）</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.min.js"></script>
@@ -32,7 +32,6 @@
     .interactive-char { cursor: pointer; transition: transform 0.15s ease, filter 0.15s ease; }
     .interactive-char:hover { transform: scale(1.12); filter: brightness(1.2); }
 
-    /* 能量條指針過渡效果 */
     .pointer-transition { transition: left 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
   </style>
 </head>
@@ -72,6 +71,7 @@
         <button @click="showRecords = !showRecords" class="flex-1 bg-slate-800 hover:bg-slate-700 text-amber-500 font-bold py-3 rounded-xl transition active:scale-95 border border-slate-600">📂 命庫</button>
       </div>
     </div>
+
     <!-- 命庫清單 -->
     <div v-if="showRecords" class="mt-4 p-3 bg-slate-900/80 rounded-xl border border-slate-700">
       <h3 class="text-xs font-bold text-slate-400 mb-2 border-b border-slate-700 pb-2">已儲存命例</h3>
@@ -88,7 +88,7 @@
     </div>
   </div>
 
-  <div v-if="result" class="space-y-6 animate-fade-in">
+  <div v-if="result" class="space-y-6">
     <!-- 頂部資訊 -->
     <div class="card-bg p-4 rounded-2xl border border-slate-700/50 text-center text-xs text-slate-300 space-y-3">
       <div class="flex justify-center items-center gap-4 flex-wrap">
@@ -118,7 +118,7 @@
     </div>
 
     <!-- ============================================== -->
-    <!-- 1. 核心盤面：四柱與歲運六柱並排 -->
+    <!-- 1. 核心盤面：四柱與歲運六柱並排 (參考圖一) -->
     <!-- ============================================== -->
     <div class="card-bg p-5 rounded-2xl border border-slate-700/50 shadow-xl overflow-x-auto relative">
       <h2 class="text-sm font-bold text-slate-200 mb-3 border-b border-slate-700 pb-2 flex justify-between items-center">
@@ -127,7 +127,7 @@
       </h2>
       
       <!-- 動態 Grid (4或6列) -->
-      <div class="grid text-center text-xs gap-y-2 min-w-[500px]" :style="`grid-template-columns: auto repeat(${displayPillars.length}, minmax(65px, 1fr))`">
+      <div class="grid text-center text-xs gap-y-2 min-w-[500px]" :style="{ gridTemplateColumns: 'auto repeat(' + displayPillars.length + ', minmax(65px, 1fr))' }">
         
         <!-- 標頭 -->
         <div></div>
@@ -175,7 +175,7 @@
           <span class="text-[10px] bg-slate-700 text-slate-300 px-1.5 rounded-full">{{ getChangShengScore(get12ChangSheng(result.dayGan, p.zhi)) }}</span>
         </div>
 
-        <!-- 得分按鈕 (僅四柱有分數) -->
+        <!-- 得分按鈕 (僅四柱有分數，100%對接圖二) -->
         <div class="text-slate-400 font-bold self-center bg-slate-800/30 py-4 rounded-bl-lg pl-2">得分</div>
         <div v-for="p in displayPillars" :key="'sc'+p.role" :class="['py-2 mx-1 rounded-b-lg flex flex-col items-center justify-center', p.isCore ? 'bg-slate-800/30' : 'bg-purple-900/10']">
           <button v-if="p.isCore" @click="selectedScorePillar = (selectedScorePillar === p.role ? null : p.role)" 
@@ -190,7 +190,7 @@
       </div>
 
       <!-- 取根明細展開區 (Toggle) -->
-      <div v-if="selectedScorePillar" class="mt-4 p-4 bg-slate-900/90 rounded-xl border border-amber-500/40 shadow-inner animate-fade-in text-xs">
+      <div v-if="selectedScorePillar" class="mt-4 p-4 bg-slate-900/90 rounded-xl border border-amber-500/40 shadow-inner text-xs">
         <div class="font-bold text-amber-400 mb-2 border-b border-slate-800 pb-2 flex justify-between items-center">
           <span>📊 【{{ selectedScorePillar }}】{{ getPillarScoreDetail(selectedScorePillar).shishen }} ({{ getPillarScoreDetail(selectedScorePillar).gan }}) 能量計算明細</span>
           <span :class="getPillarScoreDetail(selectedScorePillar).isAlly ? 'text-emerald-400' : 'text-rose-400'">總分: {{ getPillarScoreDetail(selectedScorePillar).energy }}</span>
@@ -198,7 +198,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <div v-for="(item, idx) in getPillarScoreDetail(selectedScorePillar).breakdown" :key="idx" class="flex justify-between items-center bg-slate-800/50 p-2 rounded">
             <span class="text-slate-300">{{ item.desc }}</span>
-            <span class="font-bold text-slate-100">{{ item.val > 0 ? '+' : '' }}{{ item.val }} 分</span>
+            <span class="font-bold text-slate-100">{{ item.val }} 分</span>
           </div>
         </div>
         <div v-if="getPillarScoreDetail(selectedScorePillar).breakdown.length === 0" class="text-slate-500 italic p-2 text-center">
@@ -206,7 +206,7 @@
         </div>
       </div>
 
-      <!-- 身強弱結論指標 Bar -->
+      <!-- 🎯 身強弱結論指標 Bar (完美對接圖三) -->
       <div v-if="quantScore" class="pt-6 border-t border-slate-800">
         <div class="flex justify-between items-end mb-4">
           <h3 class="text-sm font-bold text-slate-200">身強弱結論</h3>
@@ -214,20 +214,23 @@
         </div>
         
         <div class="relative pt-6 pb-4 px-2">
+          <!-- 浮動指針 Pin -->
           <div class="absolute top-0 pointer-transition transform -translate-x-1/2 flex flex-col items-center z-10"
                :style="{ left: strengthBarPercent + '%' }">
             <div class="bg-[#1e293b] text-white text-xs font-extrabold px-3 py-1 rounded shadow-lg border border-slate-600">{{ quantScore.ratio }}</div>
             <div class="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px] border-t-slate-600"></div>
           </div>
 
+          <!-- 色彩條 (5段式) -->
           <div class="h-4 w-full flex rounded-sm overflow-hidden shadow-inner">
-            <div class="w-[20%] bg-[#fcd34d]"></div> 
-            <div class="w-[20%] bg-[#86efac]"></div> 
-            <div class="w-[20%] bg-[#22c55e]"></div> 
-            <div class="w-[20%] bg-[#fcd34d]"></div> 
-            <div class="w-[20%] bg-[#94a3b8]"></div> 
+            <div class="w-[20%] bg-[#fcd34d]"></div> <!-- 偏弱 -->
+            <div class="w-[20%] bg-[#86efac]"></div> <!-- 身弱 -->
+            <div class="w-[20%] bg-[#22c55e]"></div> <!-- 中和 -->
+            <div class="w-[20%] bg-[#fcd34d]"></div> <!-- 身強 -->
+            <div class="w-[20%] bg-[#94a3b8]"></div> <!-- 偏旺 -->
           </div>
 
+          <!-- 刻度與標籤 -->
           <div class="relative w-full h-8 mt-1 text-[10px] text-slate-400 font-bold">
             <div class="absolute left-[20%] -translate-x-1/2 flex flex-col items-center"><span class="mb-0.5">0.45</span><span>身弱正格</span></div>
             <div class="absolute left-[40%] -translate-x-1/2 flex flex-col items-center"><span class="mb-0.5">0.90</span><span>中和正格</span></div>
@@ -431,7 +434,7 @@ createApp({
     const records = ref([]);
     const showRecords = ref(false);
 
-    // 🎯 100% 遵照師傅截圖的秘傳藏干表 (主9、餘4、中2)
+    // 🎯 100% 遵照圖四《地支藏干總表》 (主9、中2、餘4)
     const CUSTOM_CANG_GAN = {
       '子': [ { type: '主', stem: '癸', w: 9 }, { type: '中', stem: '辛', w: 2 }, { type: '餘', stem: '壬', w: 4 } ],
       '丑': [ { type: '主', stem: '己', w: 9 }, { type: '中', stem: '辛', w: 2 }, { type: '餘', stem: '癸', w: 4 } ],
@@ -557,7 +560,7 @@ createApp({
       }
     };
 
-    // 🎯 全新動態 6 柱連動 Grid
+    // 🎯 全新動態 6 柱連動 Grid (對接圖一)
     const displayPillars = computed(() => {
       if (!result.value) return [];
       let list = [
@@ -588,7 +591,7 @@ createApp({
       return list;
     });
 
-    // 🎯 核心：精算天干根氣得分 (嚴格對應截圖算式)
+    // 🎯 核心：精算天干根氣得分 (對接圖二 Excel 算式)
     const getStemRootEnergy = (stem, stemPillarName, allPillars) => {
       let totalEnergy = 0;
       let breakdown = [];
@@ -770,24 +773,9 @@ createApp({
               continue;
             }
 
-            const targetElem = STEM_PROPS[rule.res].e;
-            let rootBatteries = [];
-            let totalRootPower = 0;
-            const mults = [0.8, 3.0, 2.0, 1.0];
-            result.value.pillars.forEach((bp, bIdx) => {
-              (CUSTOM_CANG_GAN[bp.zhi] || []).forEach(cg => {
-                if (STEM_PROPS[cg.stem].e === targetElem) {
-                  const power = parseFloat((cg.w * mults[bIdx] * 0.1).toFixed(1));
-                  totalRootPower += power;
-                  rootBatteries.push({ pillar: bp.name, zhi: bp.zhi, cangType: cg.type, cangStem: cg.stem, power });
-                }
-              });
-            });
-
-            const successReport = `${pairStr} 五合化【${rule.targetName}】！地支化神根能量達 ${totalRootPower.toFixed(1)} 分。`;
-            if (item1.isOrig) newTransInfo[item1.name] = { isSuccess: true, pairStr, targetName: rule.targetName, targetStem: rule.res, report: successReport, totalRootPower, rootBatteries };
-            if (item2.isOrig) newTransInfo[item2.name] = { isSuccess: true, pairStr, targetName: rule.targetName, targetStem: rule.res, report: successReport, totalRootPower, rootBatteries };
             sRels.push({ desc: `${pairStr} 合化成功 ➔ 化【${rule.targetName}】`, isTrans: true, source: sourceText });
+            if (item1.isOrig) newTransInfo[item1.name] = { isSuccess: true, pairStr, targetName: rule.targetName, targetStem: rule.res, report: `成功合化為【${rule.targetName}】` };
+            if (item2.isOrig) newTransInfo[item2.name] = { isSuccess: true, pairStr, targetName: rule.targetName, targetStem: rule.res, report: `成功合化為【${rule.targetName}】` };
           }
         }
       }
@@ -979,7 +967,6 @@ createApp({
       };
     });
 
-    // 監聽大運與流年變化，連動重新計算診斷結果
     watch([selectedDaYun, selectedLiuNian], () => {
       if (result.value) {
         checkAllRelations();
