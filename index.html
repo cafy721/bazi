@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>專業八字排盤（ISO 七步論命 ＆ 根氣得分明細修復版）</title>
+  <title>專業八字排盤（極速防護 ＆ 七步 ISO 重排版）</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.min.js"></script>
@@ -170,13 +170,13 @@
           <div class="text-slate-400 py-2 font-bold">時柱</div>
 
           <div class="text-slate-400 border-t border-slate-800 py-2">十神</div>
-          <div v-for="p in pillarScores" :key="'ss'+p.name" class="border-t border-slate-800 py-2 text-slate-300 font-semibold">
+          <div v-for="p in pillarScores" :key="'t1ss'+p.name" class="border-t border-slate-800 py-2 text-slate-300 font-semibold">
             {{ p.shishen }}
           </div>
 
           <!-- 天干 -->
           <div class="text-slate-400 border-t border-slate-800 py-2 self-center">天干</div>
-          <div v-for="p in effectivePillars" :key="'gan'+p.name" class="border-t border-slate-800 py-2 flex flex-col items-center justify-center">
+          <div v-for="p in effectivePillars" :key="'t1gan'+p.name" class="border-t border-slate-800 py-2 flex flex-col items-center justify-center">
             <span :class="['text-2xl font-bold', getElemClass(p.effGan)]">{{ p.effGan }}</span>
             <div v-if="transformedInfo[p.name]" class="dotted-combo-box text-[9px] text-purple-300 font-normal mt-1">
               <span v-if="transformedInfo[p.name].isSuccess">┄ 化[{{ transformedInfo[p.name].targetName }}] ┄</span>
@@ -186,7 +186,7 @@
 
           <!-- 🎯 創新功能：能量得分按鈕 -->
           <div class="text-slate-400 border-t border-slate-800 py-2 bg-slate-900/30">得分</div>
-          <div v-for="p in pillarScores" :key="'score'+p.name" class="border-t border-slate-800 py-2 bg-slate-900/30">
+          <div v-for="p in pillarScores" :key="'t1score'+p.name" class="border-t border-slate-800 py-2 bg-slate-900/30">
             <button @click="selectedScorePillar = (selectedScorePillar === p.name ? null : p.name)" 
                     :class="['px-2 py-1 rounded-md text-[11px] font-bold border transition-all active:scale-95', p.isAlly ? 'bg-emerald-950/50 text-emerald-400 border-emerald-800/50' : 'bg-rose-950/50 text-rose-400 border-rose-800/50']">
               {{ p.energy }} 分
@@ -195,14 +195,14 @@
 
           <!-- 地支 -->
           <div class="text-slate-400 border-t border-slate-800 py-2 self-center">地支</div>
-          <div v-for="p in result.pillars" :key="'zhi'+p.name" :class="['border-t border-slate-800 py-2 text-2xl font-bold', getElemClass(p.zhi)]">
+          <div v-for="p in result.pillars" :key="'t1zhi'+p.name" :class="['border-t border-slate-800 py-2 text-2xl font-bold', getElemClass(p.zhi)]">
             {{ p.zhi }}
           </div>
 
           <!-- 三氣 -->
           <div class="text-slate-400 border-t border-slate-800 py-2">三氣</div>
-          <div v-for="p in result.pillars" :key="'cang'+p.name" class="border-t border-slate-800 py-2 text-left text-[10px] space-y-1">
-            <div v-for="cg in getCustomCangGan(p.zhi)" :key="cg.type" class="bg-slate-950/50 p-1 rounded flex justify-between">
+          <div v-for="p in result.pillars" :key="'t1cang'+p.name" class="border-t border-slate-800 py-2 text-left text-[10px] space-y-1">
+            <div v-for="cg in getCustomCangGan(p.zhi)" :key="'t1cg'+cg.type" class="bg-slate-950/50 p-1 rounded flex justify-between">
               <span>
                 <span class="text-[8px] bg-slate-800 px-1 rounded text-slate-400 mr-1">{{ cg.type }}</span>
                 <b :class="getElemClass(cg.stem)">{{ cg.stem }}</b>
@@ -213,24 +213,24 @@
         </div>
 
         <!-- 🎯 取根得分明細展開區 -->
-        <div v-if="selectedScorePillar" class="mt-4 p-4 bg-slate-900 rounded-xl border border-slate-700 text-xs shadow-inner">
+        <div v-if="selectedScorePillar" class="mt-4 p-4 bg-slate-900 rounded-xl border border-slate-700 text-xs shadow-inner animate-fade-in">
           <div class="font-bold text-amber-400 mb-2 border-b border-slate-800 pb-2 flex justify-between items-center">
             <span>📊 【{{ selectedScorePillar }}】{{ getPillarScoreDetail(selectedScorePillar).shishen }} ({{ getPillarScoreDetail(selectedScorePillar).gan }}) 能量結算</span>
             <span :class="getPillarScoreDetail(selectedScorePillar).isAlly ? 'text-emerald-400' : 'text-rose-400'">總分: {{ getPillarScoreDetail(selectedScorePillar).energy }}</span>
           </div>
           <div class="space-y-1.5">
-            <div v-for="(item, idx) in getPillarScoreDetail(selectedScorePillar).breakdown" :key="idx" class="flex justify-between items-center bg-slate-800/50 p-1.5 rounded">
+            <div v-for="(item, idx) in getPillarScoreDetail(selectedScorePillar).breakdown" :key="'bk'+idx" class="flex justify-between items-center bg-slate-800/50 p-1.5 rounded">
               <span class="text-slate-300">{{ item.desc }}</span>
               <span class="font-bold text-slate-100">+{{ item.val }} 分</span>
             </div>
-            <div v-if="getPillarScoreDetail(selectedScorePillar).breakdown.length === 1" class="text-slate-500 italic p-1">
+            <div v-if="getPillarScoreDetail(selectedScorePillar).breakdown.length <= 1" class="text-slate-500 italic p-1">
               (於全盤地支無根氣支持，屬虛浮)
             </div>
           </div>
         </div>
       </div>
 
-      <!-- 排位 2: 五行十神同/異性生剋圓環圖 -->
+      <!-- 排位 4: 五行十神同/異性生剋圓環圖 -->
       <div v-if="tenGodsTactics" class="card-bg p-5 rounded-2xl border border-amber-500/40 shadow-xl space-y-4">
         <div class="flex justify-between items-center border-b border-slate-700 pb-2">
           <h2 class="text-sm font-bold gold-text flex items-center gap-2"><span>🔮 五行十神生剋圓環圖 (日主：{{ result.dayGan }})</span></h2>
@@ -285,7 +285,7 @@
         </div>
       </div>
 
-      <!-- 排位 3: 攻守道 十神之十神 -->
+      <!-- 排位 5: 攻守道 十神之十神 -->
       <div v-if="tenGodsTactics" class="card-bg p-5 rounded-2xl border border-purple-500/40 shadow-xl space-y-4">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-700 pb-3 gap-2">
           <div>
@@ -302,7 +302,7 @@
           </div>
         </div>
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center text-xs">
-          <div v-for="p in perspectivePillars" :key="p.name" class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 space-y-1">
+          <div v-for="p in perspectivePillars" :key="'ps'+p.name" class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 space-y-1">
             <div class="text-[10px] text-slate-400 font-bold flex justify-between">
               <span>{{ p.name }}</span><span class="text-amber-400">{{ p.gan }}</span>
             </div>
@@ -315,11 +315,11 @@
           </div>
         </div>
         <div class="bg-slate-900/90 p-3.5 rounded-xl border border-slate-700 text-xs text-slate-300">
-          <span class="font-bold text-amber-400">⚔️ 【{{ perspectiveRole }}】戰術：</span> {{ perspectiveTacticalReport }}
+          <span class="font-bold text-amber-400">⚔️️ 【{{ perspectiveRole }}】戰術：</span> {{ perspectiveTacticalReport }}
         </div>
       </div>
 
-      <!-- 排位 4: ISO 7步批算報告卡 -->
+      <!-- 排位 6: ISO 7步批算報告卡 -->
       <div v-if="iso7Report.step1" class="card-bg p-5 rounded-2xl border border-amber-500/30 shadow-xl space-y-4">
         <div class="flex justify-between items-center border-b border-slate-700 pb-2">
           <h2 class="text-base font-bold gold-text flex items-center gap-2">📜 八字批算 ISO 7步標準流程</h2>
@@ -369,7 +369,7 @@
           <span class="text-[10px] text-slate-400">再按一次可恢復純原命盤</span>
         </div>
         <div class="flex overflow-x-auto no-scrollbar gap-2 pb-2">
-          <div v-for="(dy, index) in result.daYunList" :key="dy.startYear" @click="selectDaYun(dy)"
+          <div v-for="(dy, index) in result.daYunList" :key="'dy'+dy.startYear" @click="selectDaYun(dy)"
                :class="['cursor-pointer border rounded-xl p-3 w-32 text-center flex-shrink-0 transition relative', 
                         selectedDaYun?.startYear === dy.startYear ? 'border-amber-500 bg-amber-900/30 shadow-[0_0_12px_rgba(245,158,11,0.3)] ring-1 ring-amber-500' : 'border-slate-800 bg-slate-900/80 hover:bg-slate-700']">
             <div class="text-[10px] text-amber-500/80 font-bold flex justify-between items-center">
@@ -401,7 +401,7 @@
           <div class="text-amber-500 font-bold py-2">大運 ({{ selectedDaYun.startYear }}~)</div>
           <div class="text-sky-400 font-bold py-2">
             <select v-model="selectedLiuNian" class="bg-slate-800 border-none text-sky-400 text-xs p-1 rounded outline-none cursor-pointer">
-              <option v-for="ln in selectedDaYun.liuNianList" :key="ln.year" :value="ln.year">{{ ln.year }} 流年</option>
+              <option v-for="ln in selectedDaYun.liuNianList" :key="'ln'+ln.year" :value="ln.year">{{ ln.year }} 流年</option>
             </select>
           </div>
 
@@ -422,12 +422,12 @@
           </div>
 
           <div class="border-t border-slate-800 py-2 text-left text-[11px] space-y-1">
-            <div v-for="cg in getCustomCangGan(selectedDaYun.zhi)" :key="cg.type" class="bg-slate-900/60 p-1 rounded flex justify-between">
+            <div v-for="cg in getCustomCangGan(selectedDaYun.zhi)" :key="'dycg'+cg.type" class="bg-slate-900/60 p-1 rounded flex justify-between">
               <span><span class="text-[9px] bg-slate-800 px-1 rounded text-slate-400">{{ cg.type }}</span> <b :class="getElemClass(cg.stem)">{{ cg.stem }}</b></span>
             </div>
           </div>
           <div class="border-t border-slate-800 py-2 text-left text-[11px] space-y-1">
-            <div v-if="currentLiuNianObj" v-for="cg in getCustomCangGan(currentLiuNianObj.zhi)" :key="cg.type" class="bg-slate-900/60 p-1 rounded flex justify-between">
+            <div v-if="currentLiuNianObj" v-for="cg in getCustomCangGan(currentLiuNianObj.zhi)" :key="'lncg'+cg.type" class="bg-slate-900/60 p-1 rounded flex justify-between">
               <span><span class="text-[9px] bg-slate-800 px-1 rounded text-slate-400">{{ cg.type }}</span> <b :class="getElemClass(cg.stem)">{{ cg.stem }}</b></span>
             </div>
           </div>
@@ -493,7 +493,7 @@ createApp({
     const birthTime = ref('');
     const gender = ref(1);
     const result = ref(null);
-    const activeTab = ref('original'); // 'original' or 'transit'
+    const activeTab = ref('original');
     const selectedScorePillar = ref(null);
 
     const selectedDaYun = ref(null);
@@ -647,14 +647,14 @@ createApp({
               let val = (cg.w + adjust) * mult * 0.1;
               if (val > 0) {
                 energy += val;
-                breakdown.push({ desc: `${bIdxP.name}(${zhi}) ${cg.type}氣[${cg.stem}] 同行根`, val: val.toFixed(2) });
+                breakdown.push({ desc: `${bIdxP.name}(${zhi}) ${cg.type}氣[${cg.stem}] 同五行根`, val: val.toFixed(2) });
               }
             } else if (getShiShen(stem, cg.stem) === '正印' || getShiShen(stem, cg.stem) === '偏印') {
               let adjust = getShiShen(stem, cg.stem) === '偏印' ? -1.0 : -1.5;
               let val = (cg.w + adjust) * mult * 0.05;
               if (val > 0) {
                 energy += val;
-                breakdown.push({ desc: `${bIdxP.name}(${zhi}) ${cg.type}氣[${cg.stem}] 印生扶`, val: val.toFixed(2) });
+                breakdown.push({ desc: `${bIdxP.name}(${zhi}) ${cg.type}氣[${cg.stem}] 印星生扶`, val: val.toFixed(2) });
               }
             }
           });
@@ -677,7 +677,7 @@ createApp({
     });
 
     const getPillarScoreDetail = (pillarName) => {
-      return pillarScores.value.find(p => p.name === pillarName) || {};
+      return pillarScores.value.find(p => p.name === pillarName) || { breakdown: [], energy: 0, shishen: '', gan: '', isAlly: false };
     };
 
     const currentLiuNianObj = computed(() => {
@@ -1021,7 +1021,7 @@ createApp({
           { name: '食傷', catKey: '食傷', elem: getTenGodElem(dayGan, '食傷') },
           { name: '財星', catKey: '財星', elem: getTenGodElem(dayGan, '財星') },
           { name: '官殺', catKey: '官殺', elem: getTenGodElem(dayGan, '官殺') }
-        ].map(c => ({ name: c.name, elem: c.elem }))
+        ]
       };
     });
 
@@ -1043,7 +1043,6 @@ createApp({
       };
     });
 
-    // 🌟 全新 7 步 ISO 批算報告
     const iso7Report = computed(() => {
       if (!result.value || !quantScore.value || !godsInfo.value || !tenGodsTactics.value) return {};
       const dmYinYang = STEM_PROPS[result.value.dayGan].y === 0 ? '陽干從氣不從勢' : '陰干從氣不從勢';
@@ -1109,8 +1108,14 @@ createApp({
     });
 
     onMounted(() => {
-      const saved = localStorage.getItem('bazi_records');
-      if (saved) records.value = JSON.parse(saved);
+      try {
+        const saved = localStorage.getItem('bazi_records');
+        if (saved) records.value = JSON.parse(saved);
+      } catch(e) {
+        console.error("Local Storage Parse Error:", e);
+        localStorage.removeItem('bazi_records');
+        records.value = [];
+      }
       const now = new Date();
       now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
       birthTime.value = now.toISOString().slice(0, 16);
@@ -1128,33 +1133,38 @@ createApp({
     const deleteRecord = (id) => { if(confirm("確定刪除？")) { records.value = records.value.filter(r => r.id !== id); localStorage.setItem('bazi_records', JSON.stringify(records.value)); } };
 
     const calculate = () => {
-      if (typeof Solar === 'undefined') return alert("萬年曆載入中，請稍候");
-      if (!birthTime.value) return;
-      const dt = new Date(birthTime.value);
-      const solar = Solar.fromDate(dt);
-      const lunar = solar.getLunar();
-      const eightChar = lunar.getEightChar();
-      const dayGan = eightChar.getDayGan();
-      const yun = eightChar.getYun(gender.value);
+      try {
+        if (typeof Solar === 'undefined') return alert("萬年曆載入中，請稍候");
+        if (!birthTime.value) return;
+        const dt = new Date(birthTime.value);
+        const solar = Solar.fromDate(dt);
+        const lunar = solar.getLunar();
+        const eightChar = lunar.getEightChar();
+        const dayGan = eightChar.getDayGan();
+        const yun = eightChar.getYun(gender.value);
 
-      result.value = {
-        name: name.value.trim(), solarStr: solar.toFullString(), lunarStr: lunar.toString(),
-        yunStr: `${yun.getStartYear()}年${yun.getStartMonth()}個月起運`, dayGan,
-        pillars: [
-          { name: '年柱', gan: eightChar.getYearGan(), zhi: eightChar.getYearZhi(), shishen: getShiShen(dayGan, eightChar.getYearGan()) },
-          { name: '月柱', gan: eightChar.getMonthGan(), zhi: eightChar.getMonthZhi(), shishen: getShiShen(dayGan, eightChar.getMonthGan()) },
-          { name: '日柱', gan: dayGan, zhi: eightChar.getDayZhi(), isDayMaster: true },
-          { name: '時柱', gan: eightChar.getTimeGan(), zhi: eightChar.getTimeZhi(), shishen: getShiShen(dayGan, eightChar.getTimeGan()) }
-        ],
-        daYunList: yun.getDaYun().slice(1, 11).map(dy => ({
-          startAge: dy.getStartAge(), endAge: dy.getEndAge(), startYear: dy.getStartYear(),
-          gan: dy.getGanZhi().charAt(0), zhi: dy.getGanZhi().charAt(1),
-          liuNianList: dy.getLiuNian().map(ln => ({ year: ln.getYear(), gan: ln.getGanZhi().charAt(0), zhi: ln.getGanZhi().charAt(1) }))
-        }))
-      };
+        result.value = {
+          name: name.value.trim(), solarStr: solar.toFullString(), lunarStr: lunar.toString(),
+          yunStr: `${yun.getStartYear()}年${yun.getStartMonth()}個月起運`, dayGan,
+          pillars: [
+            { name: '年柱', gan: eightChar.getYearGan(), zhi: eightChar.getYearZhi(), shishen: getShiShen(dayGan, eightChar.getYearGan()) },
+            { name: '月柱', gan: eightChar.getMonthGan(), zhi: eightChar.getMonthZhi(), shishen: getShiShen(dayGan, eightChar.getMonthGan()) },
+            { name: '日柱', gan: dayGan, zhi: eightChar.getDayZhi(), isDayMaster: true },
+            { name: '時柱', gan: eightChar.getTimeGan(), zhi: eightChar.getTimeZhi(), shishen: getShiShen(dayGan, eightChar.getTimeGan()) }
+          ],
+          daYunList: yun.getDaYun().slice(1, 11).map(dy => ({
+            startAge: dy.getStartAge(), endAge: dy.getEndAge(), startYear: dy.getStartYear(),
+            gan: dy.getGanZhi().charAt(0), zhi: dy.getGanZhi().charAt(1),
+            liuNianList: dy.getLiuNian().map(ln => ({ year: ln.getYear(), gan: ln.getGanZhi().charAt(0), zhi: ln.getGanZhi().charAt(1) }))
+          }))
+        };
 
-      selectedDaYun.value = null; selectedLiuNian.value = null;
-      checkAllRelations(); calcQuantScore(); checkCircuitDiagnostics(); checkInjuryAlerts();
+        selectedDaYun.value = null; selectedLiuNian.value = null;
+        checkAllRelations(); calcQuantScore(); checkCircuitDiagnostics(); checkInjuryAlerts();
+      } catch (error) {
+        console.error("Calculation Error:", error);
+        alert("計算時發生錯誤，請檢查資料或重試。");
+      }
     };
 
     return { 
