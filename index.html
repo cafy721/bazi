@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>專業八字排盤（ISO 七步論命 ＆ 根氣得分明細版）</title>
+  <title>專業八字排盤（ISO 七步論命 ＆ 根氣得分明細修復版）</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.min.js"></script>
@@ -123,6 +123,22 @@
           狀態：{{ quantScore.verdict }} (比率 {{ quantScore.ratio }})
         </span>
       </div>
+
+      <!-- 用神喜忌定位列 -->
+      <div v-if="godsInfo" class="flex justify-center items-center gap-2 flex-wrap text-xs pt-1">
+        <span class="bg-indigo-950/60 text-indigo-300 px-2.5 py-1 rounded-md border border-indigo-800/60 font-bold">
+          格神：{{ godsInfo.geShen }}
+        </span>
+        <span class="bg-emerald-950/60 text-emerald-300 px-2.5 py-1 rounded-md border border-emerald-800/60 font-bold">
+          用神 (相神/樞紐)：{{ godsInfo.yongShen }}
+        </span>
+        <span class="bg-sky-950/60 text-sky-300 px-2.5 py-1 rounded-md border border-sky-800/60">
+          喜神：{{ godsInfo.xiShen }}
+        </span>
+        <span class="bg-rose-950/60 text-rose-300 px-2.5 py-1 rounded-md border border-rose-800/60">
+          忌神：{{ godsInfo.jiShen }}
+        </span>
+      </div>
     </div>
 
     <!-- 🌟 全新 TABS 分頁器 -->
@@ -197,7 +213,7 @@
         </div>
 
         <!-- 🎯 取根得分明細展開區 -->
-        <div v-if="selectedScorePillar" class="mt-4 p-4 bg-slate-900 rounded-xl border border-slate-700 text-xs animate-fade-in shadow-inner">
+        <div v-if="selectedScorePillar" class="mt-4 p-4 bg-slate-900 rounded-xl border border-slate-700 text-xs shadow-inner">
           <div class="font-bold text-amber-400 mb-2 border-b border-slate-800 pb-2 flex justify-between items-center">
             <span>📊 【{{ selectedScorePillar }}】{{ getPillarScoreDetail(selectedScorePillar).shishen }} ({{ getPillarScoreDetail(selectedScorePillar).gan }}) 能量結算</span>
             <span :class="getPillarScoreDetail(selectedScorePillar).isAlly ? 'text-emerald-400' : 'text-rose-400'">總分: {{ getPillarScoreDetail(selectedScorePillar).energy }}</span>
@@ -214,7 +230,7 @@
         </div>
       </div>
 
-      <!-- 排位 4: 五行十神同/異性生剋圓環圖 -->
+      <!-- 排位 2: 五行十神同/異性生剋圓環圖 -->
       <div v-if="tenGodsTactics" class="card-bg p-5 rounded-2xl border border-amber-500/40 shadow-xl space-y-4">
         <div class="flex justify-between items-center border-b border-slate-700 pb-2">
           <h2 class="text-sm font-bold gold-text flex items-center gap-2"><span>🔮 五行十神生剋圓環圖 (日主：{{ result.dayGan }})</span></h2>
@@ -222,7 +238,7 @@
         </div>
         <div class="flex flex-col md:flex-row items-center justify-between gap-6">
           <div class="w-full md:w-1/2 flex justify-center py-2">
-             <!-- SVG Circle Code (Same as before) -->
+             <!-- SVG Circle Code -->
              <svg viewBox="0 0 500 500" class="w-full max-w-[380px] h-auto drop-shadow-2xl select-none">
               <defs>
                 <marker id="arrow-sheng" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 1 L 10 5 L 0 9 z" fill="#38bdf8" /></marker>
@@ -239,11 +255,11 @@
               <line x1="340" y1="210" x2="195" y2="310" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arrow-ke)"/>
               <line x1="185" y1="300" x2="240" y2="150" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arrow-ke)"/>
 
-              <g :opacity="godsMap['印星']?.score > 0 ? 1 : 0.35"><circle cx="250" cy="130" r="30" fill="#1e293b" :stroke="getCategoryElemInfo('印星').color" stroke-width="3" /><text x="250" y="125" text-anchor="middle" fill="#f8fafc" font-size="13" font-weight="bold">印梟</text><text x="250" y="142" text-anchor="middle" :fill="getCategoryElemInfo('印星').color" font-size="11" font-weight="bold">[{{ getCategoryElemInfo('印星').elem }}]</text></g>
-              <g :opacity="godsMap['比劫']?.score > 0 ? 1 : 0.35"><circle cx="355" cy="200" r="30" fill="#1e293b" :stroke="getCategoryElemInfo('比劫').color" stroke-width="3" /><text x="355" y="195" text-anchor="middle" fill="#f8fafc" font-size="13" font-weight="bold">比劫</text><text x="355" y="212" text-anchor="middle" :fill="getCategoryElemInfo('比劫').color" font-size="11" font-weight="bold">[{{ getCategoryElemInfo('比劫').elem }}]</text></g>
-              <g :opacity="godsMap['食傷']?.score > 0 ? 1 : 0.35"><circle cx="325" cy="320" r="30" fill="#1e293b" :stroke="getCategoryElemInfo('食傷').color" stroke-width="3" /><text x="325" y="315" text-anchor="middle" fill="#f8fafc" font-size="13" font-weight="bold">食傷</text><text x="325" y="332" text-anchor="middle" :fill="getCategoryElemInfo('食傷').color" font-size="11" font-weight="bold">[{{ getCategoryElemInfo('食傷').elem }}]</text></g>
-              <g :opacity="godsMap['財星']?.score > 0 ? 1 : 0.35"><circle cx="175" cy="320" r="30" fill="#1e293b" :stroke="getCategoryElemInfo('財星').color" stroke-width="3" /><text x="175" y="315" text-anchor="middle" fill="#f8fafc" font-size="13" font-weight="bold">財</text><text x="175" y="332" text-anchor="middle" :fill="getCategoryElemInfo('財星').color" font-size="11" font-weight="bold">[{{ getCategoryElemInfo('財星').elem }}]</text></g>
-              <g :opacity="godsMap['官殺']?.score > 0 ? 1 : 0.35"><circle cx="145" cy="200" r="30" fill="#1e293b" :stroke="getCategoryElemInfo('官殺').color" stroke-width="3" /><text x="145" y="195" text-anchor="middle" fill="#f8fafc" font-size="13" font-weight="bold">官殺</text><text x="145" y="212" text-anchor="middle" :fill="getCategoryElemInfo('官殺').color" font-size="11" font-weight="bold">[{{ getCategoryElemInfo('官殺').elem }}]</text></g>
+              <g opacity="1"><circle cx="250" cy="130" r="30" fill="#1e293b" :stroke="getCategoryElemInfo('印星').color" stroke-width="3" /><text x="250" y="125" text-anchor="middle" fill="#f8fafc" font-size="13" font-weight="bold">印梟</text><text x="250" y="142" text-anchor="middle" :fill="getCategoryElemInfo('印星').color" font-size="11" font-weight="bold">[{{ getCategoryElemInfo('印星').elem }}]</text></g>
+              <g opacity="1"><circle cx="355" cy="200" r="30" fill="#1e293b" :stroke="getCategoryElemInfo('比劫').color" stroke-width="3" /><text x="355" y="195" text-anchor="middle" fill="#f8fafc" font-size="13" font-weight="bold">比劫</text><text x="355" y="212" text-anchor="middle" :fill="getCategoryElemInfo('比劫').color" font-size="11" font-weight="bold">[{{ getCategoryElemInfo('比劫').elem }}]</text></g>
+              <g opacity="1"><circle cx="325" cy="320" r="30" fill="#1e293b" :stroke="getCategoryElemInfo('食傷').color" stroke-width="3" /><text x="325" y="315" text-anchor="middle" fill="#f8fafc" font-size="13" font-weight="bold">食傷</text><text x="325" y="332" text-anchor="middle" :fill="getCategoryElemInfo('食傷').color" font-size="11" font-weight="bold">[{{ getCategoryElemInfo('食傷').elem }}]</text></g>
+              <g opacity="1"><circle cx="175" cy="320" r="30" fill="#1e293b" :stroke="getCategoryElemInfo('財星').color" stroke-width="3" /><text x="175" y="315" text-anchor="middle" fill="#f8fafc" font-size="13" font-weight="bold">財</text><text x="175" y="332" text-anchor="middle" :fill="getCategoryElemInfo('財星').color" font-size="11" font-weight="bold">[{{ getCategoryElemInfo('財星').elem }}]</text></g>
+              <g opacity="1"><circle cx="145" cy="200" r="30" fill="#1e293b" :stroke="getCategoryElemInfo('官殺').color" stroke-width="3" /><text x="145" y="195" text-anchor="middle" fill="#f8fafc" font-size="13" font-weight="bold">官殺</text><text x="145" y="212" text-anchor="middle" :fill="getCategoryElemInfo('官殺').color" font-size="11" font-weight="bold">[{{ getCategoryElemInfo('官殺').elem }}]</text></g>
 
               <line x1="230" y1="110" x2="200" y2="65" stroke="#64748b" stroke-width="1.5" /><text x="208" y="90" fill="#94a3b8" font-size="9">同性</text><circle cx="190" cy="50" r="20" fill="#0f172a" stroke="#64748b" stroke-width="1.5" /><text x="190" y="54" text-anchor="middle" fill="#e2e8f0" font-size="11">梟神</text>
               <line x1="270" y1="110" x2="300" y2="65" stroke="#64748b" stroke-width="1.5" /><text x="280" y="90" fill="#94a3b8" font-size="9">異性</text><circle cx="310" cy="50" r="20" fill="#0f172a" stroke="#64748b" stroke-width="1.5" /><text x="310" y="54" text-anchor="middle" fill="#e2e8f0" font-size="11">正印</text>
@@ -269,8 +285,8 @@
         </div>
       </div>
 
-      <!-- 排位 5: 攻守道 十神之十神 -->
-      <div class="card-bg p-5 rounded-2xl border border-purple-500/40 shadow-xl space-y-4">
+      <!-- 排位 3: 攻守道 十神之十神 -->
+      <div v-if="tenGodsTactics" class="card-bg p-5 rounded-2xl border border-purple-500/40 shadow-xl space-y-4">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-700 pb-3 gap-2">
           <div>
             <h2 class="text-sm font-bold text-purple-300 flex items-center gap-2">🎯 攻守道 ‧ 十神之十神</h2>
@@ -303,8 +319,8 @@
         </div>
       </div>
 
-      <!-- 排位 6: ISO 7步批算報告卡 -->
-      <div class="card-bg p-5 rounded-2xl border border-amber-500/30 shadow-xl space-y-4">
+      <!-- 排位 4: ISO 7步批算報告卡 -->
+      <div v-if="iso7Report.step1" class="card-bg p-5 rounded-2xl border border-amber-500/30 shadow-xl space-y-4">
         <div class="flex justify-between items-center border-b border-slate-700 pb-2">
           <h2 class="text-base font-bold gold-text flex items-center gap-2">📜 八字批算 ISO 7步標準流程</h2>
         </div>
@@ -318,7 +334,7 @@
             <p class="text-slate-300">{{ iso7Report.step2 }}</p>
           </div>
           <div class="bg-slate-900/70 p-3 rounded-xl border border-slate-800 space-y-1">
-            <div class="font-bold text-amber-400">第三步：同異黨比例 (身強弱指數)</div>
+            <div class="font-bold text-amber-400">第三步：同異黨比例 (身強弱)</div>
             <p class="text-slate-300">{{ iso7Report.step3 }}</p>
           </div>
           <div class="bg-slate-900/70 p-3 rounded-xl border border-slate-800 space-y-1">
@@ -346,7 +362,7 @@
     <!-- ============================================== -->
     <div v-show="activeTab === 'transit'" class="space-y-6 animate-fade-in">
       
-      <!-- 排位 2: 大運選擇區 -->
+      <!-- 大運選擇區 -->
       <div class="card-bg p-4 rounded-2xl border border-slate-700/50 shadow-lg">
         <div class="flex justify-between items-center border-b border-slate-700 pb-2 mb-3">
           <h2 class="text-sm font-bold text-slate-200">點擊選擇大運：</h2>
@@ -372,7 +388,7 @@
         </div>
       </div>
 
-      <!-- 排位 2 續: 大運流年連動對比表 -->
+      <!-- 大運流年連動對比表 -->
       <div class="card-bg p-4 rounded-2xl border border-slate-700/50 overflow-x-auto">
         <h2 class="text-sm font-bold text-slate-200 mb-3 border-b border-slate-700 pb-2">【 歲運連動比對 】</h2>
         
@@ -418,7 +434,7 @@
         </div>
       </div>
 
-      <!-- 排位 3: 八字氣場事件診斷 -->
+      <!-- 八字氣場事件診斷 -->
       <div class="card-bg p-4 rounded-2xl border border-slate-700/50 space-y-4">
         <div class="border-b border-slate-700 pb-2">
           <h3 class="text-sm font-bold gold-text">⚡ 氣場動態與事件診斷</h3>
@@ -490,10 +506,8 @@ createApp({
     const circuitDiagnostics = ref([]);
     const injuryAlerts = ref([]);
     const quantScore = ref(null);
-    const activeModal = ref(null);
 
     const perspectiveRole = ref('日主'); 
-
     const transformedInfo = ref({});
     const records = ref([]);
     const showRecords = ref(false);
@@ -577,9 +591,7 @@ createApp({
     const getCategoryElemInfo = (catKey) => {
       if (!result.value || !result.value.dayGan) return { elem: '', color: '#64748b' };
       const elem = getTenGodElem(result.value.dayGan, catKey);
-      const colorMap = {
-        '木': '#22c55e', '火': '#ef4444', '土': '#b8621b', '金': '#facc15', '水': '#38bdf8'
-      };
+      const colorMap = { '木': '#22c55e', '火': '#ef4444', '土': '#b8621b', '金': '#facc15', '水': '#38bdf8' };
       return { elem, color: colorMap[elem] || '#64748b' };
     };
 
@@ -611,11 +623,10 @@ createApp({
       });
     });
 
-    // 🎯 核心：計算四柱各天干的根氣得分明細
     const pillarScores = computed(() => {
-      if (!result.value) return [];
+      if (!result.value || effectivePillars.value.length === 0) return [];
       const dayGan = result.value.dayGan;
-      const mults = [0.8, 3.0, 2.0, 1.0]; // 年月日時權重
+      const mults = [0.8, 3.0, 2.0, 1.0]; 
       
       return effectivePillars.value.map((p, pIdx) => {
         const stem = p.effGan;
@@ -623,7 +634,7 @@ createApp({
         const isAlly = ['比肩','劫財','正印','偏印'].includes(shishen) || p.isDayMaster;
         
         let energy = 1.0;
-        let breakdown = [{ desc: `天干自帶基本分`, val: '1.00' }];
+        let breakdown = [{ desc: `基本分`, val: '1.00' }];
 
         result.value.pillars.forEach((bIdxP, bIdx) => {
           const zhi = bIdxP.zhi;
@@ -636,14 +647,14 @@ createApp({
               let val = (cg.w + adjust) * mult * 0.1;
               if (val > 0) {
                 energy += val;
-                breakdown.push({ desc: `${bIdxP.name}(${zhi}) ${cg.type}氣[${cg.stem}] 同五行根`, val: val.toFixed(2) });
+                breakdown.push({ desc: `${bIdxP.name}(${zhi}) ${cg.type}氣[${cg.stem}] 同行根`, val: val.toFixed(2) });
               }
             } else if (getShiShen(stem, cg.stem) === '正印' || getShiShen(stem, cg.stem) === '偏印') {
               let adjust = getShiShen(stem, cg.stem) === '偏印' ? -1.0 : -1.5;
               let val = (cg.w + adjust) * mult * 0.05;
               if (val > 0) {
                 energy += val;
-                breakdown.push({ desc: `${bIdxP.name}(${zhi}) ${cg.type}氣[${cg.stem}] 印星生扶`, val: val.toFixed(2) });
+                breakdown.push({ desc: `${bIdxP.name}(${zhi}) ${cg.type}氣[${cg.stem}] 印生扶`, val: val.toFixed(2) });
               }
             }
           });
@@ -661,14 +672,7 @@ createApp({
           });
         }
 
-        return {
-          name: p.name,
-          gan: stem,
-          shishen,
-          isAlly,
-          energy: parseFloat(energy.toFixed(1)),
-          breakdown
-        };
+        return { name: p.name, gan: stem, shishen, isAlly, energy: parseFloat(energy.toFixed(1)), breakdown };
       });
     });
 
@@ -683,11 +687,9 @@ createApp({
 
     const selectDaYun = (dy) => {
       if (!dy || (selectedDaYun.value && selectedDaYun.value.startYear === dy.startYear)) {
-        selectedDaYun.value = null;
-        selectedLiuNian.value = null;
+        selectedDaYun.value = null; selectedLiuNian.value = null;
       } else {
-        selectedDaYun.value = dy;
-        selectedLiuNian.value = dy.startYear;
+        selectedDaYun.value = dy; selectedLiuNian.value = dy.startYear;
       }
     };
 
@@ -735,7 +737,7 @@ createApp({
     });
 
     const godsMap = computed(() => {
-      if (!tenGodsTactics.value) return {};
+      if (!tenGodsTactics.value || !tenGodsTactics.value.categories) return {};
       let m = {};
       tenGodsTactics.value.categories.forEach(c => m[c.name] = c);
       return m;
@@ -764,7 +766,6 @@ createApp({
         : `原局【五行不全】，缺乏五行【${missingElementsStr.value}】！氣場傳導易有斷層，大運補足時運勢易劇變。`;
     });
 
-    // 天干爭合與合化邏輯
     const checkAllRelations = () => {
       if (!result.value) return;
       const dayGan = result.value.dayGan;
@@ -906,7 +907,6 @@ createApp({
       bHes.forEach(h => { if (branchStr.includes(h[0]) && branchStr.includes(h[1])) bCombos.push({ desc: `${h[0]}${h[1]} 六合`, source: checkBranchSource(h[0]+h[1]) }); });
 
       const bChongs = [['子','午'],['丑','未'],['寅','申'],['卯','酉'],['辰','戌'],['巳','亥']];
-      const strongStages = ['長生','冠帶','臨官','帝旺'];
       for (let i = 0; i < activeZhis.length; i++) {
         for (let j = i + 1; j < activeZhis.length; j++) {
           const z1 = activeZhis[i]; const z2 = activeZhis[j];
@@ -927,7 +927,6 @@ createApp({
       relations.value = bCombos.concat(bClashes);
     };
 
-    // 依據 pillarScores 精算身強弱指數
     const calcQuantScore = () => {
       if (!pillarScores.value || pillarScores.value.length === 0) return;
       let allyScore = 0;
@@ -973,7 +972,7 @@ createApp({
     };
 
     const tenGodsTactics = computed(() => {
-      if (!result.value || !godsInfo.value) return null;
+      if (!result.value || !quantScore.value) return null;
       const dayGan = result.value.dayGan;
       const nonDmGans = effectivePillars.value.filter(p => !p.isDayMaster).map(p => p.effGan);
       const nonDmShiShens = nonDmGans.map(g => getShiShen(dayGan, g));
@@ -1027,7 +1026,7 @@ createApp({
     });
 
     const godsInfo = computed(() => {
-      if (!result.value || !quantScore.value) return null;
+      if (!result.value || !quantScore.value || !tenGodsTactics.value) return null;
       const dayGan = result.value.dayGan;
       const isStrong = quantScore.value.verdict.includes('強') || quantScore.value.verdict.includes('旺');
       const eFood = getTenGodElem(dayGan, '食傷');
