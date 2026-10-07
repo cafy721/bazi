@@ -72,7 +72,7 @@
 <div id="app" class="max-w-6xl mx-auto space-y-5">
   <header class="text-center my-4 sm:my-6">
     <h1 class="text-2xl sm:text-3xl font-extrabold tracking-wide title-gradient drop-shadow-sm">治癒系八字排盤</h1>
-    <p class="text-[10px] sm:text-xs text-slate-500 mt-2 font-semibold tracking-widest">能量矩陣 ‧ 立體取格 ‧ 天人合一</p>
+    <p class="text-[10px] sm:text-xs text-slate-500 mt-2 font-semibold tracking-widest">能量矩陣 ‧ 順逆戰術 ‧ 三層防禦</p>
   </header>
 
   <!-- 輸入區 & 命例管理 -->
@@ -174,11 +174,11 @@
 
     <!-- 🌟 大運選擇區 -->
     <div class="card-bg p-4 rounded-3xl">
-      <div class="flex justify-between items-center pb-2 mb-2">
+      <div class="flex justify-between items-center pb-2 mb-2 border-b border-slate-100">
         <h2 class="text-xs sm:text-sm font-extrabold text-slate-600">☁️ 選擇大運軌跡：</h2>
         <button v-if="selectedDaYun" @click="selectDaYun(null)" class="text-[10px] bg-white text-slate-500 px-2.5 py-1 rounded-full shadow-sm border border-slate-100 transition active:scale-95 font-bold">↺ 恢復原局</button>
       </div>
-      <div class="flex overflow-x-auto no-scrollbar gap-2 pb-2">
+      <div class="flex overflow-x-auto no-scrollbar gap-2 pb-2 mt-3">
         <div v-for="(dy, index) in result.daYunList" :key="'dy'+dy.startYear" @click="selectDaYun(dy)"
              :class="['cursor-pointer border rounded-2xl p-2.5 w-[90px] sm:w-[110px] text-center flex-shrink-0 transition relative', 
                       selectedDaYun?.startYear === dy.startYear ? 'bg-gradient-to-br from-fuchsia-100 to-pink-100 border-pink-200 shadow-md transform -translate-y-1' : 'bg-white/60 border-white hover:bg-white']">
@@ -190,10 +190,28 @@
       </div>
     </div>
 
+    <!-- 🌟 流年選擇區 (只有在選擇大運後顯示) -->
+    <div v-if="selectedDaYun" class="card-bg p-4 rounded-3xl animate-fade-in mt-2">
+      <div class="flex justify-between items-center pb-2 mb-2 border-b border-slate-100">
+        <h2 class="text-xs sm:text-sm font-extrabold text-slate-600">🌸 選擇流年軌跡：</h2>
+        <span class="text-[10px] bg-slate-50 text-slate-400 px-2 py-0.5 rounded-full font-bold">大運 {{ selectedDaYun.gan }}{{ selectedDaYun.zhi }} 期間</span>
+      </div>
+      <div class="flex overflow-x-auto no-scrollbar gap-2 pb-2 mt-3">
+        <div v-for="ln in selectedDaYun.liuNianList" :key="'ln'+ln.year" @click="selectedLiuNian = ln.year"
+             :class="['cursor-pointer border rounded-2xl p-2 w-[70px] sm:w-[85px] text-center flex-shrink-0 transition relative', 
+                      selectedLiuNian === ln.year ? 'bg-gradient-to-br from-sky-100 to-indigo-100 border-indigo-200 shadow-md transform -translate-y-1' : 'bg-white/60 border-white hover:bg-white']">
+          <div class="text-[9px] sm:text-[10px] text-slate-500 font-bold mb-1">{{ ln.year }}</div>
+          <div class="text-sm sm:text-base font-extrabold">
+            <span :class="getElemClass(ln.gan)">{{ ln.gan }}</span><span :class="getElemClass(ln.zhi)">{{ ln.zhi }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ============================================== -->
-    <!-- 1. 核心盤面：六柱連動 -->
+    <!-- 1. 核心盤面：六柱連動 (收窄防爆框設計) -->
     <!-- ============================================== -->
-    <div class="card-bg p-3 sm:p-5 rounded-3xl overflow-hidden relative">
+    <div class="card-bg p-3 sm:p-5 rounded-3xl overflow-hidden relative mt-5">
       <h2 class="text-xs sm:text-sm font-extrabold text-slate-600 mb-3 flex justify-between items-center px-1">
         <span>✨ {{ selectedDaYun ? '六柱全息連動' : '四柱原命盤' }}</span>
         <span class="text-[9px] sm:text-[10px] text-pink-500 bg-pink-50 px-2 py-1 rounded-full shadow-sm">💡 點擊「得分」看細節</span>
@@ -204,11 +222,6 @@
         <div></div>
         <div v-for="p in displayPillars" :key="'hd'+p.role" :class="['font-extrabold py-1.5 rounded-t-xl mx-0.5 sm:mx-1 text-[9px] sm:text-xs', p.isCore ? 'bg-white/60 text-slate-500' : 'bg-pink-100/80 text-pink-600 shadow-sm']">
           {{ p.role }}
-          <div v-if="p.role === '流年' && selectedDaYun" class="text-[8px] sm:text-[9px] mt-0.5">
-            <select v-model="selectedLiuNian" class="bg-transparent border-none text-pink-500 font-bold outline-none cursor-pointer text-center w-full appearance-none">
-              <option v-for="ln in selectedDaYun.liuNianList" :key="'ln'+ln.year" :value="ln.year">{{ ln.year }} ▼</option>
-            </select>
-          </div>
         </div>
 
         <!-- 天干 -->
@@ -216,7 +229,8 @@
         <div v-for="p in displayPillars" :key="'g'+p.role" :class="['flex flex-col items-center justify-center py-1.5 sm:py-2 mx-0.5 sm:mx-1 border-b', p.isCore ? 'bg-white/50 border-white' : 'bg-pink-50/50 border-pink-100']">
           <span :class="['text-xl sm:text-3xl font-extrabold', getElemClass(p.gan)]">{{ p.gan }}</span>
           <span class="text-[8px] sm:text-[10px] text-slate-500 mt-0.5 font-bold">{{ p.shishen }}</span>
-          <div v-if="p.isCore && transformedInfo[p.role]" @click.stop="openComboDetailModal(p.role)" class="cursor-pointer text-[8px] mt-1 px-1 rounded-full bg-purple-100 text-purple-600 font-bold hover:scale-105 transition shadow-sm">
+          <!-- ✨ 修正：大運與流年也能顯示化合標籤 -->
+          <div v-if="transformedInfo[p.role]" @click.stop="openComboDetailModal(p.role)" class="cursor-pointer text-[8px] mt-1 px-1 rounded-full bg-purple-100 text-purple-600 font-bold hover:scale-105 transition shadow-sm">
             <span v-if="transformedInfo[p.role].isSuccess">化[{{ transformedInfo[p.role].targetName }}]</span>
             <span v-else class="text-rose-400">不化</span>
           </div>
@@ -600,7 +614,7 @@ const { createApp, ref, computed, watch, onMounted } = Vue;
 createApp({
   setup() {
     const name = ref('');
-    const inputMode = ref('birth'); // 'birth' or 'manual'
+    const inputMode = ref('birth'); 
     const birthTime = ref('');
     const gender = ref(1);
 
@@ -718,11 +732,16 @@ createApp({
     const getMainQi = (zhi) => (CUSTOM_CANG_GAN[zhi] || []).find(c => c.type === '主')?.stem || '';
     const getPillarWeightLabel = (pillarName) => ({ '年柱': '年柱 ×0.8', '月柱': '月柱 ×3.0', '日柱': '日柱 ×2.0', '時柱': '時柱 ×1.0' }[pillarName] || '');
 
+    // ✨ 核心修正：抓取「真・合化後」天干，供 UI 渲染使用
+    const getEffGanGlobal = (role, defaultGan) => {
+        const info = transformedInfo.value[role];
+        return (info && info.isSuccess) ? info.targetStem : defaultGan;
+    };
+
     const effectivePillars = computed(() => {
       if (!result.value) return [];
       return result.value.pillars.map(p => {
-        const info = transformedInfo.value[p.name];
-        const effGan = (info && info.isSuccess) ? info.targetStem : p.gan;
+        const effGan = getEffGanGlobal(p.name, p.gan);
         return { ...p, effGan, isTransformed: effGan !== p.gan, origGan: p.gan, shishen: p.isDayMaster ? '日主' : getShiShen(result.value.dayGan, effGan) };
       });
     });
@@ -742,8 +761,14 @@ createApp({
         { role: '日柱', isCore: true, gan: getPillarByRole('日柱').effGan, zhi: getPillarByRole('日柱').zhi, shishen: getPillarByRole('日柱').shishen, scoreDetail: getPillarScoreDetail('日柱') },
         { role: '時柱', isCore: true, gan: getPillarByRole('時柱').effGan, zhi: getPillarByRole('時柱').zhi, shishen: getPillarByRole('時柱').shishen, scoreDetail: getPillarScoreDetail('時柱') }
       ];
-      if (selectedDaYun.value) list.push({ role: '大運', isCore: false, gan: selectedDaYun.value.gan, zhi: selectedDaYun.value.zhi, shishen: getShiShen(result.value.dayGan, selectedDaYun.value.gan), scoreDetail: null });
-      if (currentLiuNianObj.value) list.push({ role: '流年', isCore: false, gan: currentLiuNianObj.value.gan, zhi: currentLiuNianObj.value.zhi, shishen: getShiShen(result.value.dayGan, currentLiuNianObj.value.gan), scoreDetail: null });
+      if (selectedDaYun.value) {
+          const effGan = getEffGanGlobal('大運', selectedDaYun.value.gan);
+          list.push({ role: '大運', isCore: false, gan: effGan, zhi: selectedDaYun.value.zhi, shishen: getShiShen(result.value.dayGan, effGan), scoreDetail: null });
+      }
+      if (currentLiuNianObj.value) {
+          const effGan = getEffGanGlobal('流年', currentLiuNianObj.value.gan);
+          list.push({ role: '流年', isCore: false, gan: effGan, zhi: currentLiuNianObj.value.zhi, shishen: getShiShen(result.value.dayGan, effGan), scoreDetail: null });
+      }
       return list;
     });
 
@@ -783,6 +808,7 @@ createApp({
       return (parseFloat(getMatrixCangDetail(selectedPillar, targetBranchPillar, '主').score) + parseFloat(getMatrixCangDetail(selectedPillar, targetBranchPillar, '中').score) + parseFloat(getMatrixCangDetail(selectedPillar, targetBranchPillar, '餘').score)).toFixed(1);
     };
 
+    // 🌟 究極防禦：同步獲取最新合化天干，徹底解決 Vue 延遲計分 Bug
     const calcQuantScore = () => {
       if (!result.value) return;
       let scores = [], ally = 0, diff = 0;
@@ -796,10 +822,11 @@ createApp({
           return false;
       };
 
-      effectivePillars.value.forEach(p => {
-        let res = getStemRootEnergy(p.effGan, p.name, result.value.pillars);
-        let isAlly = p.isDayMaster || ['比肩','劫財','正印','偏印'].includes(p.isDayMaster ? '日主' : getShiShen(dayGan, p.effGan));
-        scores.push({ name: p.name, gan: p.effGan, shishen: p.isDayMaster ? '日主' : getShiShen(dayGan, p.effGan), isAlly, energy: res.total, breakdown: res.breakdown });
+      result.value.pillars.forEach(p => {
+        let effGan = getEffGanGlobal(p.name, p.gan); // 直接取最新
+        let res = getStemRootEnergy(effGan, p.name, result.value.pillars);
+        let isAlly = p.isDayMaster || ['比肩','劫財','正印','偏印'].includes(p.isDayMaster ? '日主' : getShiShen(dayGan, effGan));
+        scores.push({ name: p.name, gan: effGan, shishen: p.isDayMaster ? '日主' : getShiShen(dayGan, effGan), isAlly, energy: res.total, breakdown: res.breakdown });
       });
 
       scores.forEach(p => {
@@ -825,9 +852,9 @@ createApp({
 
       let isComboTransformed = false;
       if (comboTargetElem) {
-        let allActiveGans = effectivePillars.value.map(p => p.effGan);
-        if (selectedDaYun.value) allActiveGans.push(transformedInfo.value['大運']?.isSuccess ? transformedInfo.value['大運'].targetStem : selectedDaYun.value.gan);
-        if (currentLiuNianObj.value) allActiveGans.push(transformedInfo.value['流年']?.isSuccess ? transformedInfo.value['流年'].targetStem : currentLiuNianObj.value.gan);
+        let allActiveGans = result.value.pillars.map(p => getEffGanGlobal(p.name, p.gan));
+        if (selectedDaYun.value) allActiveGans.push(getEffGanGlobal('大運', selectedDaYun.value.gan));
+        if (currentLiuNianObj.value) allActiveGans.push(getEffGanGlobal('流年', currentLiuNianObj.value.gan));
         isComboTransformed = allActiveGans.some(gan => STEM_PROPS[gan] && STEM_PROPS[gan].e === comboTargetElem);
       }
 
@@ -1013,6 +1040,10 @@ createApp({
       if (quantScore.value.congCategory) {
         return { patternName: quantScore.value.verdict }; 
       }
+
+      const getProtrudingStemOfElem = (elem) => {
+        return nonDmGans.find(gan => STEM_PROPS[gan] && STEM_PROPS[gan].e === elem);
+      };
 
       let comboElem = null;
       const comboStr = branchCombos.value.map(bc => bc.desc).join(',');
