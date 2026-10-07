@@ -784,6 +784,7 @@ createApp({
     };
 
     // 🌟 核心防禦：加入【步驟 0】大合局五行翻轉機制
+    // 🌟 究極防禦：加入異黨存亡掃描器 ＋ 合局透干引化機制
     const calcQuantScore = () => {
       if (!result.value) return;
       let scores = [], ally = 0, diff = 0;
@@ -826,21 +827,29 @@ createApp({
       else if (comboStr.includes('火局')) comboTargetElem = '火';
       else if (comboStr.includes('金局')) comboTargetElem = '金';
 
-      // 🛡️ 【防線一：異黨存亡掃描器】(結合合局翻轉)
+      // ✨ 核心修正：必須透干引化！檢查天干(包含日主)是否透出了合局的五行
+      let isComboTransformed = false;
+      if (comboTargetElem) {
+        const allGans = effectivePillars.value.map(p => p.effGan);
+        isComboTransformed = allGans.some(gan => STEM_PROPS[gan] && STEM_PROPS[gan].e === comboTargetElem);
+      }
+
+      // 🛡️ 【防線一：異黨存亡掃描器】(結合合局透干翻轉)
       let hasOpposingMainQi = false;
       let hasAllyMainQi = false;
 
       result.value.pillars.forEach(p => {
-        let isParticipating = comboTargetElem && comboStr.includes(p.zhi);
+        // 只有在合局成立【且】成功透干引化的情況下，地支主氣才會被強制翻轉！
+        let isParticipating = isComboTransformed && comboStr.includes(p.zhi);
         let isAlly = false;
         let isOpposing = false;
 
         if (isParticipating) {
-           // 該地支捲入合局，主氣失效，改用「合局五行」判定敵我
+           // 該地支捲入合局且透干，主氣失效，改用「合局五行」判定敵我
            if (checkElemIsAlly(comboTargetElem)) isAlly = true;
            else isOpposing = true;
         } else {
-           // 該地支未捲入合局，正常檢查原主氣
+           // 該地支未捲入合局或未透干，正常檢查原主氣
            const mainQiStem = getMainQi(p.zhi);
            if (mainQiStem) {
               const rel = getShiShen(dayGan, mainQiStem);
@@ -853,6 +862,7 @@ createApp({
         if (isOpposing) hasOpposingMainQi = true;
       });
 
+      // 判定是否入從格
       if (ratio >= 2.5) {
         if (!hasOpposingMainQi) { // 異黨徹底死絕，方可入從旺
           verdict = '偏旺候選';
