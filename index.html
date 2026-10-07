@@ -320,7 +320,7 @@
         </div>
       </div>
 
-      <!-- 身強弱結論指標 Bar (已更新異黨未絕防護網) -->
+      <!-- 身強弱結論指標 Bar (包含究極防禦系統) -->
       <div v-if="quantScore" class="pt-5 mt-5">
         <div class="flex justify-between items-end mb-3 px-1">
           <h3 class="text-xs sm:text-sm font-extrabold text-slate-600">⚖️ 能量天平</h3>
@@ -350,7 +350,7 @@
     </div>
 
     <!-- ============================================== -->
-    <!-- 🛡️ 歲運防禦與救應系統 (全新模組) -->
+    <!-- 🛡️ 歲運防禦與救應系統 -->
     <!-- ============================================== -->
     <div v-if="godsInfo" class="card-bg p-4 sm:p-5 rounded-3xl space-y-4">
       <div class="border-b border-slate-100 pb-2">
@@ -783,14 +783,25 @@ createApp({
       return (parseFloat(getMatrixCangDetail(selectedPillar, targetBranchPillar, '主').score) + parseFloat(getMatrixCangDetail(selectedPillar, targetBranchPillar, '中').score) + parseFloat(getMatrixCangDetail(selectedPillar, targetBranchPillar, '餘').score)).toFixed(1);
     };
 
-    // 🌟 究極防禦：加入異黨存亡掃描器，破解虛假從格！
+    // 🌟 核心防禦：加入【步驟 0】大合局五行翻轉機制
     const calcQuantScore = () => {
       if (!result.value) return;
       let scores = [], ally = 0, diff = 0;
+      const dayGan = result.value.dayGan;
+      const dmElem = STEM_PROPS[dayGan].e;
+      
+      // 輔助：判斷某個五行對日主來說是否為同黨
+      const checkElemIsAlly = (elem) => {
+          if (elem === dmElem) return true; // 比劫
+          const generates = { '木':'水', '火':'木', '土':'火', '金':'土', '水':'金' }; // 生我者印星
+          if (elem === generates[dmElem]) return true;
+          return false;
+      };
+
       effectivePillars.value.forEach(p => {
         let res = getStemRootEnergy(p.effGan, p.name, result.value.pillars);
-        let isAlly = p.isDayMaster || ['比肩','劫財','正印','偏印'].includes(p.isDayMaster ? '日主' : getShiShen(result.value.dayGan, p.effGan));
-        scores.push({ name: p.name, gan: p.effGan, shishen: p.isDayMaster ? '日主' : getShiShen(result.value.dayGan, p.effGan), isAlly, energy: res.total, breakdown: res.breakdown });
+        let isAlly = p.isDayMaster || ['比肩','劫財','正印','偏印'].includes(p.isDayMaster ? '日主' : getShiShen(dayGan, p.effGan));
+        scores.push({ name: p.name, gan: p.effGan, shishen: p.isDayMaster ? '日主' : getShiShen(dayGan, p.effGan), isAlly, energy: res.total, breakdown: res.breakdown });
       });
 
       scores.forEach(p => {
@@ -807,21 +818,43 @@ createApp({
       let verdict = '身中和';
       let congCategory = null;
 
-      // 🛡️ 防禦掃描：檢查四柱地支主氣中，是否還有異黨或同黨存活？
-      const dayGan = result.value.dayGan;
+      // 🛡️ 【步驟 0：合局探測】獲取當前地支合局化出的五行目標
+      const comboStr = branchCombos.value.map(bc => bc.desc).join(',');
+      let comboTargetElem = null;
+      if (comboStr.includes('水局')) comboTargetElem = '水';
+      else if (comboStr.includes('木局')) comboTargetElem = '木';
+      else if (comboStr.includes('火局')) comboTargetElem = '火';
+      else if (comboStr.includes('金局')) comboTargetElem = '金';
+
+      // 🛡️ 【防線一：異黨存亡掃描器】(結合合局翻轉)
       let hasOpposingMainQi = false;
       let hasAllyMainQi = false;
+
       result.value.pillars.forEach(p => {
-        const mainQiStem = getMainQi(p.zhi);
-        if (mainQiStem) {
-          const rel = getShiShen(dayGan, mainQiStem);
-          if (['比肩','劫財','正印','偏印'].includes(rel)) hasAllyMainQi = true;
-          else if (['食神','傷官','正財','偏財','正官','七殺'].includes(rel)) hasOpposingMainQi = true;
+        let isParticipating = comboTargetElem && comboStr.includes(p.zhi);
+        let isAlly = false;
+        let isOpposing = false;
+
+        if (isParticipating) {
+           // 該地支捲入合局，主氣失效，改用「合局五行」判定敵我
+           if (checkElemIsAlly(comboTargetElem)) isAlly = true;
+           else isOpposing = true;
+        } else {
+           // 該地支未捲入合局，正常檢查原主氣
+           const mainQiStem = getMainQi(p.zhi);
+           if (mainQiStem) {
+              const rel = getShiShen(dayGan, mainQiStem);
+              if (['比肩','劫財','正印','偏印'].includes(rel)) isAlly = true;
+              else if (['食神','傷官','正財','偏財','正官','七殺'].includes(rel)) isOpposing = true;
+           }
         }
+
+        if (isAlly) hasAllyMainQi = true;
+        if (isOpposing) hasOpposingMainQi = true;
       });
 
       if (ratio >= 2.5) {
-        if (!hasOpposingMainQi) { // 異黨死絕，才可入從旺
+        if (!hasOpposingMainQi) { // 異黨徹底死絕，方可入從旺
           verdict = '偏旺候選';
           let sums = { '印星': 0, '比劫': 0 };
           scores.forEach(p => {
@@ -832,7 +865,7 @@ createApp({
           verdict = maxCat === '印星' ? '從印格' : '從旺格';
           congCategory = maxCat;
         } else {
-          // 🚨 觸發師傅鐵律：異黨在地支主氣有根，絕不入從格！
+          // 🚨 觸發防線：主氣異黨未絕（且未被合局同化）！踢回正格！
           verdict = '身強正格 (異黨未絕，不可從)';
         }
       } 
@@ -840,7 +873,7 @@ createApp({
       else if (ratio >= 0.9) verdict = '中和正格'; 
       else if (ratio >= 0.45) verdict = '身弱正格'; 
       else {
-        if (!hasAllyMainQi) { // 同黨死絕，才可入從弱
+        if (!hasAllyMainQi) { // 同黨徹底死絕，方可入從弱
           verdict = '偏弱候選';
           let sums = { '食傷': 0, '財星': 0, '官殺': 0 };
           scores.forEach(p => {
@@ -854,7 +887,7 @@ createApp({
           else if (maxCat === '官殺') verdict = '從殺格';
           congCategory = maxCat;
         } else {
-          // 🚨 觸發師傅鐵律：同黨在地支主氣有根，死撐到底，不入從格！
+          // 🚨 觸發防線：主氣同黨死撐（且未被合局敵化）！踢回正格！
           verdict = '身弱正格 (同黨未絕，不可從)';
         }
       }
@@ -1034,7 +1067,6 @@ createApp({
       return { patternName: '無格 (正格不成)' };
     });
 
-    // 🌟 究極升級：身強弱兵法陣列 ＋ 防「比劫奪財」機制
     const godsInfo = computed(() => {
       if (!result.value || !quantScore.value || !tenGodsTactics.value) return null;
       const isStrong = parseFloat(quantScore.value.ratio) >= 1.25 || quantScore.value.verdict.includes('身強');
@@ -1046,7 +1078,6 @@ createApp({
       let xiShen = '';
       let jiShen = '';
 
-      // 1. 從格戰略
       if (cong) {
         tacticalStrategy = '【從格 ‧ 天人合一】順從旺勢';
         yongShen = cong;
@@ -1056,16 +1087,14 @@ createApp({
         else if (cong === '印星') { xiShen = '官殺、印星'; jiShen = '財星、食傷'; }
         else if (cong === '比劫') { xiShen = '印星、比劫'; jiShen = '官殺、財星'; }
       } 
-      // 2. 無格防守戰略
       else if (basePattern.includes('無格')) {
          tacticalStrategy = '【無格睇日主】歲運專心保護日主';
          yongShen = isStrong ? '食傷 / 官殺 / 財星' : '印星 / 比劫';
          xiShen = isStrong ? '食傷、財星' : '印星、比劫';
          jiShen = isStrong ? '印星、比劫' : '七殺(攻身)、重洩';
       } 
-      // 3. 正格常規戰略 (身強/身弱動態切換)
       else {
-        if (isStrong) { // 日主身強，急需洩秀或剋制
+        if (isStrong) { 
           if (basePattern.includes('印')) {
             tacticalStrategy = '【印旺身強】急需通關洩秀，轉生財星';
             yongShen = '食傷(通關洩秀) / 財星(破印生財)';
@@ -1081,13 +1110,13 @@ createApp({
             yongShen = '七殺/官星(制刃) / 食傷(洩秀生財)';
             xiShen = '官殺、食傷、財星';
             jiShen = '印星、比劫';
-          } else { // 財 / 食傷
+          } else { 
             tacticalStrategy = '【身強用洩耗】食傷生財';
             yongShen = '食傷(生財) / 財星(耗身)';
             xiShen = '食傷、財星、官殺';
             jiShen = '印星、比劫';
           }
-        } else { // 日主身弱，急需生扶或分擔
+        } else { 
           if (basePattern.includes('官') || basePattern.includes('殺')) {
             tacticalStrategy = '【殺重身輕】印星化殺 / 比劫幫身';
             yongShen = '印星(化殺生身) / 比劫(幫身擋殺)';
@@ -1103,7 +1132,7 @@ createApp({
             yongShen = '比劫(幫身抗財) / 印星(生扶)';
             xiShen = '比劫、印星';
             jiShen = '財星、食傷、官殺';
-          } else { // 印 (如身弱印格)
+          } else { 
             tacticalStrategy = '【身弱用印】順用生扶';
             yongShen = '官殺(生印) / 印星(生身)';
             xiShen = '官殺、印星、比劫';
@@ -1112,7 +1141,6 @@ createApp({
         }
       }
 
-      // 精準戰術命名
       let tacticalName = basePattern;
       const nonDmGans = effectivePillars.value.filter(p => !p.isDayMaster).map(p => p.effGan);
       const curShiShens = nonDmGans.map(g => getShiShen(result.value.dayGan, g));
