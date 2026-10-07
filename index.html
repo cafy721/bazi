@@ -77,13 +77,21 @@
 
   <!-- 輸入區 & 命例管理 -->
   <div class="card-bg p-4 sm:p-5 rounded-3xl max-w-2xl mx-auto">
+    <!-- 🌟 模式切換按鈕 -->
+    <div class="flex gap-2 mb-5 bg-white/40 p-1.5 rounded-2xl shadow-inner border border-white">
+      <button @click="inputMode = 'birth'" :class="['flex-1 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition', inputMode === 'birth' ? 'bg-white text-pink-500 shadow-sm' : 'text-slate-500 hover:bg-white/50']">📅 生辰排盤</button>
+      <button @click="inputMode = 'manual'" :class="['flex-1 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition', inputMode === 'manual' ? 'bg-white text-pink-500 shadow-sm' : 'text-slate-500 hover:bg-white/50']">📚 命盤學習 (免日期)</button>
+    </div>
+
     <div class="space-y-4">
       <div>
         <label class="block text-xs font-bold text-slate-500 mb-1 ml-1">姓名 (選填)</label>
-        <input type="text" v-model="name" placeholder="輸入名字"
+        <input type="text" v-model="name" placeholder="輸入名字或案例名稱"
                class="w-full bg-white/70 border border-white rounded-2xl p-3 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-pink-200 shadow-inner transition">
       </div>
-      <div class="flex gap-3">
+
+      <!-- 模式 1：生辰排盤輸入 -->
+      <div v-if="inputMode === 'birth'" class="flex gap-3 animate-fade-in">
         <div class="flex-[2]">
           <label class="block text-xs font-bold text-slate-500 mb-1 ml-1">出生時間</label>
           <input type="datetime-local" v-model="birthTime" 
@@ -97,21 +105,55 @@
           </select>
         </div>
       </div>
+
+      <!-- 🌟 模式 2：命盤學習 (四柱手動輸入) -->
+      <div v-if="inputMode === 'manual'" class="space-y-4 animate-fade-in">
+        <div class="grid grid-cols-4 gap-2 sm:gap-3 bg-white/30 p-3 rounded-2xl border border-white shadow-inner">
+          <div v-for="(p, i) in manualPillars" :key="i" class="space-y-2">
+            <label class="block text-[10px] sm:text-xs font-extrabold text-pink-400 text-center">{{ ['年柱','月柱','日柱','時柱'][i] }}</label>
+            <select v-model="p.gan" class="w-full bg-white/80 border border-white rounded-xl p-2 text-slate-700 text-sm sm:text-base font-extrabold text-center focus:outline-none focus:ring-2 focus:ring-pink-300 shadow-sm appearance-none">
+              <option v-for="s in stems" :value="s">{{ s }}</option>
+            </select>
+            <select v-model="p.zhi" class="w-full bg-white/80 border border-white rounded-xl p-2 text-slate-700 text-sm sm:text-base font-extrabold text-center focus:outline-none focus:ring-2 focus:ring-pink-300 shadow-sm appearance-none">
+              <option v-for="b in branches" :value="b">{{ b }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="flex gap-3">
+          <div class="flex-1">
+            <label class="block text-xs font-bold text-slate-500 mb-1 ml-1">起運歲數 (預設 1)</label>
+            <input type="number" v-model="manualStartAge" min="1" max="15" 
+                   class="w-full bg-white/70 border border-white rounded-2xl p-3 text-slate-700 text-sm font-bold text-center focus:outline-none focus:ring-2 focus:ring-pink-200 shadow-inner transition">
+          </div>
+          <div class="flex-1">
+            <label class="block text-xs font-bold text-slate-500 mb-1 ml-1">性別 (決定大運順逆)</label>
+            <select v-model="manualGender" class="w-full bg-white/70 border border-white rounded-2xl p-3 text-slate-700 text-sm font-bold text-center focus:outline-none focus:ring-2 focus:ring-pink-200 shadow-inner transition appearance-none">
+              <option :value="1">乾造 (男)</option>
+              <option :value="0">坤造 (女)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
       <div class="flex gap-2 pt-2">
-        <button @click="calculate" class="flex-[2] btn-gradient font-extrabold py-3 rounded-2xl transition active:scale-95">✨ 立即排盤</button>
-        <button @click="saveRecord" class="flex-1 bg-white/80 hover:bg-white text-slate-600 font-bold py-3 rounded-2xl transition active:scale-95 border border-slate-200 shadow-sm">💾 儲存</button>
-        <button @click="showRecords = !showRecords" class="flex-1 bg-white/80 hover:bg-white text-pink-500 font-bold py-3 rounded-2xl transition active:scale-95 border border-slate-200 shadow-sm">📂 命庫</button>
+        <button @click="calculate" class="flex-[2] btn-gradient font-extrabold py-3 rounded-2xl transition active:scale-95 text-sm sm:text-base">✨ 立即排盤</button>
+        <button @click="saveRecord" class="flex-1 bg-white/80 hover:bg-white text-slate-600 font-bold py-3 rounded-2xl transition active:scale-95 border border-slate-200 shadow-sm text-xs sm:text-sm">💾 儲存</button>
+        <button @click="showRecords = !showRecords" class="flex-1 bg-white/80 hover:bg-white text-pink-500 font-bold py-3 rounded-2xl transition active:scale-95 border border-slate-200 shadow-sm text-xs sm:text-sm">📂 命庫</button>
       </div>
     </div>
     <!-- 命庫清單 -->
-    <div v-if="showRecords" class="mt-4 p-3 bg-white/50 rounded-2xl border border-white shadow-sm">
+    <div v-if="showRecords" class="mt-4 p-3 bg-white/50 rounded-2xl border border-white shadow-sm animate-fade-in">
       <h3 class="text-xs font-bold text-slate-500 mb-2 border-b border-slate-200 pb-2">已儲存命例</h3>
       <div v-if="records.length === 0" class="text-xs text-slate-400 text-center py-4">還沒有儲存的命例喔 ☁️</div>
       <div v-else class="space-y-2 max-h-48 overflow-y-auto no-scrollbar">
         <div v-for="rec in records" :key="rec.id" class="flex justify-between items-center bg-white/60 p-2.5 rounded-xl hover:bg-white transition shadow-sm">
           <div class="cursor-pointer flex-1" @click="loadRecord(rec)">
-            <div class="text-sm font-bold text-slate-700">{{ rec.name }} <span class="text-[10px] text-pink-400 bg-pink-50 px-1.5 py-0.5 rounded-full ml-1">{{ rec.gender === 1 ? '男' : '女' }}</span></div>
-            <div class="text-[10px] text-slate-400 mt-0.5">{{ formatTime(rec.birthTime) }}</div>
+            <div class="text-sm font-bold text-slate-700">
+              {{ rec.name }} 
+              <span class="text-[10px] text-pink-400 bg-pink-50 px-1.5 py-0.5 rounded-full ml-1">{{ rec.gender === 1 ? '男' : '女' }}</span>
+              <span v-if="rec.mode === 'manual'" class="text-[9px] text-indigo-400 bg-indigo-50 px-1.5 py-0.5 rounded-full ml-1">學習盤</span>
+            </div>
+            <div class="text-[10px] text-slate-400 mt-0.5">{{ rec.mode === 'manual' ? '自訂干支排盤' : formatTime(rec.birthTime) }}</div>
           </div>
           <button @click="deleteRecord(rec.id)" class="text-rose-400 hover:text-rose-500 text-xs px-3 py-1 bg-rose-50 rounded-full font-bold">刪除</button>
         </div>
@@ -124,8 +166,8 @@
     <div class="card-bg p-4 rounded-3xl text-center text-[11px] sm:text-xs text-slate-600 space-y-2 font-semibold">
       <div class="flex justify-center items-center gap-3 sm:gap-4 flex-wrap">
         <span class="text-pink-500 font-extrabold text-sm" v-if="result.name">{{ result.name }}</span>
-        <span class="bg-white/50 px-2 py-1 rounded-lg">陽曆：{{ result.solarStr }}</span>
-        <span class="bg-white/50 px-2 py-1 rounded-lg">陰曆：{{ result.lunarStr }}</span>
+        <span class="bg-white/50 px-2 py-1 rounded-lg">{{ result.solarStr }}</span>
+        <span class="bg-white/50 px-2 py-1 rounded-lg">{{ result.lunarStr }}</span>
         <span class="bg-purple-50 text-purple-600 px-2 py-1 rounded-lg">起運：{{ result.yunStr }}</span>
       </div>
     </div>
@@ -140,7 +182,7 @@
         <div v-for="(dy, index) in result.daYunList" :key="'dy'+dy.startYear" @click="selectDaYun(dy)"
              :class="['cursor-pointer border rounded-2xl p-2.5 w-[90px] sm:w-[110px] text-center flex-shrink-0 transition relative', 
                       selectedDaYun?.startYear === dy.startYear ? 'bg-gradient-to-br from-fuchsia-100 to-pink-100 border-pink-200 shadow-md transform -translate-y-1' : 'bg-white/60 border-white hover:bg-white']">
-          <div class="text-[9px] sm:text-[10px] text-slate-500 font-bold mb-1">{{ dy.startAge }}歲 <span class="opacity-70">({{ dy.startYear }})</span></div>
+          <div class="text-[9px] sm:text-[10px] text-slate-500 font-bold mb-1">{{ dy.startAge }}歲 <span class="opacity-70">({{ dy.startYear }}起)</span></div>
           <div class="text-base sm:text-lg font-extrabold">
             <span :class="getElemClass(dy.gan)">{{ dy.gan }}</span><span :class="getElemClass(dy.zhi)">{{ dy.zhi }}</span>
           </div>
@@ -154,7 +196,7 @@
     <div class="card-bg p-3 sm:p-5 rounded-3xl overflow-hidden relative">
       <h2 class="text-xs sm:text-sm font-extrabold text-slate-600 mb-3 flex justify-between items-center px-1">
         <span>✨ {{ selectedDaYun ? '六柱全息連動' : '四柱原命盤' }}</span>
-        <span class="text-[9px] sm:text-[10px] text-pink-500 bg-pink-50 px-2 py-1 rounded-full">💡 點擊「得分」看細節</span>
+        <span class="text-[9px] sm:text-[10px] text-pink-500 bg-pink-50 px-2 py-1 rounded-full shadow-sm">💡 點擊「得分」看細節</span>
       </h2>
       
       <div class="grid text-center text-[10px] sm:text-xs gap-y-1 sm:gap-y-2 w-full" :style="{ gridTemplateColumns: 'minmax(30px, auto) repeat(' + displayPillars.length + ', minmax(0, 1fr))' }">
@@ -278,7 +320,7 @@
         </div>
       </div>
 
-      <!-- 身強弱結論指標 Bar -->
+      <!-- 身強弱結論指標 Bar (已更新異黨未絕防護網) -->
       <div v-if="quantScore" class="pt-5 mt-5">
         <div class="flex justify-between items-end mb-3 px-1">
           <h3 class="text-xs sm:text-sm font-extrabold text-slate-600">⚖️ 能量天平</h3>
@@ -558,8 +600,24 @@ const { createApp, ref, computed, watch, onMounted } = Vue;
 createApp({
   setup() {
     const name = ref('');
+    const inputMode = ref('birth'); // 'birth' or 'manual'
     const birthTime = ref('');
     const gender = ref(1);
+
+    const manualGender = ref(1);
+    const manualStartAge = ref(1);
+    const stems = ["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"];
+    const branches = ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"];
+    const jiazi = [];
+    for(let i=0; i<60; i++) jiazi.push(stems[i%10] + branches[i%12]);
+
+    const manualPillars = ref([
+      { gan: '丙', zhi: '寅' },
+      { gan: '乙', zhi: '未' },
+      { gan: '丙', zhi: '寅' },
+      { gan: '丁', zhi: '酉' }
+    ]);
+
     const result = ref(null);
     const selectedScorePillar = ref('日柱'); 
     const selectedMatrixPillar = ref('日柱'); 
@@ -725,6 +783,7 @@ createApp({
       return (parseFloat(getMatrixCangDetail(selectedPillar, targetBranchPillar, '主').score) + parseFloat(getMatrixCangDetail(selectedPillar, targetBranchPillar, '中').score) + parseFloat(getMatrixCangDetail(selectedPillar, targetBranchPillar, '餘').score)).toFixed(1);
     };
 
+    // 🌟 究極防禦：加入異黨存亡掃描器，破解虛假從格！
     const calcQuantScore = () => {
       if (!result.value) return;
       let scores = [], ally = 0, diff = 0;
@@ -748,33 +807,56 @@ createApp({
       let verdict = '身中和';
       let congCategory = null;
 
+      // 🛡️ 防禦掃描：檢查四柱地支主氣中，是否還有異黨或同黨存活？
+      const dayGan = result.value.dayGan;
+      let hasOpposingMainQi = false;
+      let hasAllyMainQi = false;
+      result.value.pillars.forEach(p => {
+        const mainQiStem = getMainQi(p.zhi);
+        if (mainQiStem) {
+          const rel = getShiShen(dayGan, mainQiStem);
+          if (['比肩','劫財','正印','偏印'].includes(rel)) hasAllyMainQi = true;
+          else if (['食神','傷官','正財','偏財','正官','七殺'].includes(rel)) hasOpposingMainQi = true;
+        }
+      });
+
       if (ratio >= 2.5) {
-        verdict = '偏旺候選';
-        let sums = { '印星': 0, '比劫': 0 };
-        scores.forEach(p => {
-           if(!p.isDayMaster && ['正印','偏印'].includes(p.shishen)) sums['印星'] += p.energy;
-           if(!p.isDayMaster && ['比肩','劫財'].includes(p.shishen)) sums['比劫'] += p.energy;
-        });
-        let maxCat = sums['印星'] > sums['比劫'] ? '印星' : '比劫';
-        verdict = maxCat === '印星' ? '從印格' : '從旺格';
-        congCategory = maxCat;
+        if (!hasOpposingMainQi) { // 異黨死絕，才可入從旺
+          verdict = '偏旺候選';
+          let sums = { '印星': 0, '比劫': 0 };
+          scores.forEach(p => {
+             if(!p.isDayMaster && ['正印','偏印'].includes(p.shishen)) sums['印星'] += p.energy;
+             if(!p.isDayMaster && ['比肩','劫財'].includes(p.shishen)) sums['比劫'] += p.energy;
+          });
+          let maxCat = sums['印星'] > sums['比劫'] ? '印星' : '比劫';
+          verdict = maxCat === '印星' ? '從印格' : '從旺格';
+          congCategory = maxCat;
+        } else {
+          // 🚨 觸發師傅鐵律：異黨在地支主氣有根，絕不入從格！
+          verdict = '身強正格 (異黨未絕，不可從)';
+        }
       } 
       else if (ratio > 1.25) verdict = '身強正格'; 
       else if (ratio >= 0.9) verdict = '中和正格'; 
       else if (ratio >= 0.45) verdict = '身弱正格'; 
       else {
-        verdict = '偏弱候選';
-        let sums = { '食傷': 0, '財星': 0, '官殺': 0 };
-        scores.forEach(p => {
-           if(!p.isDayMaster && ['食神','傷官'].includes(p.shishen)) sums['食傷'] += p.energy;
-           if(!p.isDayMaster && ['正財','偏財'].includes(p.shishen)) sums['財星'] += p.energy;
-           if(!p.isDayMaster && ['正官','七殺'].includes(p.shishen)) sums['官殺'] += p.energy;
-        });
-        let maxCat = Object.keys(sums).reduce((a, b) => sums[a] > sums[b] ? a : b);
-        if (maxCat === '食傷') verdict = '從兒格';
-        else if (maxCat === '財星') verdict = '從財格';
-        else if (maxCat === '官殺') verdict = '從殺格';
-        congCategory = maxCat;
+        if (!hasAllyMainQi) { // 同黨死絕，才可入從弱
+          verdict = '偏弱候選';
+          let sums = { '食傷': 0, '財星': 0, '官殺': 0 };
+          scores.forEach(p => {
+             if(!p.isDayMaster && ['食神','傷官'].includes(p.shishen)) sums['食傷'] += p.energy;
+             if(!p.isDayMaster && ['正財','偏財'].includes(p.shishen)) sums['財星'] += p.energy;
+             if(!p.isDayMaster && ['正官','七殺'].includes(p.shishen)) sums['官殺'] += p.energy;
+          });
+          let maxCat = Object.keys(sums).reduce((a, b) => sums[a] > sums[b] ? a : b);
+          if (maxCat === '食傷') verdict = '從兒格';
+          else if (maxCat === '財星') verdict = '從財格';
+          else if (maxCat === '官殺') verdict = '從殺格';
+          congCategory = maxCat;
+        } else {
+          // 🚨 觸發師傅鐵律：同黨在地支主氣有根，死撐到底，不入從格！
+          verdict = '身弱正格 (同黨未絕，不可從)';
+        }
       }
       
       quantScore.value = { allyScore: ally.toFixed(1), diffScore: diff.toFixed(1), ratio, verdict, congCategory };
@@ -952,10 +1034,10 @@ createApp({
       return { patternName: '無格 (正格不成)' };
     });
 
-    // 🌟 究極升級：精準匹配戰略方針、四神定位與救應系統
+    // 🌟 究極升級：身強弱兵法陣列 ＋ 防「比劫奪財」機制
     const godsInfo = computed(() => {
       if (!result.value || !quantScore.value || !tenGodsTactics.value) return null;
-      const isStrong = parseFloat(quantScore.value.ratio) >= 1.25;
+      const isStrong = parseFloat(quantScore.value.ratio) >= 1.25 || quantScore.value.verdict.includes('身強');
       const cong = quantScore.value.congCategory;
       const basePattern = tenGodsTactics.value.patternName;
 
@@ -981,53 +1063,52 @@ createApp({
          xiShen = isStrong ? '食傷、財星' : '印星、比劫';
          jiShen = isStrong ? '印星、比劫' : '七殺(攻身)、重洩';
       } 
-      // 3. 正格常規戰略 (嚴格遵循師傅的四吉四凶戰法)
+      // 3. 正格常規戰略 (身強/身弱動態切換)
       else {
-        if (basePattern.includes('正官')) {
-          tacticalStrategy = '【四吉神 ‧ 順用】生之、護之';
-          yongShen = '財星(生官) / 印星(護官)';
-          xiShen = '生助財印者';
-          jiShen = '傷官(剋官) / 官殺混雜';
-        } else if (basePattern.includes('正印') || (basePattern.includes('印') && !basePattern.includes('偏'))) {
-          tacticalStrategy = '【四吉神 ‧ 順用】生之、護之';
-          yongShen = '官殺(生印) / 比劫(通關)';
-          xiShen = '生助官殺者';
-          jiShen = '財星(破印)';
-        } else if (basePattern.includes('財')) {
-          tacticalStrategy = '【四吉神 ‧ 順用】生之、護之';
-          yongShen = '食傷(生財) / 官星(護財)';
-          xiShen = '食傷、官星';
-          jiShen = '比劫(奪財)';
-        } else if (basePattern.includes('食神')) {
-          tacticalStrategy = '【四吉神 ‧ 順用】生之、護之';
-          yongShen = '財星(轉化) / 七殺(供制伏)';
-          xiShen = '比劫(生食)、財星';
-          jiShen = '梟神/偏印(奪食)';
-        } else if (basePattern.includes('七殺')) {
-          tacticalStrategy = '【四凶神 ‧ 逆用】制之、化之';
-          yongShen = '食神(制殺) / 印星(化殺為權)';
-          xiShen = '比劫、食傷、印星';
-          jiShen = '財星(滋殺攻身)';
-        } else if (basePattern.includes('傷官')) {
-          tacticalStrategy = '【四凶神 ‧ 逆用】制之、化之';
-          yongShen = '印星(佩印收斂) / 財星(化轉生財)';
-          xiShen = '印星、財星';
-          jiShen = '正官(傷官見官)';
-        } else if (basePattern.includes('偏印') || basePattern.includes('梟神')) {
-          tacticalStrategy = '【四凶神 ‧ 逆用】制之、化之';
-          yongShen = '財星(制梟護食) / 官殺(相生)';
-          xiShen = '財星';
-          jiShen = '食神(無財救時)';
-        } else if (basePattern.includes('陽刃') || basePattern.includes('月劫') || basePattern.includes('建祿')) {
-          tacticalStrategy = '【四凶神 ‧ 逆用 / 制裁】';
-          yongShen = '七殺 / 官星(強行制伏) / 食傷(洩秀)';
-          xiShen = '財星、官殺、食傷';
-          jiShen = '印星、比劫';
-        } else {
-          tacticalStrategy = '【常規制化】';
-          yongShen = isStrong ? '食傷 / 官殺' : '印星 / 比劫';
-          xiShen = isStrong ? '食傷、財星' : '印星、比劫';
-          jiShen = isStrong ? '印星、比劫' : '財星、官殺';
+        if (isStrong) { // 日主身強，急需洩秀或剋制
+          if (basePattern.includes('印')) {
+            tacticalStrategy = '【印旺身強】急需通關洩秀，轉生財星';
+            yongShen = '食傷(通關洩秀) / 財星(破印生財)';
+            xiShen = '食傷、財星';
+            jiShen = '印星、比劫 (防比劫奪財)';
+          } else if (basePattern.includes('官') || basePattern.includes('殺')) {
+            tacticalStrategy = '【身強用剋】財生官殺';
+            yongShen = '財星(生殺/官) / 官殺(制比劫)';
+            xiShen = '財星、官殺';
+            jiShen = '印星、比劫、食傷(若剋官)';
+          } else if (basePattern.includes('祿') || basePattern.includes('刃') || basePattern.includes('劫')) {
+            tacticalStrategy = '【身旺極】強行制伏或洩秀';
+            yongShen = '七殺/官星(制刃) / 食傷(洩秀生財)';
+            xiShen = '官殺、食傷、財星';
+            jiShen = '印星、比劫';
+          } else { // 財 / 食傷
+            tacticalStrategy = '【身強用洩耗】食傷生財';
+            yongShen = '食傷(生財) / 財星(耗身)';
+            xiShen = '食傷、財星、官殺';
+            jiShen = '印星、比劫';
+          }
+        } else { // 日主身弱，急需生扶或分擔
+          if (basePattern.includes('官') || basePattern.includes('殺')) {
+            tacticalStrategy = '【殺重身輕】印星化殺 / 比劫幫身';
+            yongShen = '印星(化殺生身) / 比劫(幫身擋殺)';
+            xiShen = '印星、比劫';
+            jiShen = '財星(滋殺)、官殺';
+          } else if (basePattern.includes('傷') || basePattern.includes('食')) {
+            tacticalStrategy = '【洩氣過重】印星佩印';
+            yongShen = '印星(制傷生身)';
+            xiShen = '印星、比劫';
+            jiShen = '食傷、財星';
+          } else if (basePattern.includes('財')) {
+            tacticalStrategy = '【財多身弱】比劫分擔';
+            yongShen = '比劫(幫身抗財) / 印星(生扶)';
+            xiShen = '比劫、印星';
+            jiShen = '財星、食傷、官殺';
+          } else { // 印 (如身弱印格)
+            tacticalStrategy = '【身弱用印】順用生扶';
+            yongShen = '官殺(生印) / 印星(生身)';
+            xiShen = '官殺、印星、比劫';
+            jiShen = '財星(破印)';
+          }
         }
       }
 
@@ -1042,16 +1123,16 @@ createApp({
       } else if (basePattern.includes('正印') || (basePattern.includes('偏印') && !basePattern.includes('從'))) {
         if (has('正官') || has('七殺')) tacticalName = '印綬用官/殺';
       } else if (basePattern.includes('正財') || (basePattern.includes('偏財') && !basePattern.includes('從'))) {
-        if (has('食神') || has('傷官')) tacticalName = '財逢食/傷生 (財星為主角)';
+        if (has('食神') || has('傷官')) tacticalName = '財逢食/傷生 (財星為主)';
       } else if (basePattern.includes('食神')) {
         if (has('偏印')) tacticalName = '食神逢梟 (喜財制梟)';
         else if (has('正財') || has('偏財')) tacticalName = '食神生財';
       } else if (basePattern.includes('七殺')) {
-        if (has('食神') && (has('正印') || has('偏印'))) tacticalName = '殺逢食制露印 (需去食就殺印)';
+        if (has('食神') && (has('正印') || has('偏印'))) tacticalName = '殺逢食制露印 (需去食就印)';
         else if (has('食神') || has('傷官')) tacticalName = '食/傷制殺';
         else if (has('正印') || has('偏印')) tacticalName = '殺印相生';
       } else if (basePattern.includes('偏印') && !basePattern.includes('從')) {
-        if (has('食神')) tacticalName = '偏印透食 (真正的梟印奪食)';
+        if (has('食神')) tacticalName = '偏印透食 (梟印奪食)';
       }
 
       return {
@@ -1162,7 +1243,7 @@ createApp({
     });
 
     const missingElements = computed(() => ['木', '火', '土', '金', '水'].filter(e => !presentElements.value.includes(e)));
-    const isFiveElementsComplete = computed(() => missingElements.length === 0);
+    const isFiveElementsComplete = computed(() => missingElements.value.length === 0);
     const presentElementsStr = computed(() => presentElements.value.join('、'));
     const missingElementsStr = computed(() => missingElements.value.join('、'));
     const fiveElementsReport = computed(() => isFiveElementsComplete.value ? '原局天干通電俱全，【五行全齊】！氣場源源不絕 🌸' : `原局【五行不全】，缺乏能量【${missingElementsStr.value}】！`);
@@ -1231,12 +1312,38 @@ createApp({
 
     const formatTime = (timeStr) => timeStr.replace('T', ' ');
     const saveRecord = () => {
-      if (!birthTime.value) return alert("請先選擇出生時間！");
-      records.value.unshift({ id: Date.now(), name: name.value.trim() || '未命名', gender: gender.value, birthTime: birthTime.value });
+      if (inputMode.value === 'birth' && !birthTime.value) return alert("請先選擇出生時間！");
+      
+      const record = {
+          id: Date.now(),
+          name: name.value.trim() || (inputMode.value === 'manual' ? '學習命例' : '未命名'),
+          mode: inputMode.value,
+          gender: inputMode.value === 'birth' ? gender.value : manualGender.value
+      };
+      if (inputMode.value === 'birth') {
+          record.birthTime = birthTime.value;
+      } else {
+          record.manualPillars = JSON.parse(JSON.stringify(manualPillars.value));
+          record.manualStartAge = manualStartAge.value;
+      }
+      records.value.unshift(record);
       localStorage.setItem('bazi_records', JSON.stringify(records.value));
       alert("✅ 命例儲存成功！");
     };
-    const loadRecord = (rec) => { name.value = rec.name === '未命名' ? '' : rec.name; gender.value = rec.gender; birthTime.value = rec.birthTime; showRecords.value = false; calculate(); };
+    const loadRecord = (rec) => { 
+      name.value = rec.name;
+      inputMode.value = rec.mode || 'birth';
+      if (inputMode.value === 'birth') {
+          gender.value = rec.gender; 
+          birthTime.value = rec.birthTime; 
+      } else {
+          manualGender.value = rec.gender;
+          manualPillars.value = rec.manualPillars;
+          manualStartAge.value = rec.manualStartAge;
+      }
+      showRecords.value = false; 
+      calculate(); 
+    };
     const deleteRecord = (id) => { if(confirm("確定刪除？")) { records.value = records.value.filter(r => r.id !== id); localStorage.setItem('bazi_records', JSON.stringify(records.value)); } };
 
     const openComboDetailModal = (pillarName) => {
@@ -1247,30 +1354,82 @@ createApp({
 
     const calculate = () => {
       try {
-        if (typeof Solar === 'undefined') return alert("萬年曆載入中，請稍候");
-        if (!birthTime.value) return;
-        const dt = new Date(birthTime.value);
-        const solar = Solar.fromDate(dt);
-        const lunar = solar.getLunar();
-        const eightChar = lunar.getEightChar();
-        const dayGan = eightChar.getDayGan();
-        const yun = eightChar.getYun(gender.value);
+        if (inputMode.value === 'manual') {
+          for (let i=0; i<4; i++) {
+              let gz = manualPillars.value[i].gan + manualPillars.value[i].zhi;
+              if (!jiazi.includes(gz)) {
+                  return alert(`【${['年','月','日','時'][i]}柱】「${gz}」不是有效的六十甲子組合，請重新選擇！`);
+              }
+          }
 
-        result.value = {
-          name: name.value.trim(), solarStr: solar.toFullString(), lunarStr: lunar.toString(),
-          yunStr: `${yun.getStartYear()}年${yun.getStartMonth()}個月起運`, dayGan,
-          pillars: [
-            { name: '年柱', gan: eightChar.getYearGan(), zhi: eightChar.getYearZhi(), shishen: getShiShen(dayGan, eightChar.getYearGan()) },
-            { name: '月柱', gan: eightChar.getMonthGan(), zhi: eightChar.getMonthZhi(), shishen: getShiShen(dayGan, eightChar.getMonthGan()) },
-            { name: '日柱', gan: dayGan, zhi: eightChar.getDayZhi(), isDayMaster: true },
-            { name: '時柱', gan: eightChar.getTimeGan(), zhi: eightChar.getTimeZhi(), shishen: getShiShen(dayGan, eightChar.getTimeGan()) }
-          ],
-          daYunList: yun.getDaYun().slice(1, 11).map(dy => ({
-            startAge: dy.getStartAge(), endAge: dy.getEndAge(), startYear: dy.getStartYear(),
-            gan: dy.getGanZhi().charAt(0), zhi: dy.getGanZhi().charAt(1),
-            liuNianList: dy.getLiuNian().map(ln => ({ year: ln.getYear(), gan: ln.getGanZhi().charAt(0), zhi: ln.getGanZhi().charAt(1) }))
-          }))
-        };
+          const yIndex = jiazi.indexOf(manualPillars.value[0].gan + manualPillars.value[0].zhi);
+          const mIndex = jiazi.indexOf(manualPillars.value[1].gan + manualPillars.value[1].zhi);
+          const baseYear = 1984 + yIndex;
+          const startAge = parseInt(manualStartAge.value) || 1;
+          
+          const isYangYear = stems.indexOf(manualPillars.value[0].gan) % 2 === 0;
+          const isMale = manualGender.value === 1;
+          const direction = (isYangYear && isMale) || (!isYangYear && !isMale) ? 1 : -1;
+
+          const dayGan = manualPillars.value[2].gan;
+
+          const daYunList = [];
+          for(let i=1; i<=10; i++) {
+              let dyIndex = (mIndex + i * direction + 600) % 60;
+              let dyGan = jiazi[dyIndex][0];
+              let dyZhi = jiazi[dyIndex][1];
+              let dyStartAge = startAge + (i-1)*10;
+              let dyStartYear = baseYear + dyStartAge;
+              
+              let liuNianList = [];
+              for(let j=0; j<10; j++) {
+                  let lnYear = dyStartYear + j;
+                  let lnIndex = (lnYear - 1984 + 6000) % 60;
+                  liuNianList.push({ year: lnYear, gan: jiazi[lnIndex][0], zhi: jiazi[lnIndex][1] });
+              }
+              daYunList.push({ startAge: dyStartAge, endAge: dyStartAge + 9, startYear: dyStartYear, gan: dyGan, zhi: dyZhi, liuNianList });
+          }
+
+          result.value = {
+              name: name.value.trim() || '學習命例',
+              solarStr: '命盤學習模式 (無公曆)',
+              lunarStr: '純干支起盤',
+              yunStr: `${startAge}歲起運`,
+              dayGan: dayGan,
+              pillars: [
+                  { name: '年柱', gan: manualPillars.value[0].gan, zhi: manualPillars.value[0].zhi, shishen: getShiShen(dayGan, manualPillars.value[0].gan) },
+                  { name: '月柱', gan: manualPillars.value[1].gan, zhi: manualPillars.value[1].zhi, shishen: getShiShen(dayGan, manualPillars.value[1].gan) },
+                  { name: '日柱', gan: dayGan, zhi: manualPillars.value[2].zhi, isDayMaster: true },
+                  { name: '時柱', gan: manualPillars.value[3].gan, zhi: manualPillars.value[3].zhi, shishen: getShiShen(dayGan, manualPillars.value[3].gan) }
+              ],
+              daYunList
+          };
+        } else {
+          if (typeof Solar === 'undefined') return alert("萬年曆載入中，請稍候");
+          if (!birthTime.value) return;
+          const dt = new Date(birthTime.value);
+          const solar = Solar.fromDate(dt);
+          const lunar = solar.getLunar();
+          const eightChar = lunar.getEightChar();
+          const dayGan = eightChar.getDayGan();
+          const yun = eightChar.getYun(gender.value);
+
+          result.value = {
+            name: name.value.trim(), solarStr: solar.toFullString(), lunarStr: lunar.toString(),
+            yunStr: `${yun.getStartYear()}年${yun.getStartMonth()}個月起運`, dayGan,
+            pillars: [
+              { name: '年柱', gan: eightChar.getYearGan(), zhi: eightChar.getYearZhi(), shishen: getShiShen(dayGan, eightChar.getYearGan()) },
+              { name: '月柱', gan: eightChar.getMonthGan(), zhi: eightChar.getMonthZhi(), shishen: getShiShen(dayGan, eightChar.getMonthGan()) },
+              { name: '日柱', gan: dayGan, zhi: eightChar.getDayZhi(), isDayMaster: true },
+              { name: '時柱', gan: eightChar.getTimeGan(), zhi: eightChar.getTimeZhi(), shishen: getShiShen(dayGan, eightChar.getTimeGan()) }
+            ],
+            daYunList: yun.getDaYun().slice(1, 11).map(dy => ({
+              startAge: dy.getStartAge(), endAge: dy.getEndAge(), startYear: dy.getStartYear(),
+              gan: dy.getGanZhi().charAt(0), zhi: dy.getGanZhi().charAt(1),
+              liuNianList: dy.getLiuNian().map(ln => ({ year: ln.getYear(), gan: ln.getGanZhi().charAt(0), zhi: ln.getGanZhi().charAt(1) }))
+            }))
+          };
+        }
 
         selectedDaYun.value = null; selectedLiuNian.value = null; selectedMatrixPillar.value = '日柱'; selectedScorePillar.value = null;
         checkAllRelations(); calcQuantScore(); checkCircuitDiagnostics(); checkInjuryAlerts();
@@ -1280,7 +1439,8 @@ createApp({
     };
 
     return { 
-      name, birthTime, gender, result, selectedDaYun, selectedLiuNian, currentLiuNianObj, selectedScorePillar, selectedMatrixPillar,
+      name, inputMode, manualPillars, manualGender, manualStartAge, stems, branches,
+      birthTime, gender, result, selectedDaYun, selectedLiuNian, currentLiuNianObj, selectedScorePillar, selectedMatrixPillar,
       effectivePillars, transformedInfo, pillarScores, strengthBarPercent, getPillarByRole, getPillarScoreDetail, getMainQi, displayPillars, getPillarWeightLabel,
       perspectiveRole, perspectivePillars, perspectiveTacticalReport,
       isCategoryPresent, isSpecificGodPresent,
