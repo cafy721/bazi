@@ -334,7 +334,7 @@
         </div>
       </div>
 
-      <!-- 身強弱結論指標 Bar (包含從格易位機制) -->
+      <!-- 身強弱結論指標 Bar -->
       <div v-if="quantScore" class="pt-5 mt-5">
         <div class="flex justify-between items-end mb-3 px-1">
           <h3 class="text-xs sm:text-sm font-extrabold text-slate-600">⚖️ 能量天平</h3>
@@ -364,13 +364,13 @@
     </div>
 
     <!-- ============================================== -->
-    <!-- 🛡️ 歲運防禦與救應系統 (全新立體戰略面板) -->
+    <!-- 🛡️ 歲運防禦與戰略系統 (已升級主副分離) -->
     <!-- ============================================== -->
     <div v-if="godsInfo" class="card-bg p-4 sm:p-5 rounded-3xl space-y-4">
       <div class="border-b border-slate-100 pb-2">
         <h2 class="text-sm font-extrabold text-slate-600 flex items-center gap-2">🛡️ 歲運防禦與戰略系統</h2>
       </div>
-      <!-- 戰略配置：引入主副格局分離 -->
+      <!-- 戰略配置 -->
       <div class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100 shadow-sm space-y-4">
         <div class="text-xs font-extrabold text-indigo-500 mb-2 border-b border-indigo-100/50 pb-2 flex justify-between">
             <span>⚔️ 當前戰略：{{ godsInfo.tacticalStrategy }}</span>
@@ -561,6 +561,45 @@
         </div>
       </div>
     </div>
+
+    <!-- ============================================== -->
+    <!-- 7. ISO 7步批算報告卡 -->
+    <!-- ============================================== -->
+    <div v-if="iso7Report.step1" class="card-bg p-4 sm:p-5 rounded-3xl space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+        <h2 class="text-sm font-extrabold text-slate-600 flex items-center gap-2">📜 7步標準分析報告</h2>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 text-[10px] sm:text-xs">
+        <div class="bg-white/60 p-3 sm:p-4 rounded-2xl border border-white shadow-sm space-y-1">
+          <div class="font-extrabold text-pink-500">第一步：日主與四柱根氣</div>
+          <p class="text-slate-600 font-bold leading-relaxed">{{ iso7Report.step1 }}</p>
+        </div>
+        <div class="bg-white/60 p-3 sm:p-4 rounded-2xl border border-white shadow-sm space-y-1">
+          <div class="font-extrabold text-pink-500">第二步：月令透干取格</div>
+          <p class="text-slate-600 font-bold leading-relaxed">{{ iso7Report.step2 }}</p>
+        </div>
+        <div class="bg-white/60 p-3 sm:p-4 rounded-2xl border border-white shadow-sm space-y-1">
+          <div class="font-extrabold text-pink-500">第三步：同異黨比例 (身強弱)</div>
+          <p class="text-slate-600 font-bold leading-relaxed">{{ iso7Report.step3 }}</p>
+        </div>
+        <div class="bg-white/60 p-3 sm:p-4 rounded-2xl border border-white shadow-sm space-y-1">
+          <div class="font-extrabold text-pink-500">第四步：看氣勢定正偏格</div>
+          <p class="text-slate-600 font-bold leading-relaxed">{{ iso7Report.step4 }}</p>
+        </div>
+        <div class="bg-white/60 p-3 sm:p-4 rounded-2xl border border-white shadow-sm space-y-1">
+          <div class="font-extrabold text-pink-500">第五步：局中戰術與用神</div>
+          <p class="text-slate-600 font-bold leading-relaxed">{{ iso7Report.step5 }}</p>
+        </div>
+        <div class="bg-white/60 p-3 sm:p-4 rounded-2xl border border-white shadow-sm space-y-1">
+          <div class="font-extrabold text-pink-500">第六步：喜忌陣營</div>
+          <p class="text-slate-600 font-bold leading-relaxed">{{ iso7Report.step6 }}</p>
+        </div>
+        <div class="bg-white/60 p-3 sm:p-4 rounded-2xl border border-white shadow-sm space-y-1 md:col-span-2">
+          <div class="font-extrabold text-pink-500">第七步：大運吉凶指引</div>
+          <p class="text-slate-600 font-bold leading-relaxed">{{ iso7Report.step7 }}</p>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- 化神根能量專屬診斷彈窗 -->
@@ -610,10 +649,10 @@ createApp({
     for(let i=0; i<60; i++) jiazi.push(stems[i%10] + branches[i%12]);
 
     const manualPillars = ref([
-      { gan: '庚', zhi: '子' },
-      { gan: '庚', zhi: '辰' },
-      { gan: '甲', zhi: '申' },
-      { gan: '丁', zhi: '卯' }
+      { gan: '丙', zhi: '寅' },
+      { gan: '乙', zhi: '未' },
+      { gan: '丙', zhi: '寅' },
+      { gan: '丁', zhi: '酉' }
     ]);
 
     const result = ref(null);
@@ -1012,13 +1051,11 @@ createApp({
       branchCombos.value = bCombos; branchClashes.value = bClashes;
     };
 
-    // 🌟 究極立體演算法：主格(純原局) 與 副格(大運引發) 完美分離
     const tenGodsTactics = computed(() => {
       if (!result.value || !quantScore.value) return null;
       const dayGan = result.value.dayGan;
       const dmYinYang = STEM_PROPS[dayGan].y; 
 
-      // 1. 推導【本命主格】 (只看原局四柱)
       let mainPattern = '無格 (正格不成)';
       const origGans = result.value.pillars.filter(p => !p.isDayMaster).map(p => p.origGan);
       const origZhis = result.value.pillars.map(p => p.zhi);
@@ -1044,8 +1081,9 @@ createApp({
       } else {
           let killProtrude = null;
           for (const cang of monthCangs) {
-              if (getShiShen(dayGan, cang.stem) === '七殺' && origGans.some(g => STEM_PROPS[g] && STEM_PROPS[g].e === STEM_PROPS[cang.stem].e)) {
-                  killProtrude = true; break;
+              if (getShiShen(dayGan, cang.stem) === '七殺') {
+                  const matched = origGans.find(g => STEM_PROPS[g] && STEM_PROPS[cang.stem] && STEM_PROPS[g].e === STEM_PROPS[cang.stem].e);
+                  if (matched) { killProtrude = true; break; }
               }
           }
           if (killProtrude) {
@@ -1055,23 +1093,29 @@ createApp({
               for (const type of ['主', '餘', '中']) {
                   const cang = monthCangs.find(c => c.type === type);
                   if (cang) {
-                      const matchedGan = origGans.find(gan => STEM_PROPS[gan] && STEM_PROPS[gan].e === STEM_PROPS[cang.stem].e);
+                      const matchedGan = origGans.find(gan => {
+                          if (!STEM_PROPS[gan] || !STEM_PROPS[cang.stem]) return false;
+                          const isSameElem = STEM_PROPS[gan].e === STEM_PROPS[cang.stem].e;
+                          const shishen = getShiShen(dayGan, gan);
+                          // ✨ 核心修正：不能以比肩劫財取格！
+                          return isSameElem && shishen !== '比肩' && shishen !== '劫財';
+                      });
                       if (matchedGan) { protrudingGan = matchedGan; break; }
                   }
               }
               if (protrudingGan) mainPattern = `${getShiShen(dayGan, protrudingGan)}格`;
               else {
                   const sortedScores = [...pillarScores.value].filter(p => !p.isDayMaster && ['年柱','月柱','時柱'].includes(p.name)).sort((a, b) => b.energy - a.energy);
-                  if (sortedScores.length > 0 && sortedScores[0].energy > 0) mainPattern = `借用 ‧ ${sortedScores[0].shishen}格`;
+                  // 借用也排除比劫
+                  const validScores = sortedScores.filter(s => s.shishen !== '比肩' && s.shishen !== '劫財');
+                  if (validScores.length > 0 && validScores[0].energy > 0) mainPattern = `借用 ‧ ${validScores[0].shishen}格`;
               }
           }
       }
 
-      // 若為從格，強制覆蓋主格名稱
       const cong = quantScore.value.congCategory;
       if (cong) mainPattern = quantScore.value.verdict;
 
-      // 2. 探測【歲運副格】 (大運/流年引發的合局)
       let subPattern = null;
       let allActiveGans = [...origGans];
       let activeZhis = [...origZhis];
@@ -1089,7 +1133,6 @@ createApp({
           let dynBranchStr = activeZhis.join('');
           let dynComboElem = null;
           [ ['寅','卯','辰','木'], ['巳','午','未','火'], ['申','酉','戌','金'], ['亥','子','丑','水'], ['申','子','辰','水'], ['亥','卯','未','木'], ['寅','午','戌','火'], ['巳','酉','丑','金'] ].forEach(h => {
-              // 若動態形成合局，且此合局原本在原局並未完整成立
               if (dynBranchStr.includes(h[0]) && dynBranchStr.includes(h[1]) && dynBranchStr.includes(h[2])) {
                   if (!(origBranchStr.includes(h[0]) && origBranchStr.includes(h[1]) && origBranchStr.includes(h[2]))) {
                       dynComboElem = h[3];
@@ -1099,7 +1142,13 @@ createApp({
           
           if (dynComboElem) {
               let targetGan = allActiveGans.find(gan => STEM_PROPS[gan] && STEM_PROPS[gan].e === dynComboElem);
-              if (targetGan) subPattern = `${getShiShen(dayGan, targetGan)}合局`;
+              if (targetGan) {
+                  const ss = getShiShen(dayGan, targetGan);
+                  // 副格同樣不採納比肩劫財
+                  if (ss !== '比肩' && ss !== '劫財') {
+                      subPattern = `${ss}合局`;
+                  }
+              }
           }
       }
 
@@ -1117,14 +1166,13 @@ createApp({
       let yongShen = '';
       let xiShen = '';
       let jiShen = '';
-      let currentTactic = mainPattern; // 預設戰術名稱與主格相同
+      let currentTactic = mainPattern; 
 
-      // 取得全盤(含歲運)活躍天干的十神
       let activeGans = effectivePillars.value.filter(p => !p.isDayMaster).map(p => p.effGan);
       if (selectedDaYun.value) activeGans.push(transformedInfo.value['大運']?.isSuccess ? transformedInfo.value['大運'].targetStem : selectedDaYun.value.gan);
       if (currentLiuNianObj.value) activeGans.push(transformedInfo.value['流年']?.isSuccess ? transformedInfo.value['流年'].targetStem : currentLiuNianObj.value.gan);
       const curShiShens = activeGans.map(g => getShiShen(result.value.dayGan, g));
-      const has = (name) => curShiShens.includes(name) || (subPattern && subPattern.includes(name)); // 副格十神也視為存在
+      const has = (name) => curShiShens.includes(name) || (subPattern && subPattern.includes(name)); 
 
       if (cong) {
         tacticalStrategy = '【從格 ‧ 天人合一】順從旺勢';
@@ -1143,7 +1191,6 @@ createApp({
          jiShen = isStrong ? '印星、比劫' : '七殺(攻身)、重洩';
       } 
       else {
-        // 常規正格攻防判斷 (結合主格與歲運副格)
         if (mainPattern.includes('七殺')) {
             tacticalStrategy = '【四凶神 ‧ 逆用】制之、化之';
             yongShen = '食神(制殺) / 印星(化殺為權)'; xiShen = '比劫、食傷、印星'; jiShen = '財星(滋殺攻身)';
