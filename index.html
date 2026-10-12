@@ -72,7 +72,7 @@
 <div id="app" class="max-w-6xl mx-auto space-y-5">
   <header class="text-center my-4 sm:my-6">
     <h1 class="text-2xl sm:text-3xl font-extrabold tracking-wide title-gradient drop-shadow-sm">治癒系八字排盤</h1>
-    <p class="text-[10px] sm:text-xs text-slate-500 mt-2 font-semibold tracking-widest">能量矩陣 ‧ 順逆戰術 ‧ 七柱連動</p>
+    <p class="text-[10px] sm:text-xs text-slate-500 mt-2 font-semibold tracking-widest">理行先 ‧ 數在後 ‧ 三層遞進 ‧ 全息戰術</p>
   </header>
 
   <!-- 輸入區 & 命例管理 -->
@@ -408,7 +408,7 @@
           <div v-if="godsInfo.subPattern" class="flex items-center gap-2 animate-fade-in">
             <span class="text-[10px] sm:text-xs text-slate-400 whitespace-nowrap">🌸 歲運副格：</span>
             <b class="text-pink-500 text-sm bg-pink-50 border border-pink-100 px-3 py-1 rounded-full shadow-sm">{{ godsInfo.subPattern }}</b>
-            <span class="text-[9px] text-slate-400">(大運/歲月引發)</span>
+            <span class="text-[9px] text-slate-400">(大運/流年引發)</span>
           </div>
 
           <div class="flex items-center gap-2 pt-1">
@@ -669,10 +669,10 @@ createApp({
     for(let i=0; i<60; i++) jiazi.push(stems[i%10] + branches[i%12]);
 
     const manualPillars = ref([
-      { gan: '丙', zhi: '寅' },
-      { gan: '乙', zhi: '未' },
-      { gan: '丙', zhi: '寅' },
-      { gan: '丁', zhi: '酉' }
+      { gan: '戊', zhi: '辰' },
+      { gan: '乙', zhi: '丑' },
+      { gan: '乙', zhi: '亥' },
+      { gan: '丁', zhi: '亥' }
     ]);
 
     const result = ref(null);
@@ -794,12 +794,10 @@ createApp({
         return selectedDaYun.value.liuNianList.find(ln => ln.year === selectedLiuNian.value) || null;
     });
     
-    // 計算流年對應的 12 個流月
     const currentLiuYueList = computed(() => {
         if (!currentLiuNianObj.value) return [];
         const lnGan = currentLiuNianObj.value.gan;
         
-        // 五虎遁訣求正月天干
         const wuHuDun = {
             '甲': '丙', '己': '丙',
             '乙': '戊', '庚': '戊',
@@ -813,7 +811,7 @@ createApp({
         
         for (let i = 0; i < 12; i++) {
             const mGan = stems[(firstMonthGanIndex + i) % 10];
-            const mZhi = branches[(2 + i) % 12]; // 正月建寅
+            const mZhi = branches[(2 + i) % 12];
             yueList.push({ month: i + 1, gan: mGan, zhi: mZhi });
         }
         return yueList;
@@ -824,7 +822,6 @@ createApp({
         return currentLiuYueList.value.find(lm => lm.month === selectedLiuYue.value) || null;
     });
 
-    // 🌟 第一層選取：選擇大運 (同時完全重置流年與流月)
     const selectDaYun = (dy) => {
       if (!dy || (selectedDaYun.value?.startYear === dy.startYear)) { 
           selectedDaYun.value = null; 
@@ -832,12 +829,11 @@ createApp({
           selectedLiuYue.value = null;
       } else { 
           selectedDaYun.value = dy; 
-          selectedLiuNian.value = null; // 重置流年，促使使用者手動點選
-          selectedLiuYue.value = null;  // 重置流月
+          selectedLiuNian.value = null;
+          selectedLiuYue.value = null;
       }
     };
 
-    // 🌟 第二層選取：選擇流年 (同時重置流月)
     const selectLiuNian = (ln) => {
         const yearVal = typeof ln === 'object' ? ln.year : ln;
         if (selectedLiuNian.value === yearVal) {
@@ -845,11 +841,10 @@ createApp({
             selectedLiuYue.value = null;
         } else {
             selectedLiuNian.value = yearVal;
-            selectedLiuYue.value = null; // 重置流月
+            selectedLiuYue.value = null;
         }
     };
 
-    // 🌟 第三層選取：選擇流月
     const selectLiuYue = (monthVal) => {
         if (selectedLiuYue.value === monthVal) {
             selectedLiuYue.value = null;
@@ -858,7 +853,6 @@ createApp({
         }
     };
 
-    // 動態標題文字
     const boardTitle = computed(() => {
         if (currentLiuYueObj.value) return '七柱全息連動';
         if (currentLiuNianObj.value) return '六柱全息連動';
@@ -866,7 +860,6 @@ createApp({
         return '四柱原命盤';
     });
 
-    // 核心排版：依據階梯選取動態展現柱數
     const displayPillars = computed(() => {
       if (!result.value) return [];
       let list = [
@@ -926,12 +919,22 @@ createApp({
       return (parseFloat(getMatrixCangDetail(selectedPillar, targetBranchPillar, '主').score) + parseFloat(getMatrixCangDetail(selectedPillar, targetBranchPillar, '中').score) + parseFloat(getMatrixCangDetail(selectedPillar, targetBranchPillar, '餘').score)).toFixed(1);
     };
 
+    // 🌟 究極防禦：加入【理行先，數在後】受生檢測 & 【身弱不受生 / 棄命從財】
     const calcQuantScore = () => {
       if (!result.value) return;
       let scores = [], ally = 0, diff = 0;
       const dayGan = result.value.dayGan;
       const dmElem = STEM_PROPS[dayGan].e;
-      
+
+      // 1. 理氣核心檢測：日主在地支是否有本氣強根？(如乙木需要地支有寅或卯主氣)
+      let hasMainQiBranchRoot = false;
+      result.value.pillars.forEach(p => {
+          const mqStem = getMainQi(p.zhi);
+          if (mqStem && STEM_PROPS[mqStem] && STEM_PROPS[mqStem].e === dmElem) {
+              hasMainQiBranchRoot = true;
+          }
+      });
+
       const checkElemIsAlly = (elem) => {
           if (elem === dmElem) return true; 
           const generates = { '木':'水', '火':'木', '土':'火', '金':'土', '水':'金' }; 
@@ -939,6 +942,7 @@ createApp({
           return false;
       };
 
+      // 計算各柱得分
       result.value.pillars.forEach(p => {
         let effGan = getEffGanGlobal(p.name, p.gan); 
         let res = getStemRootEnergy(effGan, p.name, result.value.pillars);
@@ -946,13 +950,42 @@ createApp({
         scores.push({ name: p.name, gan: effGan, shishen: p.isDayMaster ? '日主' : getShiShen(dayGan, effGan), isAlly, energy: res.total, breakdown: res.breakdown });
       });
 
+      // 印星與比劫力量分拆
+      let resourceEnergy = 0;
+      let biJianEnergy = 0;
+      let nonAllyEnergy = 0;
+
       scores.forEach(p => {
         if(!p.isDayMaster && transformedInfo.value[p.name]?.isLoyalToDM) {
            p.isAlly = true; p.breakdown.push({desc:'合日主(情向日主)轉為同黨', val: p.energy.toFixed(2)});
         }
         p.energy = parseFloat(p.energy.toFixed(1));
-        if(p.isAlly) ally += p.energy; else diff += p.energy;
+
+        if (p.isAlly) {
+            if (['正印','偏印'].includes(p.shishen)) {
+                resourceEnergy += p.energy;
+            } else {
+                biJianEnergy += p.energy; 
+            }
+        } else {
+            nonAllyEnergy += p.energy;
+        }
       });
+
+      // 🧠【理行先，數在後】判斷受生與否
+      let isUnableToReceiveResource = false;
+      if (!hasMainQiBranchRoot && resourceEnergy >= 30) {
+          isUnableToReceiveResource = true;
+      }
+
+      // 如果「身弱不受生」，印星能量無效化，不能加入同黨，且被視為負擔
+      if (isUnableToReceiveResource) {
+          ally = biJianEnergy; 
+          diff = nonAllyEnergy + resourceEnergy; 
+      } else {
+          ally = biJianEnergy + resourceEnergy;
+          diff = nonAllyEnergy;
+      }
 
       pillarScores.value = scores;
       const ratio = diff > 0 ? (ally / diff).toFixed(2) : ally.toFixed(2);
@@ -1000,7 +1033,12 @@ createApp({
         if (isOpposing) hasOpposingMainQi = true;
       });
 
-      if (ratio >= 2.5) {
+      // 特殊從格與格局判定
+      if (isUnableToReceiveResource) {
+          verdict = '棄命從財格 (身弱不受生)';
+          congCategory = '財星';
+      }
+      else if (ratio >= 2.5) {
         if (!hasOpposingMainQi) { 
           verdict = '偏旺候選';
           let sums = { '印星': 0, '比劫': 0 };
@@ -1278,8 +1316,8 @@ createApp({
       if (cong) {
         tacticalStrategy = '【從格 ‧ 天人合一】順從旺勢';
         yongShen = cong;
-        currentTactic = `順勢 ‧ ${cong}成局`;
-        if (cong === '財星') { xiShen = '食傷、財星'; jiShen = '印星、比劫'; }
+        currentTactic = `順勢 ‧ 從${cong}局`;
+        if (cong === '財星') { xiShen = '食傷、財星'; jiShen = '印星、比劫'; currentTactic = '棄命從財格 (順應旺土)'; }
         else if (cong === '官殺') { xiShen = '財星、官殺'; jiShen = '食傷、比劫'; }
         else if (cong === '食傷') { xiShen = '比劫、食傷'; jiShen = '印星、官殺'; }
         else if (cong === '印星') { xiShen = '官殺、印星'; jiShen = '財星、食傷'; currentTactic = '從強格 (純印)'; }
