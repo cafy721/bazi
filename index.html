@@ -65,6 +65,29 @@
     .btn-gradient:hover {
       background: linear-gradient(135deg, #f9a8d4, #d8b4fe, #93c5fd);
     }
+
+    /* 羅盤格子樣式 */
+    .palace-cell {
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid rgba(255,255,255,0.9);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 6px 2px;
+      min-height: 80px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+      transition: all 0.3s ease;
+    }
+    .palace-cell.active { background: #fdf4ff; border-color: #f5d0fe; box-shadow: 0 4px 15px rgba(217, 70, 239, 0.15); transform: scale(1.02); }
+    
+    .radar-screen {
+      background: linear-gradient(145deg, #1e293b, #0f172a);
+      border-radius: 16px;
+      box-shadow: inset 0 4px 20px rgba(0,0,0,0.5);
+      color: #38bdf8;
+      overflow-y: auto;
+    }
   </style>
 </head>
 <body class="p-2 sm:p-6 min-h-screen">
@@ -72,7 +95,7 @@
 <div id="app" class="max-w-6xl mx-auto space-y-5">
   <header class="text-center my-4 sm:my-6">
     <h1 class="text-2xl sm:text-3xl font-extrabold tracking-wide title-gradient drop-shadow-sm">治癒系八字排盤</h1>
-    <p class="text-[10px] sm:text-xs text-slate-500 mt-2 font-semibold tracking-widest">能量矩陣 ‧ 順逆戰術 ‧ 七柱連動</p>
+    <p class="text-[10px] sm:text-xs text-slate-500 mt-2 font-semibold tracking-widest">能量矩陣 ‧ 紫微地支 ‧ 戰略配備</p>
   </header>
 
   <!-- 輸入區 & 命例管理 -->
@@ -173,219 +196,346 @@
       </div>
     </div>
 
-    <!-- 🌟 大運選擇區 -->
-    <div class="card-bg p-4 rounded-3xl">
-      <div class="flex justify-between items-center pb-2 mb-2 border-b border-slate-100">
-        <h2 class="text-xs sm:text-sm font-extrabold text-slate-600">☁️ 選擇大運軌跡：</h2>
-        <button v-if="selectedDaYun" @click="selectDaYun(null)" class="text-[10px] bg-white text-slate-500 px-2.5 py-1 rounded-full shadow-sm border border-slate-100 transition active:scale-95 font-bold">↺ 恢復原局</button>
+    <!-- 🌟 大運/流年/流月 選擇區 -->
+    <div class="card-bg p-4 rounded-3xl space-y-3">
+      <div>
+        <div class="flex justify-between items-center pb-2 mb-2 border-b border-slate-100">
+          <h2 class="text-xs sm:text-sm font-extrabold text-slate-600">☁️ 選擇大運軌跡：</h2>
+          <button v-if="selectedDaYun" @click="selectDaYun(null)" class="text-[10px] bg-white text-slate-500 px-2.5 py-1 rounded-full shadow-sm border border-slate-100 transition active:scale-95 font-bold">↺ 恢復原局</button>
+        </div>
+        <div class="flex overflow-x-auto no-scrollbar gap-2 pb-1">
+          <div v-for="(dy, index) in result.daYunList" :key="'dy'+dy.startYear" @click="selectDaYun(dy)"
+               :class="['cursor-pointer border rounded-2xl p-2.5 w-[90px] sm:w-[110px] text-center flex-shrink-0 transition relative', 
+                        selectedDaYun?.startYear === dy.startYear ? 'bg-gradient-to-br from-fuchsia-100 to-pink-100 border-pink-200 shadow-md transform -translate-y-1' : 'bg-white/60 border-white hover:bg-white']">
+            <div class="text-[9px] sm:text-[10px] text-slate-500 font-bold mb-1">{{ dy.startAge }}歲 <span class="opacity-70">({{ dy.startYear }}起)</span></div>
+            <div class="text-base sm:text-lg font-extrabold">
+              <span :class="getElemClass(dy.gan)">{{ dy.gan }}</span><span :class="getElemClass(dy.zhi)">{{ dy.zhi }}</span>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="flex overflow-x-auto no-scrollbar gap-2 pb-2 mt-3">
-        <div v-for="(dy, index) in result.daYunList" :key="'dy'+dy.startYear" @click="selectDaYun(dy)"
-             :class="['cursor-pointer border rounded-2xl p-2.5 w-[90px] sm:w-[110px] text-center flex-shrink-0 transition relative', 
-                      selectedDaYun?.startYear === dy.startYear ? 'bg-gradient-to-br from-fuchsia-100 to-pink-100 border-pink-200 shadow-md transform -translate-y-1' : 'bg-white/60 border-white hover:bg-white']">
-          <div class="text-[9px] sm:text-[10px] text-slate-500 font-bold mb-1">{{ dy.startAge }}歲 <span class="opacity-70">({{ dy.startYear }}起)</span></div>
-          <div class="text-base sm:text-lg font-extrabold">
-            <span :class="getElemClass(dy.gan)">{{ dy.gan }}</span><span :class="getElemClass(dy.zhi)">{{ dy.zhi }}</span>
+
+      <div v-if="selectedDaYun" class="animate-fade-in pt-2 border-t border-slate-100/50">
+        <div class="flex justify-between items-center pb-2 mb-2">
+          <h2 class="text-xs sm:text-sm font-extrabold text-slate-600">🌸 選擇流年軌跡：</h2>
+        </div>
+        <div class="flex overflow-x-auto no-scrollbar gap-2 pb-1">
+          <div v-for="ln in selectedDaYun.liuNianList" :key="'ln'+ln.year" @click="selectLiuNian(ln)"
+               :class="['cursor-pointer border rounded-2xl p-2 w-[70px] sm:w-[85px] text-center flex-shrink-0 transition relative', 
+                        selectedLiuNian?.year === ln.year ? 'bg-gradient-to-br from-sky-100 to-indigo-100 border-indigo-200 shadow-md transform -translate-y-1' : 'bg-white/60 border-white hover:bg-white']">
+            <div class="text-[9px] sm:text-[10px] text-slate-500 font-bold mb-1">{{ ln.year }}</div>
+            <div class="text-sm sm:text-base font-extrabold">
+              <span :class="getElemClass(ln.gan)">{{ ln.gan }}</span><span :class="getElemClass(ln.zhi)">{{ ln.zhi }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="selectedLiuNian" class="animate-fade-in pt-2 border-t border-slate-100/50">
+        <div class="flex justify-between items-center pb-2 mb-2">
+          <h2 class="text-xs sm:text-sm font-extrabold text-slate-600">🍃 選擇流月軌跡：</h2>
+        </div>
+        <div class="flex overflow-x-auto no-scrollbar gap-2 pb-1">
+          <div v-for="lm in currentLiuYueList" :key="'lm'+lm.month" @click="selectedLiuYue = lm.month"
+               :class="['cursor-pointer border rounded-xl p-2 w-[65px] text-center flex-shrink-0 transition relative', 
+                        selectedLiuYue === lm.month ? 'bg-gradient-to-br from-emerald-50 to-teal-100 border-teal-200 shadow-sm transform -translate-y-1' : 'bg-white/50 border-white hover:bg-white']">
+            <div class="text-[8px] sm:text-[9px] text-slate-400 font-bold mb-0.5">{{ lm.month }}月</div>
+            <div class="text-xs sm:text-sm font-extrabold">
+              <span :class="getElemClass(lm.gan)">{{ lm.gan }}</span><span :class="getElemClass(lm.zhi)">{{ lm.zhi }}</span>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 🌟 流年選擇區 (選擇大運後顯示) -->
-    <div v-if="selectedDaYun" class="card-bg p-4 rounded-3xl animate-fade-in mt-2">
-      <div class="flex justify-between items-center pb-2 mb-2 border-b border-slate-100">
-        <h2 class="text-xs sm:text-sm font-extrabold text-slate-600">🌸 選擇流年軌跡：</h2>
-        <span class="text-[10px] bg-slate-50 text-slate-400 px-2 py-0.5 rounded-full font-bold">大運 {{ selectedDaYun.gan }}{{ selectedDaYun.zhi }} 期間</span>
-      </div>
-      <div class="flex overflow-x-auto no-scrollbar gap-2 pb-2 mt-3">
-        <div v-for="ln in selectedDaYun.liuNianList" :key="'ln'+ln.year" @click="selectLiuNian(ln)"
-             :class="['cursor-pointer border rounded-2xl p-2 w-[70px] sm:w-[85px] text-center flex-shrink-0 transition relative', 
-                      selectedLiuNian?.year === ln.year ? 'bg-gradient-to-br from-sky-100 to-indigo-100 border-indigo-200 shadow-md transform -translate-y-1' : 'bg-white/60 border-white hover:bg-white']">
-          <div class="text-[9px] sm:text-[10px] text-slate-500 font-bold mb-1">{{ ln.year }}</div>
-          <div class="text-sm sm:text-base font-extrabold">
-            <span :class="getElemClass(ln.gan)">{{ ln.gan }}</span><span :class="getElemClass(ln.zhi)">{{ ln.zhi }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 🌟 流月選擇區 (選擇流年後顯示) -->
-    <div v-if="selectedLiuNian" class="card-bg p-4 rounded-3xl animate-fade-in mt-2">
-      <div class="flex justify-between items-center pb-2 mb-2 border-b border-slate-100">
-        <h2 class="text-xs sm:text-sm font-extrabold text-slate-600">🍃 選擇流月軌跡：</h2>
-        <span class="text-[10px] bg-slate-50 text-slate-400 px-2 py-0.5 rounded-full font-bold">流年 {{ selectedLiuNian.gan }}{{ selectedLiuNian.zhi }} 期間</span>
-      </div>
-      <div class="flex overflow-x-auto no-scrollbar gap-2 pb-2 mt-3">
-        <div v-for="lm in currentLiuYueList" :key="'lm'+lm.month" @click="selectedLiuYue = lm.month"
-             :class="['cursor-pointer border rounded-xl p-2 w-[65px] text-center flex-shrink-0 transition relative', 
-                      selectedLiuYue === lm.month ? 'bg-gradient-to-br from-emerald-50 to-teal-100 border-teal-200 shadow-sm transform -translate-y-1' : 'bg-white/50 border-white hover:bg-white']">
-          <div class="text-[8px] sm:text-[9px] text-slate-400 font-bold mb-0.5">{{ lm.month }}月</div>
-          <div class="text-xs sm:text-sm font-extrabold">
-            <span :class="getElemClass(lm.gan)">{{ lm.gan }}</span><span :class="getElemClass(lm.zhi)">{{ lm.zhi }}</span>
-          </div>
-        </div>
-      </div>
+    <!-- 🌟 切換 Tab 區域 -->
+    <div class="flex justify-center gap-3 mt-4 mb-2">
+      <button @click="activeViewTab = 'main'" :class="['px-5 py-2.5 rounded-full text-xs sm:text-sm font-extrabold transition shadow-sm border', activeViewTab === 'main' ? 'bg-white text-pink-500 border-pink-200' : 'bg-white/50 text-slate-500 border-transparent hover:bg-white']">✨ 天地全息盤</button>
+      <button @click="activeViewTab = 'radar'" :class="['px-5 py-2.5 rounded-full text-xs sm:text-sm font-extrabold transition shadow-sm border', activeViewTab === 'radar' ? 'bg-indigo-50 text-indigo-600 border-indigo-200' : 'bg-white/50 text-slate-500 border-transparent hover:bg-white']">🔮 地支紫微羅盤</button>
     </div>
 
     <!-- ============================================== -->
-    <!-- 1. 核心盤面：七柱連動 (動態寬度) -->
+    <!-- 視圖 A：傳統全息連動盤 -->
     <!-- ============================================== -->
-    <div class="card-bg p-3 sm:p-5 rounded-3xl overflow-hidden relative mt-5">
-      <h2 class="text-xs sm:text-sm font-extrabold text-slate-600 mb-3 flex justify-between items-center px-1">
-        <span>✨ {{ selectedDaYun ? (selectedLiuYue ? '七柱全息連動' : '六柱全息連動') : '四柱原命盤' }}</span>
-        <span class="text-[9px] sm:text-[10px] text-pink-500 bg-pink-50 px-2 py-1 rounded-full shadow-sm">💡 點擊「得分」看細節</span>
-      </h2>
-      
-      <div class="overflow-x-auto no-scrollbar pb-2">
-        <div class="grid text-center text-[10px] sm:text-xs gap-y-1 sm:gap-y-2 w-full min-w-max" :style="{ gridTemplateColumns: 'minmax(35px, auto) repeat(' + displayPillars.length + ', minmax(50px, 1fr))' }">
-          
-          <!-- 標頭 -->
-          <div></div>
-          <div v-for="p in displayPillars" :key="'hd'+p.role" :class="['font-extrabold py-1.5 rounded-t-xl mx-0.5 sm:mx-1 text-[9px] sm:text-xs', p.isCore ? 'bg-white/60 text-slate-500' : 'bg-pink-100/80 text-pink-600 shadow-sm']">
-            {{ p.role }}
-          </div>
-
-          <!-- 天干 -->
-          <div class="text-slate-400 font-bold self-center bg-white/40 py-2 sm:py-4 rounded-l-xl pl-1 sm:pl-2 text-[8px] sm:text-[10px]">天干</div>
-          <div v-for="p in displayPillars" :key="'g'+p.role" :class="['flex flex-col items-center justify-center py-1.5 sm:py-2 mx-0.5 sm:mx-1 border-b', p.isCore ? 'bg-white/50 border-white' : 'bg-pink-50/50 border-pink-100']">
-            <span :class="['text-lg sm:text-2xl font-extrabold', getElemClass(p.gan)]">{{ p.gan }}</span>
-            <span class="text-[8px] sm:text-[9px] text-slate-500 mt-0.5 font-bold whitespace-nowrap">{{ p.shishen }}</span>
-            <div v-if="transformedInfo[p.role]" @click.stop="openComboDetailModal(p.role)" class="cursor-pointer text-[7px] sm:text-[8px] mt-1 px-1 rounded-full bg-purple-100 text-purple-600 font-bold hover:scale-105 transition shadow-sm whitespace-nowrap">
-              <span v-if="transformedInfo[p.role].isSuccess">化[{{ transformedInfo[p.role].targetName }}]</span>
-              <span v-else class="text-rose-400">不化</span>
-            </div>
-          </div>
-
-          <!-- 地支 -->
-          <div class="text-slate-400 font-bold self-center bg-white/40 py-2 sm:py-4 pl-1 sm:pl-2 text-[8px] sm:text-[10px]">地支</div>
-          <div v-for="p in displayPillars" :key="'z'+p.role" :class="['flex flex-col items-center justify-center py-1.5 sm:py-2 mx-0.5 sm:mx-1 border-b', p.isCore ? 'bg-white/50 border-white' : 'bg-pink-50/50 border-pink-100']">
-            <span :class="['text-lg sm:text-2xl font-extrabold', getElemClass(p.zhi)]">{{ p.zhi }}</span>
-            <span class="text-[8px] sm:text-[9px] text-slate-500 mt-0.5 font-bold whitespace-nowrap">{{ getShiShen(result.dayGan, getMainQi(p.zhi)) }}</span>
-          </div>
-
-          <!-- 藏干 -->
-          <div class="text-slate-400 font-bold self-center bg-white/40 py-2 sm:py-4 pl-1 sm:pl-2 text-[8px] sm:text-[10px]">藏干</div>
-          <div v-for="p in displayPillars" :key="'c'+p.role" :class="['py-1.5 sm:py-2 mx-0.5 sm:mx-1 flex flex-col gap-0.5 sm:gap-1 border-b', p.isCore ? 'bg-white/50 border-white' : 'bg-pink-50/50 border-pink-100']">
-            <div v-for="cg in getCustomCangGan(p.zhi)" :key="cg.type" class="flex items-center justify-center gap-0.5 text-[8px] sm:text-[10px]">
-              <b :class="getElemClass(cg.stem)">{{ cg.stem }}</b>
-              <span class="text-[7px] sm:text-[8px] text-slate-400 w-3 sm:w-4 text-left">{{ getShiShen(result.dayGan, cg.stem).substring(0,1) }}</span>
-            </div>
-          </div>
-
-          <!-- 星運 -->
-          <div class="text-slate-400 font-bold self-center bg-white/40 py-2 sm:py-3 pl-1 sm:pl-2 text-[8px] sm:text-[10px]">星運</div>
-          <div v-for="p in displayPillars" :key="'cs'+p.role" :class="['py-2 sm:py-3 mx-0.5 sm:mx-1 flex flex-col justify-center items-center gap-0.5 border-b', p.isCore ? 'bg-white/50 border-white' : 'bg-pink-50/50 border-pink-100']">
-            <span class="text-teal-500 font-extrabold text-[8px] sm:text-[10px]">{{ get12ChangSheng(result.dayGan, p.zhi) }}</span>
-            <span class="text-[7px] sm:text-[8px] bg-slate-100 text-slate-500 px-1 rounded-full font-bold">{{ getChangShengScore(get12ChangSheng(result.dayGan, p.zhi)) }}</span>
-          </div>
-
-          <!-- 得分按鈕 -->
-          <div class="text-slate-400 font-bold self-center bg-white/40 py-2 sm:py-4 rounded-bl-xl pl-1 sm:pl-2 text-[8px] sm:text-[10px]">得分</div>
-          <div v-for="p in displayPillars" :key="'sc'+p.role" :class="['py-1.5 sm:py-2 mx-0.5 sm:mx-1 rounded-b-xl flex flex-col items-center justify-center', p.isCore ? 'bg-white/50' : 'bg-pink-50/50']">
-            <button v-if="p.isCore" @click="selectedMatrixPillar = p.role" 
-                    :class="['w-full py-1 rounded-xl transition-all active:scale-95 border bg-white shadow-sm', 
-                             p.scoreDetail.isAlly ? 'text-teal-500 border-teal-100' : 'text-rose-400 border-rose-100',
-                             selectedMatrixPillar === p.role ? 'ring-2 ring-pink-300 ring-offset-1 bg-pink-50' : 'hover:bg-slate-50']">
-              <div class="text-[7px] sm:text-[8px] mb-0.5 opacity-70 font-bold whitespace-nowrap">{{ p.scoreDetail.isAlly ? '同黨' : '異黨' }}</div>
-              <div class="text-xs font-extrabold">{{ p.scoreDetail.energy }}</div>
-            </button>
-            <div v-else class="text-slate-300 text-[10px]">-</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 🎯 四柱取根明細矩陣 -->
-      <div v-if="selectedMatrixPillar" class="mt-4 sm:mt-6 bg-white/80 rounded-3xl p-3 sm:p-5 border border-white shadow-lg space-y-3 text-xs animate-fade-in">
-        <div class="grid grid-cols-5 text-center border-b border-slate-100 pb-2 font-bold">
-          <div class="flex flex-col items-center justify-center bg-slate-50 rounded-xl py-1 mr-1">
-            <span :class="['text-lg sm:text-xl font-extrabold', getElemClass(getPillarByRole(selectedMatrixPillar).effGan)]">{{ getPillarByRole(selectedMatrixPillar).effGan }}</span>
-            <span class="text-[8px] sm:text-[10px] text-slate-400 font-bold">選干</span>
-          </div>
-          <div v-for="p in ['年柱','月柱','日柱','時柱']" :key="'mx_hd_'+p" :class="['py-1 rounded-xl mx-0.5', p === selectedMatrixPillar ? 'bg-pink-100 text-pink-600 shadow-sm' : 'text-slate-500']">
-            <div class="text-[10px] sm:text-xs">{{ p }}</div>
-            <div class="text-[8px] sm:text-[9px] opacity-70">{{ getPillarWeightLabel(p) }}</div>
-          </div>
-        </div>
+    <div v-if="activeViewTab === 'main'" class="animate-fade-in space-y-5">
+      <div class="card-bg p-3 sm:p-5 rounded-3xl overflow-hidden relative">
+        <h2 class="text-xs sm:text-sm font-extrabold text-slate-600 mb-3 flex justify-between items-center px-1">
+          <span>✨ {{ selectedDaYun ? (selectedLiuYue ? '七柱全息連動' : '六柱全息連動') : '四柱原命盤' }}</span>
+          <span class="text-[9px] sm:text-[10px] text-pink-500 bg-pink-50 px-2 py-1 rounded-full shadow-sm">💡 點擊「得分」看細節</span>
+        </h2>
         
-        <div class="grid grid-cols-5 text-center py-2 border-b border-slate-50 items-center">
-          <div class="text-slate-400 font-bold text-[9px] sm:text-xs">星運</div>
-          <div v-for="p in ['年柱','月柱','日柱','時柱']" :key="'mx_cs_'+p" class="text-slate-500">
-            <span class="text-teal-500 font-bold text-[10px] sm:text-xs">{{ get12ChangSheng(getPillarByRole(selectedMatrixPillar).effGan, getPillarByRole(p).zhi) }}</span>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-5 text-center py-2 border-b border-slate-50 items-center bg-slate-50/50 rounded-lg">
-          <div class="text-slate-500"><div class="font-extrabold text-[10px] sm:text-xs">主氣</div><div class="text-[8px] sm:text-[9px] text-slate-400">基 9</div></div>
-          <div v-for="p in ['年柱','月柱','日柱','時柱']" :key="'mx_jq_'+p" class="space-y-0.5">
-            <div class="flex items-center justify-center gap-0.5 sm:gap-1">
-              <b :class="getElemClass(getMatrixCangDetail(selectedMatrixPillar, p, '主').stem)">{{ getMatrixCangDetail(selectedMatrixPillar, p, '主').stem }}</b>
-              <span class="text-[8px] sm:text-[9px] text-slate-400">{{ getMatrixCangDetail(selectedMatrixPillar, p, '主').roleTag }}</span>
+        <div class="overflow-x-auto no-scrollbar pb-2">
+          <div class="grid text-center text-[10px] sm:text-xs gap-y-1 sm:gap-y-2 w-full min-w-max" :style="{ gridTemplateColumns: 'minmax(35px, auto) repeat(' + displayPillars.length + ', minmax(50px, 1fr))' }">
+            
+            <!-- 標頭 -->
+            <div></div>
+            <div v-for="p in displayPillars" :key="'hd'+p.role" :class="['font-extrabold py-1.5 rounded-t-xl mx-0.5 sm:mx-1 text-[9px] sm:text-xs', p.isCore ? 'bg-white/60 text-slate-500' : 'bg-pink-100/80 text-pink-600 shadow-sm']">
+              {{ p.role }}
             </div>
-            <div class="font-extrabold text-slate-600 text-[10px] sm:text-xs">{{ getMatrixCangDetail(selectedMatrixPillar, p, '主').score }}</div>
-          </div>
-        </div>
 
-        <div class="grid grid-cols-5 text-center py-2 border-b border-slate-50 items-center">
-          <div class="text-slate-500"><div class="font-extrabold text-[10px] sm:text-xs">中氣</div><div class="text-[8px] sm:text-[9px] text-slate-400">基 2</div></div>
-          <div v-for="p in ['年柱','月柱','日柱','時柱']" :key="'mx_zq_'+p" class="space-y-0.5">
-            <div class="flex items-center justify-center gap-0.5 sm:gap-1">
-              <b :class="getElemClass(getMatrixCangDetail(selectedMatrixPillar, p, '中').stem)">{{ getMatrixCangDetail(selectedMatrixPillar, p, '中').stem }}</b>
-              <span class="text-[8px] sm:text-[9px] text-slate-400">{{ getMatrixCangDetail(selectedMatrixPillar, p, '中').roleTag }}</span>
+            <!-- 天干 -->
+            <div class="text-slate-400 font-bold self-center bg-white/40 py-2 sm:py-4 rounded-l-xl pl-1 sm:pl-2 text-[8px] sm:text-[10px]">天干</div>
+            <div v-for="p in displayPillars" :key="'g'+p.role" :class="['flex flex-col items-center justify-center py-1.5 sm:py-2 mx-0.5 sm:mx-1 border-b', p.isCore ? 'bg-white/50 border-white' : 'bg-pink-50/50 border-pink-100']">
+              <span :class="['text-lg sm:text-2xl font-extrabold', getElemClass(p.gan)]">{{ p.gan }}</span>
+              <span class="text-[8px] sm:text-[9px] text-slate-500 mt-0.5 font-bold whitespace-nowrap">{{ p.shishen }}</span>
+              <div v-if="transformedInfo[p.role]" @click.stop="openComboDetailModal(p.role)" class="cursor-pointer text-[7px] sm:text-[8px] mt-1 px-1 rounded-full bg-purple-100 text-purple-600 font-bold hover:scale-105 transition shadow-sm whitespace-nowrap">
+                <span v-if="transformedInfo[p.role].isSuccess">化[{{ transformedInfo[p.role].targetName }}]</span>
+                <span v-else class="text-rose-400">不化</span>
+              </div>
             </div>
-            <div class="font-extrabold text-slate-600 text-[10px] sm:text-xs">{{ getMatrixCangDetail(selectedMatrixPillar, p, '中').score }}</div>
-          </div>
-        </div>
 
-        <div class="grid grid-cols-5 text-center py-2 border-b border-slate-50 items-center bg-slate-50/50 rounded-lg">
-          <div class="text-slate-500"><div class="font-extrabold text-[10px] sm:text-xs">餘氣</div><div class="text-[8px] sm:text-[9px] text-slate-400">基 4</div></div>
-          <div v-for="p in ['年柱','月柱','日柱','時柱']" :key="'mx_yq_'+p" class="space-y-0.5">
-            <div class="flex items-center justify-center gap-0.5 sm:gap-1">
-              <b :class="getElemClass(getMatrixCangDetail(selectedMatrixPillar, p, '餘').stem)">{{ getMatrixCangDetail(selectedMatrixPillar, p, '餘').stem }}</b>
-              <span class="text-[8px] sm:text-[9px] text-slate-400">{{ getMatrixCangDetail(selectedMatrixPillar, p, '餘').roleTag }}</span>
+            <!-- 地支 -->
+            <div class="text-slate-400 font-bold self-center bg-white/40 py-2 sm:py-4 pl-1 sm:pl-2 text-[8px] sm:text-[10px]">地支</div>
+            <div v-for="p in displayPillars" :key="'z'+p.role" :class="['flex flex-col items-center justify-center py-1.5 sm:py-2 mx-0.5 sm:mx-1 border-b', p.isCore ? 'bg-white/50 border-white' : 'bg-pink-50/50 border-pink-100']">
+              <span :class="['text-lg sm:text-2xl font-extrabold', getElemClass(p.zhi)]">{{ p.zhi }}</span>
+              <span class="text-[8px] sm:text-[9px] text-slate-500 mt-0.5 font-bold whitespace-nowrap">{{ getShiShen(result.dayGan, getMainQi(p.zhi)) }}</span>
             </div>
-            <div class="font-extrabold text-slate-600 text-[10px] sm:text-xs">{{ getMatrixCangDetail(selectedMatrixPillar, p, '餘').score }}</div>
+
+            <!-- 藏干 -->
+            <div class="text-slate-400 font-bold self-center bg-white/40 py-2 sm:py-4 pl-1 sm:pl-2 text-[8px] sm:text-[10px]">藏干</div>
+            <div v-for="p in displayPillars" :key="'c'+p.role" :class="['py-1.5 sm:py-2 mx-0.5 sm:mx-1 flex flex-col gap-0.5 sm:gap-1 border-b', p.isCore ? 'bg-white/50 border-white' : 'bg-pink-50/50 border-pink-100']">
+              <div v-for="cg in getCustomCangGan(p.zhi)" :key="cg.type" class="flex items-center justify-center gap-0.5 text-[8px] sm:text-[10px]">
+                <b :class="getElemClass(cg.stem)">{{ cg.stem }}</b>
+                <span class="text-[7px] sm:text-[8px] text-slate-400 w-3 sm:w-4 text-left">{{ getShiShen(result.dayGan, cg.stem).substring(0,1) }}</span>
+              </div>
+            </div>
+
+            <!-- 星運 -->
+            <div class="text-slate-400 font-bold self-center bg-white/40 py-2 sm:py-3 pl-1 sm:pl-2 text-[8px] sm:text-[10px]">星運</div>
+            <div v-for="p in displayPillars" :key="'cs'+p.role" :class="['py-2 sm:py-3 mx-0.5 sm:mx-1 flex flex-col justify-center items-center gap-0.5 border-b', p.isCore ? 'bg-white/50 border-white' : 'bg-pink-50/50 border-pink-100']">
+              <span class="text-teal-500 font-extrabold text-[8px] sm:text-[10px]">{{ get12ChangSheng(result.dayGan, p.zhi) }}</span>
+              <span class="text-[7px] sm:text-[8px] bg-slate-100 text-slate-500 px-1 rounded-full font-bold">{{ getChangShengScore(get12ChangSheng(result.dayGan, p.zhi)) }}</span>
+            </div>
+
+            <!-- 得分按鈕 -->
+            <div class="text-slate-400 font-bold self-center bg-white/40 py-2 sm:py-4 rounded-bl-xl pl-1 sm:pl-2 text-[8px] sm:text-[10px]">得分</div>
+            <div v-for="p in displayPillars" :key="'sc'+p.role" :class="['py-1.5 sm:py-2 mx-0.5 sm:mx-1 rounded-b-xl flex flex-col items-center justify-center', p.isCore ? 'bg-white/50' : 'bg-pink-50/50']">
+              <button v-if="p.isCore" @click="selectedMatrixPillar = p.role" 
+                      :class="['w-full py-1 rounded-xl transition-all active:scale-95 border bg-white shadow-sm', 
+                               p.scoreDetail.isAlly ? 'text-teal-500 border-teal-100' : 'text-rose-400 border-rose-100',
+                               selectedMatrixPillar === p.role ? 'ring-2 ring-pink-300 ring-offset-1 bg-pink-50' : 'hover:bg-slate-50']">
+                <div class="text-[7px] sm:text-[8px] mb-0.5 opacity-70 font-bold whitespace-nowrap">{{ p.scoreDetail.isAlly ? '同黨' : '異黨' }}</div>
+                <div class="text-xs font-extrabold">{{ p.scoreDetail.energy }}</div>
+              </button>
+              <div v-else class="text-slate-300 text-[10px]">-</div>
+            </div>
           </div>
         </div>
 
-        <div class="grid grid-cols-5 text-center py-2 font-bold bg-pink-50/50 rounded-xl mt-1">
-          <div class="text-pink-400 text-[10px] sm:text-xs self-center">小計</div>
-          <div v-for="p in ['年柱','月柱','日柱','時柱']" :key="'mx_sub_'+p" :class="['text-xs sm:text-sm', p === selectedMatrixPillar ? 'text-pink-500 font-extrabold bg-white rounded-lg py-1 shadow-sm mx-1' : 'text-slate-500 self-center']">
-            {{ getMatrixColumnSubtotal(selectedMatrixPillar, p) }}
+        <!-- 🎯 四柱取根明細矩陣 -->
+        <div v-if="selectedMatrixPillar" class="mt-4 sm:mt-6 bg-white/80 rounded-3xl p-3 sm:p-5 border border-white shadow-lg space-y-3 text-xs animate-fade-in">
+          <div class="grid grid-cols-5 text-center border-b border-slate-100 pb-2 font-bold">
+            <div class="flex flex-col items-center justify-center bg-slate-50 rounded-xl py-1 mr-1">
+              <span :class="['text-lg sm:text-xl font-extrabold', getElemClass(getPillarByRole(selectedMatrixPillar).effGan)]">{{ getPillarByRole(selectedMatrixPillar).effGan }}</span>
+              <span class="text-[8px] sm:text-[10px] text-slate-400 font-bold">選干</span>
+            </div>
+            <div v-for="p in ['年柱','月柱','日柱','時柱']" :key="'mx_hd_'+p" :class="['py-1 rounded-xl mx-0.5', p === selectedMatrixPillar ? 'bg-pink-100 text-pink-600 shadow-sm' : 'text-slate-500']">
+              <div class="text-[10px] sm:text-xs">{{ p }}</div>
+              <div class="text-[8px] sm:text-[9px] opacity-70">{{ getPillarWeightLabel(p) }}</div>
+            </div>
           </div>
-        </div>
-      </div>
+          
+          <div class="grid grid-cols-5 text-center py-2 border-b border-slate-50 items-center">
+            <div class="text-slate-400 font-bold text-[9px] sm:text-xs">星運</div>
+            <div v-for="p in ['年柱','月柱','日柱','時柱']" :key="'mx_cs_'+p" class="text-slate-500">
+              <span class="text-teal-500 font-bold text-[10px] sm:text-xs">{{ get12ChangSheng(getPillarByRole(selectedMatrixPillar).effGan, getPillarByRole(p).zhi) }}</span>
+            </div>
+          </div>
 
-      <!-- 身強弱結論指標 Bar -->
-      <div v-if="quantScore" class="pt-5 mt-5">
-        <div class="flex justify-between items-end mb-3 px-1">
-          <h3 class="text-xs sm:text-sm font-extrabold text-slate-600">⚖️ 能量天平</h3>
-          <div class="text-[10px] sm:text-xs text-slate-400 font-bold">當前比例：<b class="text-pink-500 text-sm bg-white px-2 py-0.5 rounded-full shadow-sm">{{ quantScore.ratio }}</b></div>
+          <div class="grid grid-cols-5 text-center py-2 border-b border-slate-50 items-center bg-slate-50/50 rounded-lg">
+            <div class="text-slate-500"><div class="font-extrabold text-[10px] sm:text-xs">主氣</div><div class="text-[8px] sm:text-[9px] text-slate-400">基 9</div></div>
+            <div v-for="p in ['年柱','月柱','日柱','時柱']" :key="'mx_jq_'+p" class="space-y-0.5">
+              <div class="flex items-center justify-center gap-0.5 sm:gap-1">
+                <b :class="getElemClass(getMatrixCangDetail(selectedMatrixPillar, p, '主').stem)">{{ getMatrixCangDetail(selectedMatrixPillar, p, '主').stem }}</b>
+                <span class="text-[8px] sm:text-[9px] text-slate-400">{{ getMatrixCangDetail(selectedMatrixPillar, p, '主').roleTag }}</span>
+              </div>
+              <div class="font-extrabold text-slate-600 text-[10px] sm:text-xs">{{ getMatrixCangDetail(selectedMatrixPillar, p, '主').score }}</div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-5 text-center py-2 border-b border-slate-50 items-center">
+            <div class="text-slate-500"><div class="font-extrabold text-[10px] sm:text-xs">中氣</div><div class="text-[8px] sm:text-[9px] text-slate-400">基 2</div></div>
+            <div v-for="p in ['年柱','月柱','日柱','時柱']" :key="'mx_zq_'+p" class="space-y-0.5">
+              <div class="flex items-center justify-center gap-0.5 sm:gap-1">
+                <b :class="getElemClass(getMatrixCangDetail(selectedMatrixPillar, p, '中').stem)">{{ getMatrixCangDetail(selectedMatrixPillar, p, '中').stem }}</b>
+                <span class="text-[8px] sm:text-[9px] text-slate-400">{{ getMatrixCangDetail(selectedMatrixPillar, p, '中').roleTag }}</span>
+              </div>
+              <div class="font-extrabold text-slate-600 text-[10px] sm:text-xs">{{ getMatrixCangDetail(selectedMatrixPillar, p, '中').score }}</div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-5 text-center py-2 border-b border-slate-50 items-center bg-slate-50/50 rounded-lg">
+            <div class="text-slate-500"><div class="font-extrabold text-[10px] sm:text-xs">餘氣</div><div class="text-[8px] sm:text-[9px] text-slate-400">基 4</div></div>
+            <div v-for="p in ['年柱','月柱','日柱','時柱']" :key="'mx_yq_'+p" class="space-y-0.5">
+              <div class="flex items-center justify-center gap-0.5 sm:gap-1">
+                <b :class="getElemClass(getMatrixCangDetail(selectedMatrixPillar, p, '餘').stem)">{{ getMatrixCangDetail(selectedMatrixPillar, p, '餘').stem }}</b>
+                <span class="text-[8px] sm:text-[9px] text-slate-400">{{ getMatrixCangDetail(selectedMatrixPillar, p, '餘').roleTag }}</span>
+              </div>
+              <div class="font-extrabold text-slate-600 text-[10px] sm:text-xs">{{ getMatrixCangDetail(selectedMatrixPillar, p, '餘').score }}</div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-5 text-center py-2 font-bold bg-pink-50/50 rounded-xl mt-1">
+            <div class="text-pink-400 text-[10px] sm:text-xs self-center">小計</div>
+            <div v-for="p in ['年柱','月柱','日柱','時柱']" :key="'mx_sub_'+p" :class="['text-xs sm:text-sm', p === selectedMatrixPillar ? 'text-pink-500 font-extrabold bg-white rounded-lg py-1 shadow-sm mx-1' : 'text-slate-500 self-center']">
+              {{ getMatrixColumnSubtotal(selectedMatrixPillar, p) }}
+            </div>
+          </div>
         </div>
-        <div class="relative pt-6 pb-5 px-2">
-          <div class="absolute top-0 pointer-transition transform -translate-x-1/2 flex flex-col items-center z-10" :style="{ left: strengthBarPercent + '%' }">
-            <div class="bg-white text-pink-500 text-[10px] sm:text-xs font-extrabold px-3 py-1 rounded-full shadow-md border border-pink-100">{{ quantScore.ratio }}</div>
-            <div class="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[5px] border-t-white drop-shadow-md"></div>
+
+        <!-- 身強弱結論指標 Bar -->
+        <div v-if="quantScore" class="pt-5 mt-5">
+          <div class="flex justify-between items-end mb-3 px-1">
+            <h3 class="text-xs sm:text-sm font-extrabold text-slate-600">⚖️ 能量天平</h3>
+            <div class="text-[10px] sm:text-xs text-slate-400 font-bold">當前比例：<b class="text-pink-500 text-sm bg-white px-2 py-0.5 rounded-full shadow-sm">{{ quantScore.ratio }}</b></div>
           </div>
-          <div class="h-3 w-full flex rounded-full overflow-hidden shadow-inner bg-slate-100">
-            <div class="w-[20%] bg-sky-200"></div> 
-            <div class="w-[20%] bg-teal-200"></div> 
-            <div class="w-[20%] bg-emerald-300"></div> 
-            <div class="w-[20%] bg-amber-200"></div> 
-            <div class="w-[20%] bg-rose-200"></div> 
-          </div>
-          <div class="relative w-full h-8 mt-1.5 text-[8px] sm:text-[9px] text-slate-400 font-bold">
-            <div class="absolute left-[20%] -translate-x-1/2 flex flex-col items-center"><span class="mb-0.5 text-slate-300">0.45</span><span>身弱正格</span></div>
-            <div class="absolute left-[40%] -translate-x-1/2 flex flex-col items-center"><span class="mb-0.5 text-slate-300">0.90</span><span>中和正格</span></div>
-            <div class="absolute left-[60%] -translate-x-1/2 flex flex-col items-center"><span class="mb-0.5 text-slate-300">1.25</span><span>身強正格</span></div>
-            <div class="absolute left-[80%] -translate-x-1/2 flex flex-col items-center"><span class="mb-0.5 text-slate-300">2.50</span><span>偏旺候選</span></div>
-            <div class="absolute left-[5%] -translate-x-1/2 bottom-0">偏弱候選</div>
+          <div class="relative pt-6 pb-5 px-2">
+            <div class="absolute top-0 pointer-transition transform -translate-x-1/2 flex flex-col items-center z-10" :style="{ left: strengthBarPercent + '%' }">
+              <div class="bg-white text-pink-500 text-[10px] sm:text-xs font-extrabold px-3 py-1 rounded-full shadow-md border border-pink-100">{{ quantScore.ratio }}</div>
+              <div class="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[5px] border-t-white drop-shadow-md"></div>
+            </div>
+            <div class="h-3 w-full flex rounded-full overflow-hidden shadow-inner bg-slate-100">
+              <div class="w-[20%] bg-sky-200"></div> 
+              <div class="w-[20%] bg-teal-200"></div> 
+              <div class="w-[20%] bg-emerald-300"></div> 
+              <div class="w-[20%] bg-amber-200"></div> 
+              <div class="w-[20%] bg-rose-200"></div> 
+            </div>
+            <div class="relative w-full h-8 mt-1.5 text-[8px] sm:text-[9px] text-slate-400 font-bold">
+              <div class="absolute left-[20%] -translate-x-1/2 flex flex-col items-center"><span class="mb-0.5 text-slate-300">0.45</span><span>身弱正格</span></div>
+              <div class="absolute left-[40%] -translate-x-1/2 flex flex-col items-center"><span class="mb-0.5 text-slate-300">0.90</span><span>中和正格</span></div>
+              <div class="absolute left-[60%] -translate-x-1/2 flex flex-col items-center"><span class="mb-0.5 text-slate-300">1.25</span><span>身強正格</span></div>
+              <div class="absolute left-[80%] -translate-x-1/2 flex flex-col items-center"><span class="mb-0.5 text-slate-300">2.50</span><span>偏旺候選</span></div>
+              <div class="absolute left-[5%] -translate-x-1/2 bottom-0">偏弱候選</div>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
     <!-- ============================================== -->
-    <!-- 🛡️ 歲運防禦與戰略系統 -->
+    <!-- 視圖 B：🔮 地支紫微羅盤 (全新模組) -->
+    <!-- ============================================== -->
+    <div v-if="activeViewTab === 'radar'" class="animate-fade-in space-y-5">
+      <div class="card-bg p-4 sm:p-5 rounded-3xl relative overflow-hidden">
+        
+        <h2 class="text-xs sm:text-sm font-extrabold text-indigo-800 mb-4 flex justify-between items-center px-1">
+          <span class="flex items-center gap-1.5"><span class="text-lg">🔮</span> 紫微 12 宮動態羅盤</span>
+          <span class="text-[9px] sm:text-[10px] text-indigo-500 bg-indigo-50 px-2 py-1 rounded-full shadow-sm">地支化學反應監視器</span>
+        </h2>
+
+        <!-- 4x4 羅盤網格 -->
+        <div class="grid grid-cols-4 grid-rows-4 gap-1.5 sm:gap-2 aspect-[4/5] sm:aspect-square max-w-lg mx-auto bg-slate-50/50 p-2 sm:p-3 rounded-2xl border border-white shadow-inner relative">
+          
+          <!-- Cell: 巳 -->
+          <div :class="['palace-cell col-start-1 row-start-1', getZhiTokens('巳').length > 0 ? 'active' : 'opacity-60']">
+            <span class="text-xs sm:text-sm font-extrabold text-rose-500">巳</span>
+            <div class="flex-1 w-full flex flex-col gap-0.5 mt-1 items-center justify-start overflow-y-auto no-scrollbar">
+              <span v-for="t in getZhiTokens('巳')" :class="['text-[8px] px-1.5 py-0.5 rounded shadow-sm text-white w-full text-center', t.bgClass]">{{ t.role }}</span>
+            </div>
+          </div>
+          <!-- Cell: 午 -->
+          <div :class="['palace-cell col-start-2 row-start-1', getZhiTokens('午').length > 0 ? 'active' : 'opacity-60']">
+            <span class="text-xs sm:text-sm font-extrabold text-rose-600">午</span>
+            <div class="flex-1 w-full flex flex-col gap-0.5 mt-1 items-center justify-start overflow-y-auto no-scrollbar">
+              <span v-for="t in getZhiTokens('午')" :class="['text-[8px] px-1.5 py-0.5 rounded shadow-sm text-white w-full text-center', t.bgClass]">{{ t.role }}</span>
+            </div>
+          </div>
+          <!-- Cell: 未 -->
+          <div :class="['palace-cell col-start-3 row-start-1', getZhiTokens('未').length > 0 ? 'active' : 'opacity-60']">
+            <span class="text-xs sm:text-sm font-extrabold text-amber-600">未</span>
+            <div class="flex-1 w-full flex flex-col gap-0.5 mt-1 items-center justify-start overflow-y-auto no-scrollbar">
+              <span v-for="t in getZhiTokens('未')" :class="['text-[8px] px-1.5 py-0.5 rounded shadow-sm text-white w-full text-center', t.bgClass]">{{ t.role }}</span>
+            </div>
+          </div>
+          <!-- Cell: 申 -->
+          <div :class="['palace-cell col-start-4 row-start-1', getZhiTokens('申').length > 0 ? 'active' : 'opacity-60']">
+            <span class="text-xs sm:text-sm font-extrabold text-amber-500">申</span>
+            <div class="flex-1 w-full flex flex-col gap-0.5 mt-1 items-center justify-start overflow-y-auto no-scrollbar">
+              <span v-for="t in getZhiTokens('申')" :class="['text-[8px] px-1.5 py-0.5 rounded shadow-sm text-white w-full text-center', t.bgClass]">{{ t.role }}</span>
+            </div>
+          </div>
+
+          <!-- Cell: 辰 -->
+          <div :class="['palace-cell col-start-1 row-start-2', getZhiTokens('辰').length > 0 ? 'active' : 'opacity-60']">
+            <span class="text-xs sm:text-sm font-extrabold text-amber-600">辰</span>
+            <div class="flex-1 w-full flex flex-col gap-0.5 mt-1 items-center justify-start overflow-y-auto no-scrollbar">
+              <span v-for="t in getZhiTokens('辰')" :class="['text-[8px] px-1.5 py-0.5 rounded shadow-sm text-white w-full text-center', t.bgClass]">{{ t.role }}</span>
+            </div>
+          </div>
+          <!-- Radar Screen (Center 2x2) -->
+          <div class="col-start-2 col-span-2 row-start-2 row-span-2 radar-screen p-2 sm:p-3 flex flex-col gap-2 relative">
+             <!-- Radar Header -->
+             <div class="text-[8px] sm:text-[10px] text-sky-400/70 border-b border-sky-900/50 pb-1 flex justify-between">
+                <span>SYSTEM.RADAR.ACTIVE</span>
+                <span class="animate-pulse text-rose-400">REC</span>
+             </div>
+             <!-- Radar Reports -->
+             <div class="flex-1 overflow-y-auto no-scrollbar space-y-2">
+                <div v-if="radarReports.length === 0" class="text-[9px] sm:text-xs text-sky-700/50 text-center mt-6">無地支互動發生</div>
+                <div v-for="rep in radarReports" :key="rep.title" class="bg-sky-950/40 p-1.5 sm:p-2 rounded border border-sky-800/30">
+                   <div :class="['text-[9px] sm:text-[11px] font-extrabold mb-0.5', rep.isCritical ? 'text-rose-400' : 'text-sky-300']">{{ rep.title }}</div>
+                   <div class="text-[8px] sm:text-[9px] text-sky-100/70 leading-relaxed">{{ rep.desc }}</div>
+                </div>
+             </div>
+          </div>
+          <!-- Cell: 酉 -->
+          <div :class="['palace-cell col-start-4 row-start-2', getZhiTokens('酉').length > 0 ? 'active' : 'opacity-60']">
+            <span class="text-xs sm:text-sm font-extrabold text-amber-400">酉</span>
+            <div class="flex-1 w-full flex flex-col gap-0.5 mt-1 items-center justify-start overflow-y-auto no-scrollbar">
+              <span v-for="t in getZhiTokens('酉')" :class="['text-[8px] px-1.5 py-0.5 rounded shadow-sm text-white w-full text-center', t.bgClass]">{{ t.role }}</span>
+            </div>
+          </div>
+
+          <!-- Cell: 卯 -->
+          <div :class="['palace-cell col-start-1 row-start-3', getZhiTokens('卯').length > 0 ? 'active' : 'opacity-60']">
+            <span class="text-xs sm:text-sm font-extrabold text-emerald-400">卯</span>
+            <div class="flex-1 w-full flex flex-col gap-0.5 mt-1 items-center justify-start overflow-y-auto no-scrollbar">
+              <span v-for="t in getZhiTokens('卯')" :class="['text-[8px] px-1.5 py-0.5 rounded shadow-sm text-white w-full text-center', t.bgClass]">{{ t.role }}</span>
+            </div>
+          </div>
+          <!-- Cell: 戌 -->
+          <div :class="['palace-cell col-start-4 row-start-3', getZhiTokens('戌').length > 0 ? 'active' : 'opacity-60']">
+            <span class="text-xs sm:text-sm font-extrabold text-amber-700">戌</span>
+            <div class="flex-1 w-full flex flex-col gap-0.5 mt-1 items-center justify-start overflow-y-auto no-scrollbar">
+              <span v-for="t in getZhiTokens('戌')" :class="['text-[8px] px-1.5 py-0.5 rounded shadow-sm text-white w-full text-center', t.bgClass]">{{ t.role }}</span>
+            </div>
+          </div>
+
+          <!-- Cell: 寅 -->
+          <div :class="['palace-cell col-start-1 row-start-4', getZhiTokens('寅').length > 0 ? 'active' : 'opacity-60']">
+            <span class="text-xs sm:text-sm font-extrabold text-emerald-500">寅</span>
+            <div class="flex-1 w-full flex flex-col gap-0.5 mt-1 items-center justify-start overflow-y-auto no-scrollbar">
+              <span v-for="t in getZhiTokens('寅')" :class="['text-[8px] px-1.5 py-0.5 rounded shadow-sm text-white w-full text-center', t.bgClass]">{{ t.role }}</span>
+            </div>
+          </div>
+          <!-- Cell: 丑 -->
+          <div :class="['palace-cell col-start-2 row-start-4', getZhiTokens('丑').length > 0 ? 'active' : 'opacity-60']">
+            <span class="text-xs sm:text-sm font-extrabold text-amber-600">丑</span>
+            <div class="flex-1 w-full flex flex-col gap-0.5 mt-1 items-center justify-start overflow-y-auto no-scrollbar">
+              <span v-for="t in getZhiTokens('丑')" :class="['text-[8px] px-1.5 py-0.5 rounded shadow-sm text-white w-full text-center', t.bgClass]">{{ t.role }}</span>
+            </div>
+          </div>
+          <!-- Cell: 子 -->
+          <div :class="['palace-cell col-start-3 row-start-4', getZhiTokens('子').length > 0 ? 'active' : 'opacity-60']">
+            <span class="text-xs sm:text-sm font-extrabold text-sky-500">子</span>
+            <div class="flex-1 w-full flex flex-col gap-0.5 mt-1 items-center justify-start overflow-y-auto no-scrollbar">
+              <span v-for="t in getZhiTokens('子')" :class="['text-[8px] px-1.5 py-0.5 rounded shadow-sm text-white w-full text-center', t.bgClass]">{{ t.role }}</span>
+            </div>
+          </div>
+          <!-- Cell: 亥 -->
+          <div :class="['palace-cell col-start-4 row-start-4', getZhiTokens('亥').length > 0 ? 'active' : 'opacity-60']">
+            <span class="text-xs sm:text-sm font-extrabold text-sky-600">亥</span>
+            <div class="flex-1 w-full flex flex-col gap-0.5 mt-1 items-center justify-start overflow-y-auto no-scrollbar">
+              <span v-for="t in getZhiTokens('亥')" :class="['text-[8px] px-1.5 py-0.5 rounded shadow-sm text-white w-full text-center', t.bgClass]">{{ t.role }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- 🛡️ 歲運防禦與戰略系統 (已升級主副分離) -->
     <!-- ============================================== -->
     <div v-if="godsInfo" class="card-bg p-4 sm:p-5 rounded-3xl space-y-4">
       <div class="border-b border-slate-100 pb-2">
@@ -438,47 +588,6 @@
         <div class="bg-white/60 p-3 rounded-xl border border-white shadow-sm flex gap-2 items-start">
           <span class="text-rose-500 font-extrabold whitespace-nowrap">第三層：傷身</span>
           <span class="text-slate-600">若防禦全破，七殺直剋日主或強根拔盡，直接威脅健康與生命安全。</span>
-        </div>
-      </div>
-      <!-- 救應原則 -->
-      <div class="bg-teal-50/50 p-3.5 rounded-xl border border-teal-100 text-[10px] sm:text-xs text-slate-600 mt-2">
-        <b class="text-teal-600">💡 救應原則：</b> 
-        天干合化救應（若流年忌神來襲，原局或大運能「合走忌神」則相神得救）。若為無格，則秉持「無格睇日主」，專心保護日主免受重剋，留得有用之身。
-      </div>
-    </div>
-
-    <!-- ============================================== -->
-    <!-- 氣場動態診斷 -->
-    <!-- ============================================== -->
-    <div class="card-bg p-4 sm:p-5 rounded-3xl space-y-4">
-      <div class="border-b border-slate-100 pb-2 flex justify-between items-center">
-        <h3 class="text-xs sm:text-sm font-extrabold text-slate-600">💬 氣場動態診斷</h3>
-      </div>
-      <div class="space-y-2">
-        <h4 class="text-[10px] sm:text-xs font-bold text-sky-500">🫧 天干事件</h4>
-        <div v-if="stemRelations.length === 0" class="text-[10px] text-slate-400 italic pl-2">好平靜，沒有打架喔</div>
-        <div class="flex flex-wrap gap-1.5 sm:gap-2">
-          <span v-for="sr in stemRelations" :key="sr.desc" :class="['relation-tag', sr.isTrans ? 'tag-trans' : 'tag-stem']">{{ sr.desc }}</span>
-        </div>
-      </div>
-      <div class="space-y-2 border-t border-slate-100 pt-3">
-        <h4 class="text-[10px] sm:text-xs font-bold text-emerald-500">🍀 地支合局</h4>
-        <div v-if="branchCombos.length === 0" class="text-[10px] text-slate-400 italic pl-2">沒有牽手合局喔</div>
-        <div class="flex flex-wrap gap-1.5 sm:gap-2">
-          <span v-for="bc in branchCombos" :key="bc.desc" class="relation-tag tag-he">{{ bc.desc }}</span>
-        </div>
-      </div>
-      <div class="space-y-2 border-t border-slate-100 pt-3">
-        <h4 class="text-[10px] sm:text-xs font-bold text-rose-400">⚡ 沖刑震盪</h4>
-        <div v-if="branchClashes.length === 0" class="text-[10px] text-slate-400 italic pl-2">地支乖乖的，沒有衝突</div>
-        <div class="flex flex-wrap gap-1.5 sm:gap-2">
-          <span v-for="bcl in branchClashes" :key="bcl.desc" :class="['relation-tag', bcl.type === 'chong' ? 'tag-chong' : 'tag-xing']">{{ bcl.desc }}</span>
-        </div>
-      </div>
-      <div v-if="circuitDiagnostics.length > 0" class="space-y-2 border-t border-slate-100 pt-3">
-        <h4 class="text-[10px] sm:text-xs font-bold text-indigo-400">🔌 電路阻斷</h4>
-        <div class="flex flex-wrap gap-1.5 sm:gap-2">
-          <span v-for="cd in circuitDiagnostics" :key="cd" class="relation-tag tag-circuit">{{ cd }}</span>
         </div>
       </div>
     </div>
@@ -581,45 +690,6 @@
         </div>
       </div>
     </div>
-
-    <!-- ============================================== -->
-    <!-- 7. ISO 7步批算報告卡 -->
-    <!-- ============================================== -->
-    <div v-if="iso7Report.step1" class="card-bg p-4 sm:p-5 rounded-3xl space-y-4">
-      <div class="flex justify-between items-center border-b border-slate-100 pb-2">
-        <h2 class="text-sm font-extrabold text-slate-600 flex items-center gap-2">📜 7步標準分析報告</h2>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 text-[10px] sm:text-xs">
-        <div class="bg-white/60 p-3 sm:p-4 rounded-2xl border border-white shadow-sm space-y-1">
-          <div class="font-extrabold text-pink-500">第一步：日主與四柱根氣</div>
-          <p class="text-slate-600 font-bold leading-relaxed">{{ iso7Report.step1 }}</p>
-        </div>
-        <div class="bg-white/60 p-3 sm:p-4 rounded-2xl border border-white shadow-sm space-y-1">
-          <div class="font-extrabold text-pink-500">第二步：月令透干取格</div>
-          <p class="text-slate-600 font-bold leading-relaxed">{{ iso7Report.step2 }}</p>
-        </div>
-        <div class="bg-white/60 p-3 sm:p-4 rounded-2xl border border-white shadow-sm space-y-1">
-          <div class="font-extrabold text-pink-500">第三步：同異黨比例 (身強弱)</div>
-          <p class="text-slate-600 font-bold leading-relaxed">{{ iso7Report.step3 }}</p>
-        </div>
-        <div class="bg-white/60 p-3 sm:p-4 rounded-2xl border border-white shadow-sm space-y-1">
-          <div class="font-extrabold text-pink-500">第四步：看氣勢定正偏格</div>
-          <p class="text-slate-600 font-bold leading-relaxed">{{ iso7Report.step4 }}</p>
-        </div>
-        <div class="bg-white/60 p-3 sm:p-4 rounded-2xl border border-white shadow-sm space-y-1">
-          <div class="font-extrabold text-pink-500">第五步：局中戰術與用神</div>
-          <p class="text-slate-600 font-bold leading-relaxed">{{ iso7Report.step5 }}</p>
-        </div>
-        <div class="bg-white/60 p-3 sm:p-4 rounded-2xl border border-white shadow-sm space-y-1">
-          <div class="font-extrabold text-pink-500">第六步：喜忌陣營</div>
-          <p class="text-slate-600 font-bold leading-relaxed">{{ iso7Report.step6 }}</p>
-        </div>
-        <div class="bg-white/60 p-3 sm:p-4 rounded-2xl border border-white shadow-sm space-y-1 md:col-span-2">
-          <div class="font-extrabold text-pink-500">第七步：大運吉凶指引</div>
-          <p class="text-slate-600 font-bold leading-relaxed">{{ iso7Report.step7 }}</p>
-        </div>
-      </div>
-    </div>
   </div>
 
   <!-- 化神根能量專屬診斷彈窗 -->
@@ -660,6 +730,7 @@ createApp({
     const inputMode = ref('birth'); 
     const birthTime = ref('');
     const gender = ref(1);
+    const activeViewTab = ref('main');
 
     const manualGender = ref(1);
     const manualStartAge = ref(1);
@@ -725,7 +796,6 @@ createApp({
       '癸': { '卯':'長生','寅':'沐浴','丑':'冠帶','子':'臨官','亥':'帝旺','戌':'衰','酉':'病','申':'死','未':'墓','午':'絕','巳':'胎','辰':'養' }
     };
 
-    const get12ChangSheng = (stem, zhi) => CHANG_SHENG_MAP[stem]?.[zhi] || '';
     const getChangShengScore = (cs) => ({ '長生':10, '沐浴':8, '冠帶':9, '臨官':11, '帝旺':12, '衰':7, '病':5, '死':2, '墓':3, '絕':1, '胎':4, '養':6 }[cs] || 0);
 
     const getElemClass = (char) => {
@@ -791,27 +861,17 @@ createApp({
 
     const currentLiuNianObj = computed(() => selectedDaYun.value?.liuNianList.find(ln => ln.year === selectedLiuNian.value) || null);
     
-    // 🌟 新增：計算流年對應的 12 個流月
     const currentLiuYueList = computed(() => {
         if (!currentLiuNianObj.value) return [];
         const lnYear = currentLiuNianObj.value.year;
         const lnGan = currentLiuNianObj.value.gan;
-        
-        // 五虎遁訣求正月天干
-        const wuHuDun = {
-            '甲': '丙', '己': '丙',
-            '乙': '戊', '庚': '戊',
-            '丙': '庚', '辛': '庚',
-            '丁': '壬', '壬': '壬',
-            '戊': '甲', '癸': '甲'
-        };
+        const wuHuDun = { '甲': '丙', '己': '丙', '乙': '戊', '庚': '戊', '丙': '庚', '辛': '庚', '丁': '壬', '壬': '壬', '戊': '甲', '癸': '甲' };
         const firstMonthGan = wuHuDun[lnGan];
         const firstMonthGanIndex = stems.indexOf(firstMonthGan);
         const yueList = [];
-        
         for (let i = 0; i < 12; i++) {
             const mGan = stems[(firstMonthGanIndex + i) % 10];
-            const mZhi = branches[(2 + i) % 12]; // 正月建寅 (index 2)
+            const mZhi = branches[(2 + i) % 12]; 
             yueList.push({ month: i + 1, gan: mGan, zhi: mZhi });
         }
         return yueList;
@@ -821,22 +881,91 @@ createApp({
 
     const selectDaYun = (dy) => {
       if (!dy || (selectedDaYun.value?.startYear === dy.startYear)) { 
-          selectedDaYun.value = null; 
-          selectedLiuNian.value = null; 
-          selectedLiuYue.value = null;
+          selectedDaYun.value = null; selectedLiuNian.value = null; selectedLiuYue.value = null;
       } else { 
-          selectedDaYun.value = dy; 
-          selectedLiuNian.value = dy.startYear; 
-          selectedLiuYue.value = null;
+          selectedDaYun.value = dy; selectedLiuNian.value = dy.startYear; selectedLiuYue.value = null;
       }
     };
+    const selectLiuNian = (lnYear) => { selectedLiuNian.value = lnYear; selectedLiuYue.value = null; };
 
-    const selectLiuNian = (lnYear) => {
-        selectedLiuNian.value = lnYear;
-        selectedLiuYue.value = null;
+    // 🌟 計算紫微羅盤的落子 (Tokens)
+    const getZhiTokens = (zhiTarget) => {
+        if (!result.value) return [];
+        let tokens = [];
+        result.value.pillars.forEach(p => { if (p.zhi === zhiTarget) tokens.push({ role: p.name, bgClass: 'bg-slate-400' }); });
+        if (selectedDaYun.value && selectedDaYun.value.zhi === zhiTarget) tokens.push({ role: '大運', bgClass: 'bg-purple-400' });
+        if (currentLiuNianObj.value && currentLiuNianObj.value.zhi === zhiTarget) tokens.push({ role: '流年', bgClass: 'bg-pink-400' });
+        if (currentLiuYueObj.value && currentLiuYueObj.value.zhi === zhiTarget) tokens.push({ role: '流月', bgClass: 'bg-emerald-400' });
+        return tokens;
     };
 
-    // 🌟 核心排版：動態六柱/七柱切換
+    // 🌟 紫微羅盤中央動態戰情報告
+    const radarReports = computed(() => {
+        if (!result.value) return [];
+        let reports = [];
+        let activeZhis = result.value.pillars.map(p => p.zhi);
+        if (selectedDaYun.value) activeZhis.push(selectedDaYun.value.zhi);
+        if (currentLiuNianObj.value) activeZhis.push(currentLiuNianObj.value.zhi);
+        if (currentLiuYueObj.value) activeZhis.push(currentLiuYueObj.value.zhi);
+
+        let zhiSet = new Set(activeZhis);
+        
+        // 1. 無恩之刑引爆器
+        if (zhiSet.has('寅') && zhiSet.has('申') && zhiSet.has('巳')) {
+            reports.push({
+                isCritical: true, title: '⚠️ 無恩之刑引爆 (寅申巳齊全)',
+                desc: '【申】猛沖【寅】➔【巳】介入合申解沖 ➔【寅】竟忘恩穿害【巳】破合 ➔ 勸退者被趕，戰火重燃，忘恩負義自招災禍！'
+            });
+        }
+
+        // 2. 基礎互動與滴天髓宜不宜判定
+        const dayGan = result.value.dayGan;
+        const checkHeYiBuYi = (targetElem) => {
+            if (!godsInfo.value) return '化氣中立';
+            const cats = ['比劫','食傷','財星','官殺','印星'];
+            let targetCat = cats.find(c => getTenGodElem(dayGan, c) === targetElem);
+            if (!targetCat) return '';
+            const isXi = godsInfo.value.xiShen.includes(targetCat) || godsInfo.value.yongShen.includes(targetCat);
+            const isJi = godsInfo.value.jiShen.includes(targetCat);
+            if (isXi) return `合助【${targetCat}】(吉！鞏固根基)`;
+            if (isJi) return `增強【${targetCat}】(大凶！助紂為虐)`;
+            return `成閒神【${targetCat}】(動轉靜)`;
+        };
+
+        const heRules = { '子丑':'土', '寅亥':'木', '卯戌':'火', '辰酉':'金', '巳申':'水', '午未':'火' };
+        let processedPairs = new Set();
+
+        for (let i = 0; i < activeZhis.length; i++) {
+            for (let j = i + 1; j < activeZhis.length; j++) {
+                let z1 = activeZhis[i], z2 = activeZhis[j];
+                let pairKey = [z1, z2].sort().join('');
+                if (processedPairs.has(pairKey)) continue;
+                processedPairs.add(pairKey);
+
+                // 六合
+                let heElem = heRules[z1+z2] || heRules[z2+z1];
+                if (heElem) {
+                    let analysis = checkHeYiBuYi(heElem);
+                    reports.push({ isCritical: false, title: `🟢 ${z1}${z2}六合 (化${heElem})`, desc: analysis });
+                }
+                // 六沖
+                const bChongs = [['子','午'],['丑','未'],['寅','申'],['卯','酉'],['辰','戌'],['巳','亥']];
+                const isChong = bChongs.some(c => (c[0] === z1 && c[1] === z2) || (c[1] === z1 && c[0] === z2));
+                if (isChong) {
+                    let isYang = ['子','午','寅','申','辰','戌'].includes(z1);
+                    reports.push({ isCritical: true, title: `💥 ${z1}${z2}六沖`, desc: isYang ? '陽宮猛沖，動盪極大！' : '陰宮相沖，暗流湧動。' });
+                }
+                // 穿害
+                const bChuans = [['子','未'],['丑','午'],['寅','巳'],['卯','辰'],['申','亥'],['酉','戌']];
+                const isChuan = bChuans.some(c => (c[0] === z1 && c[1] === z2) || (c[1] === z1 && c[0] === z2));
+                if (isChuan) {
+                    reports.push({ isCritical: false, title: `🟣 ${z1}${z2}相穿(害)`, desc: '氣場不合，壞合扯後腿。' });
+                }
+            }
+        }
+        return reports;
+    });
+
     const displayPillars = computed(() => {
       if (!result.value) return [];
       let list = [
@@ -853,7 +982,6 @@ createApp({
           const effGan = getEffGanGlobal('流年', currentLiuNianObj.value.gan);
           list.push({ role: '流年', isCore: false, gan: effGan, zhi: currentLiuNianObj.value.zhi, shishen: getShiShen(result.value.dayGan, effGan), scoreDetail: null });
       }
-      // ✨ 擴展：加入流月
       if (currentLiuYueObj.value) {
           const effGan = getEffGanGlobal('流月', currentLiuYueObj.value.gan);
           list.push({ role: '流月', isCore: false, gan: effGan, zhi: currentLiuYueObj.value.zhi, shishen: getShiShen(result.value.dayGan, effGan), scoreDetail: null });
@@ -897,7 +1025,6 @@ createApp({
       return (parseFloat(getMatrixCangDetail(selectedPillar, targetBranchPillar, '主').score) + parseFloat(getMatrixCangDetail(selectedPillar, targetBranchPillar, '中').score) + parseFloat(getMatrixCangDetail(selectedPillar, targetBranchPillar, '餘').score)).toFixed(1);
     };
 
-    // 🌟 全新計分核心：加入流月動態重構
     const calcQuantScore = () => {
       if (!result.value) return;
       let scores = [], ally = 0, diff = 0;
@@ -913,13 +1040,12 @@ createApp({
 
       result.value.pillars.forEach(p => {
         let effGan = getEffGanGlobal(p.name, p.gan); 
-        // 在取根計算時，如果流月存在，將不會只計四柱，會將大運/流年/流月都視為地支環境
         let envZhis = result.value.pillars.map(x => x.zhi);
         if (selectedDaYun.value) envZhis.push(selectedDaYun.value.zhi);
         if (currentLiuNianObj.value) envZhis.push(currentLiuNianObj.value.zhi);
         if (currentLiuYueObj.value) envZhis.push(currentLiuYueObj.value.zhi);
         
-        let res = getStemRootEnergy(effGan, p.name, result.value.pillars); // Note: 這裡只算原局四柱權重，若要將歲運地支加入分數計算可在此擴展，目前依循師傅法則以原局為體
+        let res = getStemRootEnergy(effGan, p.name, result.value.pillars); 
         let isAlly = p.isDayMaster || ['比肩','劫財','正印','偏印'].includes(p.isDayMaster ? '日主' : getShiShen(dayGan, effGan));
         scores.push({ name: p.name, gan: effGan, shishen: p.isDayMaster ? '日主' : getShiShen(dayGan, effGan), isAlly, energy: res.total, breakdown: res.breakdown });
       });
@@ -1028,7 +1154,6 @@ createApp({
       return Math.min(95, 80 + ((ratio - 2.50) / 2.50) * 20);
     });
 
-    // 🌟 修正：加入流月天干掃描爭合
     const checkAllRelations = () => {
       if (!result.value) return;
       const dayGan = result.value.dayGan;
@@ -1192,7 +1317,6 @@ createApp({
       const cong = quantScore.value.congCategory;
       if (cong) mainPattern = quantScore.value.verdict;
 
-      // 🌟 修正：加入流月掃描副格
       let subPattern = null;
       let allActiveGans = [...origGans];
       let activeZhis = [...origZhis];
@@ -1367,115 +1491,12 @@ createApp({
       return '「比劫」視角：官殺為【七殺(強力約束)】；食傷為【食傷(才華釋放)】。';
     });
 
-    const getActiveStemsWithPower = () => {
-      if (!result.value) return [];
-      let validStems = [];
-      let allStems = effectivePillars.value.map(p => ({ gan: p.effGan, isDM: p.isDayMaster }));
-      if (selectedDaYun.value) {
-        let effGan = transformedInfo.value['大運']?.isSuccess ? transformedInfo.value['大運'].targetStem : selectedDaYun.value.gan;
-        allStems.push({ gan: effGan, isDM: false });
-      }
-      if (currentLiuNianObj.value) {
-        let effGan = transformedInfo.value['流年']?.isSuccess ? transformedInfo.value['流年'].targetStem : currentLiuNianObj.value.gan;
-        allStems.push({ gan: effGan, isDM: false });
-      }
-      if (currentLiuYueObj.value) {
-        let effGan = transformedInfo.value['流月']?.isSuccess ? transformedInfo.value['流月'].targetStem : currentLiuYueObj.value.gan;
-        allStems.push({ gan: effGan, isDM: false });
-      }
-
-      let activeZhis = result.value.pillars.map(p => p.zhi);
-      if (selectedDaYun.value) activeZhis.push(selectedDaYun.value.zhi);
-      if (currentLiuNianObj.value) activeZhis.push(currentLiuNianObj.value.zhi);
-      if (currentLiuYueObj.value) activeZhis.push(currentLiuYueObj.value.zhi);
-
-      allStems.forEach(item => {
-        if (item.isDM) {
-          validStems.push(item);
-        } else {
-          let hasPower = false;
-          activeZhis.forEach(zhi => {
-            (CUSTOM_CANG_GAN[zhi] || []).forEach(cg => {
-              let rel = getShiShen(item.gan, cg.stem);
-              if (['比肩', '劫財', '偏印', '正印'].includes(rel)) {
-                let deduction = { '比肩':0, '劫財':0.5, '偏印':1.0, '正印':1.5 }[rel];
-                if (cg.w - deduction > 0) hasPower = true;
-              }
-            });
-          });
-          if (hasPower) validStems.push(item);
-        }
-      });
-      return validStems;
-    };
-
-    const isSpecificGodPresent = (shishenName) => {
-      try {
-        if (!result.value) return false;
-        return getActiveStemsWithPower().some(s => !s.isDM && getShiShen(result.value.dayGan, s.gan) === shishenName);
-      } catch (e) { return false; }
-    };
-
-    const isCategoryPresent = (category) => {
-      try {
-        if (!result.value) return false;
-        const targetElem = getTenGodElem(result.value.dayGan, category);
-        return getActiveStemsWithPower().some(s => STEM_PROPS[s.gan] && STEM_PROPS[s.gan].e === targetElem);
-      } catch (e) { return false; }
-    };
-
-    const presentElements = computed(() => {
-      try {
-        if (!result.value) return [];
-        let elemSet = new Set();
-        getActiveStemsWithPower().forEach(s => { if(STEM_PROPS[s.gan]) elemSet.add(STEM_PROPS[s.gan].e); });
-        return Array.from(elemSet);
-      } catch (e) { return []; }
-    });
-
-    const missingElements = computed(() => ['木', '火', '土', '金', '水'].filter(e => !presentElements.value.includes(e)));
-    const isFiveElementsComplete = computed(() => missingElements.value.length === 0);
-    const presentElementsStr = computed(() => presentElements.value.join('、'));
-    const missingElementsStr = computed(() => missingElements.value.join('、'));
-    const fiveElementsReport = computed(() => isFiveElementsComplete.value ? '原局天干通電俱全，【五行全齊】！氣場源源不絕 🌸' : `原局【五行不全】，缺乏能量【${missingElementsStr.value}】！`);
-
-    const checkCircuitDiagnostics = () => {
-      if (!result.value) return;
-      let diags = [];
-      const effPillars = effectivePillars.value;
-      const curGans = [...result.value.pillars.map(p => p.gan)];
-      const curZhis = [...result.value.pillars.map(p => p.zhi)];
-      if (selectedDaYun.value) { curGans.push(selectedDaYun.value.gan); curZhis.push(selectedDaYun.value.zhi); }
-      if (currentLiuNianObj.value) { curGans.push(currentLiuNianObj.value.gan); curZhis.push(currentLiuNianObj.value.zhi); }
-      if (currentLiuYueObj.value) { curGans.push(currentLiuYueObj.value.gan); curZhis.push(currentLiuYueObj.value.zhi); }
-
-      effPillars.forEach(p => {
-        const gan = p.effGan; const zhi = p.zhi;
-        const cangs = CUSTOM_CANG_GAN[zhi] || [];
-        if (cangs.length > 0 && STEM_PROPS[gan] && STEM_PROPS[cangs[0].stem] && STEM_PROPS[gan].e === STEM_PROPS[cangs[0].stem].e) diags.push(`${p.name}干支同氣`);
-        let hasActiveRoot = false;
-        curZhis.forEach(z => { (CUSTOM_CANG_GAN[z] || []).forEach(cg => { if (STEM_PROPS[gan] && STEM_PROPS[cg.stem] && (STEM_PROPS[gan].e === STEM_PROPS[cg.stem].e || ['正印','偏印'].includes(getShiShen(gan, cg.stem)))) hasActiveRoot = true; }); });
-        if (!hasActiveRoot) diags.push(`${p.name}截腳(無根)`);
-        if (!cangs.some(cg => curGans.includes(cg.stem))) diags.push(`${p.name}蓋頭(不透)`);
-      });
-      circuitDiagnostics.value = diags;
-    };
-
-    const checkInjuryAlerts = () => {
-      if (!result.value) return;
-      let alerts = [];
-      const dayGan = result.value.dayGan;
-      const effGans = effectivePillars.value.map(p => p.effGan);
-      if (effGans.filter(g => getShiShen(dayGan, g) === '七殺').length >= 2) alerts.push({ level: 'shen', desc: `⚠️ 雙七殺攻身` });
-      injuryAlerts.value = alerts;
-    };
-
     const iso7Report = computed(() => {
       if (!result.value || !quantScore.value || !godsInfo.value || !tenGodsTactics.value) return {};
       const dmYinYang = STEM_PROPS[result.value.dayGan].y === 0 ? '陽干' : '陰干';
       return {
         step1: `四柱根氣得分已於上方明細中展示，清晰可見各柱能量。`,
-        step2: `【月令透干取格】：確定為主格【${godsInfo.value.geShen}】。`,
+        step2: `【月令透干取格】：確定為主格【${godsInfo.value.mainPattern}】。`,
         step3: `【同異黨比例】：同黨能量 ${quantScore.value.allyScore} 分 vs 異黨能量 ${quantScore.value.diffScore} 分，比率 ${quantScore.value.ratio}。`,
         step4: `【看氣勢定正偏格】：日干為 ${result.value.dayGan} (${dmYinYang})，判定為【${quantScore.value.verdict}】。`,
         step5: `【局中戰術】：目前戰略為「${godsInfo.value.currentTactic}」，採【${godsInfo.value.tacticalStrategy}】。樞紐鎖定為【${godsInfo.value.yongShen}】。`,
@@ -1484,158 +1505,12 @@ createApp({
       };
     });
 
-    watch([selectedDaYun, selectedLiuNian, selectedLiuYue], () => {
-      if (result.value) { checkAllRelations(); checkCircuitDiagnostics(); checkInjuryAlerts(); }
-    });
-
-    onMounted(() => {
-      try {
-        const saved = localStorage.getItem('bazi_records');
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed)) records.value = parsed;
-        }
-      } catch(e) { records.value = []; }
-      const now = new Date();
-      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-      birthTime.value = now.toISOString().slice(0, 16);
-      setTimeout(() => { if (typeof Solar !== 'undefined') calculate(); }, 800); 
-    });
-
-    const formatTime = (timeStr) => timeStr.replace('T', ' ');
-    const saveRecord = () => {
-      if (inputMode.value === 'birth' && !birthTime.value) return alert("請先選擇出生時間！");
-      
-      const record = {
-          id: Date.now(),
-          name: name.value.trim() || (inputMode.value === 'manual' ? '學習命例' : '未命名'),
-          mode: inputMode.value,
-          gender: inputMode.value === 'birth' ? gender.value : manualGender.value
-      };
-      if (inputMode.value === 'birth') {
-          record.birthTime = birthTime.value;
-      } else {
-          record.manualPillars = JSON.parse(JSON.stringify(manualPillars.value));
-          record.manualStartAge = manualStartAge.value;
-      }
-      records.value.unshift(record);
-      localStorage.setItem('bazi_records', JSON.stringify(records.value));
-      alert("✅ 命例儲存成功！");
-    };
-    const loadRecord = (rec) => { 
-      name.value = rec.name;
-      inputMode.value = rec.mode || 'birth';
-      if (inputMode.value === 'birth') {
-          gender.value = rec.gender; 
-          birthTime.value = rec.birthTime; 
-      } else {
-          manualGender.value = rec.gender;
-          manualPillars.value = rec.manualPillars;
-          manualStartAge.value = rec.manualStartAge;
-      }
-      showRecords.value = false; 
-      calculate(); 
-    };
-    const deleteRecord = (id) => { if(confirm("確定刪除？")) { records.value = records.value.filter(r => r.id !== id); localStorage.setItem('bazi_records', JSON.stringify(records.value)); } };
-
-    const openComboDetailModal = (pillarName) => {
-      const info = transformedInfo.value[pillarName];
-      if (!info) return;
-      activeModal.value = { modalType: 'combo', pillarName, comboInfo: info };
-    };
-
-    const calculate = () => {
-      try {
-        if (inputMode.value === 'manual') {
-          for (let i=0; i<4; i++) {
-              let gz = manualPillars.value[i].gan + manualPillars.value[i].zhi;
-              if (!jiazi.includes(gz)) {
-                  return alert(`【${['年','月','日','時'][i]}柱】「${gz}」不是有效的六十甲子組合，請重新選擇！`);
-              }
-          }
-
-          const yIndex = jiazi.indexOf(manualPillars.value[0].gan + manualPillars.value[0].zhi);
-          const mIndex = jiazi.indexOf(manualPillars.value[1].gan + manualPillars.value[1].zhi);
-          const baseYear = 1984 + yIndex;
-          const startAge = parseInt(manualStartAge.value) || 1;
-          
-          const isYangYear = stems.indexOf(manualPillars.value[0].gan) % 2 === 0;
-          const isMale = manualGender.value === 1;
-          const direction = (isYangYear && isMale) || (!isYangYear && !isMale) ? 1 : -1;
-
-          const dayGan = manualPillars.value[2].gan;
-
-          const daYunList = [];
-          for(let i=1; i<=10; i++) {
-              let dyIndex = (mIndex + i * direction + 600) % 60;
-              let dyGan = jiazi[dyIndex][0];
-              let dyZhi = jiazi[dyIndex][1];
-              let dyStartAge = startAge + (i-1)*10;
-              let dyStartYear = baseYear + dyStartAge;
-              
-              let liuNianList = [];
-              for(let j=0; j<10; j++) {
-                  let lnYear = dyStartYear + j;
-                  let lnIndex = (lnYear - 1984 + 6000) % 60;
-                  liuNianList.push({ year: lnYear, gan: jiazi[lnIndex][0], zhi: jiazi[lnIndex][1] });
-              }
-              daYunList.push({ startAge: dyStartAge, endAge: dyStartAge + 9, startYear: dyStartYear, gan: dyGan, zhi: dyZhi, liuNianList });
-          }
-
-          result.value = {
-              name: name.value.trim() || '學習命例',
-              solarStr: '命盤學習模式 (無公曆)',
-              lunarStr: '純干支起盤',
-              yunStr: `${startAge}歲起運`,
-              dayGan: dayGan,
-              pillars: [
-                  { name: '年柱', gan: manualPillars.value[0].gan, zhi: manualPillars.value[0].zhi, shishen: getShiShen(dayGan, manualPillars.value[0].gan) },
-                  { name: '月柱', gan: manualPillars.value[1].gan, zhi: manualPillars.value[1].zhi, shishen: getShiShen(dayGan, manualPillars.value[1].gan) },
-                  { name: '日柱', gan: dayGan, zhi: manualPillars.value[2].zhi, isDayMaster: true },
-                  { name: '時柱', gan: manualPillars.value[3].gan, zhi: manualPillars.value[3].zhi, shishen: getShiShen(dayGan, manualPillars.value[3].gan) }
-              ],
-              daYunList
-          };
-        } else {
-          if (typeof Solar === 'undefined') return alert("萬年曆載入中，請稍候");
-          if (!birthTime.value) return;
-          const dt = new Date(birthTime.value);
-          const solar = Solar.fromDate(dt);
-          const lunar = solar.getLunar();
-          const eightChar = lunar.getEightChar();
-          const dayGan = eightChar.getDayGan();
-          const yun = eightChar.getYun(gender.value);
-
-          result.value = {
-            name: name.value.trim(), solarStr: solar.toFullString(), lunarStr: lunar.toString(),
-            yunStr: `${yun.getStartYear()}年${yun.getStartMonth()}個月起運`, dayGan,
-            pillars: [
-              { name: '年柱', gan: eightChar.getYearGan(), zhi: eightChar.getYearZhi(), shishen: getShiShen(dayGan, eightChar.getYearGan()) },
-              { name: '月柱', gan: eightChar.getMonthGan(), zhi: eightChar.getMonthZhi(), shishen: getShiShen(dayGan, eightChar.getMonthGan()) },
-              { name: '日柱', gan: dayGan, zhi: eightChar.getDayZhi(), isDayMaster: true },
-              { name: '時柱', gan: eightChar.getTimeGan(), zhi: eightChar.getTimeZhi(), shishen: getShiShen(dayGan, eightChar.getTimeGan()) }
-            ],
-            daYunList: yun.getDaYun().slice(1, 11).map(dy => ({
-              startAge: dy.getStartAge(), endAge: dy.getEndAge(), startYear: dy.getStartYear(),
-              gan: dy.getGanZhi().charAt(0), zhi: dy.getGanZhi().charAt(1),
-              liuNianList: dy.getLiuNian().map(ln => ({ year: ln.getYear(), gan: ln.getGanZhi().charAt(0), zhi: ln.getGanZhi().charAt(1) }))
-            }))
-          };
-        }
-
-        selectedDaYun.value = null; selectedLiuNian.value = null; selectedLiuYue.value = null; selectedMatrixPillar.value = '日柱'; selectedScorePillar.value = null;
-        checkAllRelations(); calcQuantScore(); checkCircuitDiagnostics(); checkInjuryAlerts();
-      } catch (error) {
-        console.error("Calculation Error:", error);
-      }
-    };
-
     return { 
       name, inputMode, manualPillars, manualGender, manualStartAge, stems, branches,
-      birthTime, gender, result, selectedDaYun, selectedLiuNian, selectedLiuYue, currentLiuNianObj, currentLiuYueList, currentLiuYueObj, selectedScorePillar, selectedMatrixPillar,
+      birthTime, gender, result, selectedDaYun, selectedLiuNian, selectedLiuYue, currentLiuNianObj, currentLiuYueList, currentLiuYueObj, selectedScorePillar, selectedMatrixPillar, activeViewTab,
       effectivePillars, transformedInfo, pillarScores, strengthBarPercent, getPillarByRole, getPillarScoreDetail, getMainQi, displayPillars, getPillarWeightLabel,
       perspectiveRole, perspectivePillars, perspectiveTacticalReport,
-      isCategoryPresent, isSpecificGodPresent,
+      isCategoryPresent, isSpecificGodPresent, radarReports, getZhiTokens,
       stemRelations, branchCombos, branchClashes, circuitDiagnostics, injuryAlerts, quantScore, godsInfo, tenGodsTactics,
       isFiveElementsComplete, presentElementsStr, missingElementsStr, fiveElementsReport, iso7Report, activeModal,
       records, showRecords, saveRecord, loadRecord, deleteRecord, formatTime, selectDaYun, selectLiuNian, getMatrixCangDetail, getMatrixColumnSubtotal, openComboDetailModal,
