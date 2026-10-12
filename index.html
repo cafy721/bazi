@@ -72,7 +72,7 @@
 <div id="app" class="max-w-6xl mx-auto space-y-5">
   <header class="text-center my-4 sm:my-6">
     <h1 class="text-2xl sm:text-3xl font-extrabold tracking-wide title-gradient drop-shadow-sm">治癒系八字排盤</h1>
-    <p class="text-[10px] sm:text-xs text-slate-500 mt-2 font-semibold tracking-widest">能量矩陣 ‧ 爭合判定 ‧ 戰略配置</p>
+    <p class="text-[10px] sm:text-xs text-slate-500 mt-2 font-semibold tracking-widest">能量矩陣 ‧ 順逆戰術 ‧ 七柱連動</p>
   </header>
 
   <!-- 輸入區 & 命例管理 -->
@@ -141,6 +141,7 @@
         <button @click="showRecords = !showRecords" class="flex-1 bg-white/80 hover:bg-white text-pink-500 font-bold py-3 rounded-2xl transition active:scale-95 border border-slate-200 shadow-sm text-xs sm:text-sm">📂 命庫</button>
       </div>
     </div>
+    
     <!-- 命庫清單 -->
     <div v-if="showRecords" class="mt-4 p-3 bg-white/50 rounded-2xl border border-white shadow-sm animate-fade-in">
       <h3 class="text-xs font-bold text-slate-500 mb-2 border-b border-slate-200 pb-2">已儲存命例</h3>
@@ -190,16 +191,16 @@
       </div>
     </div>
 
-    <!-- 🌟 流年選擇區 (只有在選擇大運後顯示) -->
+    <!-- 🌟 流年選擇區 (選擇大運後顯示) -->
     <div v-if="selectedDaYun" class="card-bg p-4 rounded-3xl animate-fade-in mt-2">
       <div class="flex justify-between items-center pb-2 mb-2 border-b border-slate-100">
         <h2 class="text-xs sm:text-sm font-extrabold text-slate-600">🌸 選擇流年軌跡：</h2>
         <span class="text-[10px] bg-slate-50 text-slate-400 px-2 py-0.5 rounded-full font-bold">大運 {{ selectedDaYun.gan }}{{ selectedDaYun.zhi }} 期間</span>
       </div>
       <div class="flex overflow-x-auto no-scrollbar gap-2 pb-2 mt-3">
-        <div v-for="ln in selectedDaYun.liuNianList" :key="'ln'+ln.year" @click="selectedLiuNian = ln.year"
+        <div v-for="ln in selectedDaYun.liuNianList" :key="'ln'+ln.year" @click="selectLiuNian(ln)"
              :class="['cursor-pointer border rounded-2xl p-2 w-[70px] sm:w-[85px] text-center flex-shrink-0 transition relative', 
-                      selectedLiuNian === ln.year ? 'bg-gradient-to-br from-sky-100 to-indigo-100 border-indigo-200 shadow-md transform -translate-y-1' : 'bg-white/60 border-white hover:bg-white']">
+                      selectedLiuNian?.year === ln.year ? 'bg-gradient-to-br from-sky-100 to-indigo-100 border-indigo-200 shadow-md transform -translate-y-1' : 'bg-white/60 border-white hover:bg-white']">
           <div class="text-[9px] sm:text-[10px] text-slate-500 font-bold mb-1">{{ ln.year }}</div>
           <div class="text-sm sm:text-base font-extrabold">
             <span :class="getElemClass(ln.gan)">{{ ln.gan }}</span><span :class="getElemClass(ln.zhi)">{{ ln.zhi }}</span>
@@ -208,68 +209,88 @@
       </div>
     </div>
 
+    <!-- 🌟 流月選擇區 (選擇流年後顯示) -->
+    <div v-if="selectedLiuNian" class="card-bg p-4 rounded-3xl animate-fade-in mt-2">
+      <div class="flex justify-between items-center pb-2 mb-2 border-b border-slate-100">
+        <h2 class="text-xs sm:text-sm font-extrabold text-slate-600">🍃 選擇流月軌跡：</h2>
+        <span class="text-[10px] bg-slate-50 text-slate-400 px-2 py-0.5 rounded-full font-bold">流年 {{ selectedLiuNian.gan }}{{ selectedLiuNian.zhi }} 期間</span>
+      </div>
+      <div class="flex overflow-x-auto no-scrollbar gap-2 pb-2 mt-3">
+        <div v-for="lm in currentLiuYueList" :key="'lm'+lm.month" @click="selectedLiuYue = lm.month"
+             :class="['cursor-pointer border rounded-xl p-2 w-[65px] text-center flex-shrink-0 transition relative', 
+                      selectedLiuYue === lm.month ? 'bg-gradient-to-br from-emerald-50 to-teal-100 border-teal-200 shadow-sm transform -translate-y-1' : 'bg-white/50 border-white hover:bg-white']">
+          <div class="text-[8px] sm:text-[9px] text-slate-400 font-bold mb-0.5">{{ lm.month }}月</div>
+          <div class="text-xs sm:text-sm font-extrabold">
+            <span :class="getElemClass(lm.gan)">{{ lm.gan }}</span><span :class="getElemClass(lm.zhi)">{{ lm.zhi }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ============================================== -->
-    <!-- 1. 核心盤面：六柱連動 -->
+    <!-- 1. 核心盤面：七柱連動 (動態寬度) -->
     <!-- ============================================== -->
     <div class="card-bg p-3 sm:p-5 rounded-3xl overflow-hidden relative mt-5">
       <h2 class="text-xs sm:text-sm font-extrabold text-slate-600 mb-3 flex justify-between items-center px-1">
-        <span>✨ {{ selectedDaYun ? '六柱全息連動' : '四柱原命盤' }}</span>
+        <span>✨ {{ selectedDaYun ? (selectedLiuYue ? '七柱全息連動' : '六柱全息連動') : '四柱原命盤' }}</span>
         <span class="text-[9px] sm:text-[10px] text-pink-500 bg-pink-50 px-2 py-1 rounded-full shadow-sm">💡 點擊「得分」看細節</span>
       </h2>
       
-      <div class="grid text-center text-[10px] sm:text-xs gap-y-1 sm:gap-y-2 w-full" :style="{ gridTemplateColumns: 'minmax(30px, auto) repeat(' + displayPillars.length + ', minmax(0, 1fr))' }">
-        <!-- 標頭 -->
-        <div></div>
-        <div v-for="p in displayPillars" :key="'hd'+p.role" :class="['font-extrabold py-1.5 rounded-t-xl mx-0.5 sm:mx-1 text-[9px] sm:text-xs', p.isCore ? 'bg-white/60 text-slate-500' : 'bg-pink-100/80 text-pink-600 shadow-sm']">
-          {{ p.role }}
-        </div>
-
-        <!-- 天干 -->
-        <div class="text-slate-400 font-bold self-center bg-white/40 py-2 sm:py-4 rounded-l-xl pl-1 sm:pl-2 text-[8px] sm:text-[10px]">天干</div>
-        <div v-for="p in displayPillars" :key="'g'+p.role" :class="['flex flex-col items-center justify-center py-1.5 sm:py-2 mx-0.5 sm:mx-1 border-b', p.isCore ? 'bg-white/50 border-white' : 'bg-pink-50/50 border-pink-100']">
-          <span :class="['text-xl sm:text-3xl font-extrabold', getElemClass(p.gan)]">{{ p.gan }}</span>
-          <span class="text-[8px] sm:text-[10px] text-slate-500 mt-0.5 font-bold">{{ p.shishen }}</span>
-          <!-- 化合標籤 -->
-          <div v-if="transformedInfo[p.role]" @click.stop="openComboDetailModal(p.role)" class="cursor-pointer text-[8px] mt-1 px-1 rounded-full bg-purple-100 text-purple-600 font-bold hover:scale-105 transition shadow-sm">
-            <span v-if="transformedInfo[p.role].isSuccess">化[{{ transformedInfo[p.role].targetName }}]</span>
-            <span v-else class="text-rose-400">不化</span>
+      <div class="overflow-x-auto no-scrollbar pb-2">
+        <div class="grid text-center text-[10px] sm:text-xs gap-y-1 sm:gap-y-2 w-full min-w-max" :style="{ gridTemplateColumns: 'minmax(35px, auto) repeat(' + displayPillars.length + ', minmax(50px, 1fr))' }">
+          
+          <!-- 標頭 -->
+          <div></div>
+          <div v-for="p in displayPillars" :key="'hd'+p.role" :class="['font-extrabold py-1.5 rounded-t-xl mx-0.5 sm:mx-1 text-[9px] sm:text-xs', p.isCore ? 'bg-white/60 text-slate-500' : 'bg-pink-100/80 text-pink-600 shadow-sm']">
+            {{ p.role }}
           </div>
-        </div>
 
-        <!-- 地支 -->
-        <div class="text-slate-400 font-bold self-center bg-white/40 py-2 sm:py-4 pl-1 sm:pl-2 text-[8px] sm:text-[10px]">地支</div>
-        <div v-for="p in displayPillars" :key="'z'+p.role" :class="['flex flex-col items-center justify-center py-1.5 sm:py-2 mx-0.5 sm:mx-1 border-b', p.isCore ? 'bg-white/50 border-white' : 'bg-pink-50/50 border-pink-100']">
-          <span :class="['text-xl sm:text-3xl font-extrabold', getElemClass(p.zhi)]">{{ p.zhi }}</span>
-          <span class="text-[8px] sm:text-[10px] text-slate-500 mt-0.5 font-bold">{{ getShiShen(result.dayGan, getMainQi(p.zhi)) }}</span>
-        </div>
-
-        <!-- 藏干 -->
-        <div class="text-slate-400 font-bold self-center bg-white/40 py-2 sm:py-4 pl-1 sm:pl-2 text-[8px] sm:text-[10px]">藏干</div>
-        <div v-for="p in displayPillars" :key="'c'+p.role" :class="['py-1.5 sm:py-2 mx-0.5 sm:mx-1 flex flex-col gap-0.5 sm:gap-1 border-b', p.isCore ? 'bg-white/50 border-white' : 'bg-pink-50/50 border-pink-100']">
-          <div v-for="cg in getCustomCangGan(p.zhi)" :key="cg.type" class="flex items-center justify-center gap-0.5 sm:gap-1 text-[9px] sm:text-[11px]">
-            <b :class="getElemClass(cg.stem)">{{ cg.stem }}</b>
-            <span class="text-[8px] sm:text-[9px] text-slate-400 w-4 sm:w-5 text-left">{{ getShiShen(result.dayGan, cg.stem) }}</span>
+          <!-- 天干 -->
+          <div class="text-slate-400 font-bold self-center bg-white/40 py-2 sm:py-4 rounded-l-xl pl-1 sm:pl-2 text-[8px] sm:text-[10px]">天干</div>
+          <div v-for="p in displayPillars" :key="'g'+p.role" :class="['flex flex-col items-center justify-center py-1.5 sm:py-2 mx-0.5 sm:mx-1 border-b', p.isCore ? 'bg-white/50 border-white' : 'bg-pink-50/50 border-pink-100']">
+            <span :class="['text-lg sm:text-2xl font-extrabold', getElemClass(p.gan)]">{{ p.gan }}</span>
+            <span class="text-[8px] sm:text-[9px] text-slate-500 mt-0.5 font-bold whitespace-nowrap">{{ p.shishen }}</span>
+            <div v-if="transformedInfo[p.role]" @click.stop="openComboDetailModal(p.role)" class="cursor-pointer text-[7px] sm:text-[8px] mt-1 px-1 rounded-full bg-purple-100 text-purple-600 font-bold hover:scale-105 transition shadow-sm whitespace-nowrap">
+              <span v-if="transformedInfo[p.role].isSuccess">化[{{ transformedInfo[p.role].targetName }}]</span>
+              <span v-else class="text-rose-400">不化</span>
+            </div>
           </div>
-        </div>
 
-        <!-- 星運 -->
-        <div class="text-slate-400 font-bold self-center bg-white/40 py-2 sm:py-3 pl-1 sm:pl-2 text-[8px] sm:text-[10px]">星運</div>
-        <div v-for="p in displayPillars" :key="'cs'+p.role" :class="['py-2 sm:py-3 mx-0.5 sm:mx-1 flex flex-col sm:flex-row justify-center items-center gap-0.5 sm:gap-1 border-b', p.isCore ? 'bg-white/50 border-white' : 'bg-pink-50/50 border-pink-100']">
-          <span class="text-teal-500 font-extrabold text-[9px] sm:text-xs">{{ get12ChangSheng(result.dayGan, p.zhi) }}</span>
-          <span class="text-[8px] sm:text-[9px] bg-slate-100 text-slate-500 px-1 rounded-full font-bold">{{ getChangShengScore(get12ChangSheng(result.dayGan, p.zhi)) }}</span>
-        </div>
+          <!-- 地支 -->
+          <div class="text-slate-400 font-bold self-center bg-white/40 py-2 sm:py-4 pl-1 sm:pl-2 text-[8px] sm:text-[10px]">地支</div>
+          <div v-for="p in displayPillars" :key="'z'+p.role" :class="['flex flex-col items-center justify-center py-1.5 sm:py-2 mx-0.5 sm:mx-1 border-b', p.isCore ? 'bg-white/50 border-white' : 'bg-pink-50/50 border-pink-100']">
+            <span :class="['text-lg sm:text-2xl font-extrabold', getElemClass(p.zhi)]">{{ p.zhi }}</span>
+            <span class="text-[8px] sm:text-[9px] text-slate-500 mt-0.5 font-bold whitespace-nowrap">{{ getShiShen(result.dayGan, getMainQi(p.zhi)) }}</span>
+          </div>
 
-        <!-- 得分按鈕 -->
-        <div class="text-slate-400 font-bold self-center bg-white/40 py-2 sm:py-4 rounded-bl-xl pl-1 sm:pl-2 text-[8px] sm:text-[10px]">得分</div>
-        <div v-for="p in displayPillars" :key="'sc'+p.role" :class="['py-1.5 sm:py-2 mx-0.5 sm:mx-1 rounded-b-xl flex flex-col items-center justify-center', p.isCore ? 'bg-white/50' : 'bg-pink-50/50']">
-          <button v-if="p.isCore" @click="selectedMatrixPillar = p.role" 
-                  :class="['w-full sm:w-11/12 py-1.5 sm:py-2 rounded-xl transition-all active:scale-95 border bg-white shadow-sm', 
-                           p.scoreDetail.isAlly ? 'text-teal-500 border-teal-100' : 'text-rose-400 border-rose-100',
-                           selectedMatrixPillar === p.role ? 'ring-2 ring-pink-300 ring-offset-2 bg-pink-50' : 'hover:bg-slate-50']">
-            <div class="text-[8px] sm:text-[9px] mb-0.5 opacity-70 font-bold">{{ p.scoreDetail.isAlly ? '同黨' : '異黨' }}</div>
-            <div class="text-xs sm:text-sm font-extrabold">{{ p.scoreDetail.energy }}</div>
-          </button>
-          <div v-else class="text-slate-300 text-[10px]">-</div>
+          <!-- 藏干 -->
+          <div class="text-slate-400 font-bold self-center bg-white/40 py-2 sm:py-4 pl-1 sm:pl-2 text-[8px] sm:text-[10px]">藏干</div>
+          <div v-for="p in displayPillars" :key="'c'+p.role" :class="['py-1.5 sm:py-2 mx-0.5 sm:mx-1 flex flex-col gap-0.5 sm:gap-1 border-b', p.isCore ? 'bg-white/50 border-white' : 'bg-pink-50/50 border-pink-100']">
+            <div v-for="cg in getCustomCangGan(p.zhi)" :key="cg.type" class="flex items-center justify-center gap-0.5 text-[8px] sm:text-[10px]">
+              <b :class="getElemClass(cg.stem)">{{ cg.stem }}</b>
+              <span class="text-[7px] sm:text-[8px] text-slate-400 w-3 sm:w-4 text-left">{{ getShiShen(result.dayGan, cg.stem).substring(0,1) }}</span>
+            </div>
+          </div>
+
+          <!-- 星運 -->
+          <div class="text-slate-400 font-bold self-center bg-white/40 py-2 sm:py-3 pl-1 sm:pl-2 text-[8px] sm:text-[10px]">星運</div>
+          <div v-for="p in displayPillars" :key="'cs'+p.role" :class="['py-2 sm:py-3 mx-0.5 sm:mx-1 flex flex-col justify-center items-center gap-0.5 border-b', p.isCore ? 'bg-white/50 border-white' : 'bg-pink-50/50 border-pink-100']">
+            <span class="text-teal-500 font-extrabold text-[8px] sm:text-[10px]">{{ get12ChangSheng(result.dayGan, p.zhi) }}</span>
+            <span class="text-[7px] sm:text-[8px] bg-slate-100 text-slate-500 px-1 rounded-full font-bold">{{ getChangShengScore(get12ChangSheng(result.dayGan, p.zhi)) }}</span>
+          </div>
+
+          <!-- 得分按鈕 -->
+          <div class="text-slate-400 font-bold self-center bg-white/40 py-2 sm:py-4 rounded-bl-xl pl-1 sm:pl-2 text-[8px] sm:text-[10px]">得分</div>
+          <div v-for="p in displayPillars" :key="'sc'+p.role" :class="['py-1.5 sm:py-2 mx-0.5 sm:mx-1 rounded-b-xl flex flex-col items-center justify-center', p.isCore ? 'bg-white/50' : 'bg-pink-50/50']">
+            <button v-if="p.isCore" @click="selectedMatrixPillar = p.role" 
+                    :class="['w-full py-1 rounded-xl transition-all active:scale-95 border bg-white shadow-sm', 
+                             p.scoreDetail.isAlly ? 'text-teal-500 border-teal-100' : 'text-rose-400 border-rose-100',
+                             selectedMatrixPillar === p.role ? 'ring-2 ring-pink-300 ring-offset-1 bg-pink-50' : 'hover:bg-slate-50']">
+              <div class="text-[7px] sm:text-[8px] mb-0.5 opacity-70 font-bold whitespace-nowrap">{{ p.scoreDetail.isAlly ? '同黨' : '異黨' }}</div>
+              <div class="text-xs font-extrabold">{{ p.scoreDetail.energy }}</div>
+            </button>
+            <div v-else class="text-slate-300 text-[10px]">-</div>
+          </div>
         </div>
       </div>
 
@@ -364,7 +385,7 @@
     </div>
 
     <!-- ============================================== -->
-    <!-- 🛡️ 歲運防禦與戰略系統 (已升級主副分離) -->
+    <!-- 🛡️ 歲運防禦與戰略系統 -->
     <!-- ============================================== -->
     <div v-if="godsInfo" class="card-bg p-4 sm:p-5 rounded-3xl space-y-4">
       <div class="border-b border-slate-100 pb-2">
@@ -387,7 +408,7 @@
           <div v-if="godsInfo.subPattern" class="flex items-center gap-2 animate-fade-in">
             <span class="text-[10px] sm:text-xs text-slate-400 whitespace-nowrap">🌸 歲運副格：</span>
             <b class="text-pink-500 text-sm bg-pink-50 border border-pink-100 px-3 py-1 rounded-full shadow-sm">{{ godsInfo.subPattern }}</b>
-            <span class="text-[9px] text-slate-400">(大運引發)</span>
+            <span class="text-[9px] text-slate-400">(大運/流年引發)</span>
           </div>
 
           <div class="flex items-center gap-2 pt-1">
@@ -432,7 +453,6 @@
     <div class="card-bg p-4 sm:p-5 rounded-3xl space-y-4">
       <div class="border-b border-slate-100 pb-2 flex justify-between items-center">
         <h3 class="text-xs sm:text-sm font-extrabold text-slate-600">💬 氣場動態診斷</h3>
-        <span class="text-[9px] sm:text-[10px] text-slate-400 bg-white px-2 py-0.5 rounded-full shadow-sm" v-if="selectedDaYun">大運：{{ selectedDaYun.gan }}{{ selectedDaYun.zhi }}</span>
       </div>
       <div class="space-y-2">
         <h4 class="text-[10px] sm:text-xs font-bold text-sky-500">🫧 天干事件</h4>
@@ -649,10 +669,10 @@ createApp({
     for(let i=0; i<60; i++) jiazi.push(stems[i%10] + branches[i%12]);
 
     const manualPillars = ref([
-      { gan: '丙', zhi: '寅' },
-      { gan: '乙', zhi: '未' },
-      { gan: '丙', zhi: '寅' },
-      { gan: '丁', zhi: '酉' }
+      { gan: '庚', zhi: '子' },
+      { gan: '庚', zhi: '辰' },
+      { gan: '甲', zhi: '申' },
+      { gan: '丁', zhi: '卯' }
     ]);
 
     const result = ref(null);
@@ -662,6 +682,7 @@ createApp({
 
     const selectedDaYun = ref(null);
     const selectedLiuNian = ref(null);
+    const selectedLiuYue = ref(null);
     
     const stemRelations = ref([]);
     const branchCombos = ref([]);
@@ -769,12 +790,53 @@ createApp({
     });
 
     const currentLiuNianObj = computed(() => selectedDaYun.value?.liuNianList.find(ln => ln.year === selectedLiuNian.value) || null);
+    
+    // 🌟 新增：計算流年對應的 12 個流月
+    const currentLiuYueList = computed(() => {
+        if (!currentLiuNianObj.value) return [];
+        const lnYear = currentLiuNianObj.value.year;
+        const lnGan = currentLiuNianObj.value.gan;
+        
+        // 五虎遁訣求正月天干
+        const wuHuDun = {
+            '甲': '丙', '己': '丙',
+            '乙': '戊', '庚': '戊',
+            '丙': '庚', '辛': '庚',
+            '丁': '壬', '壬': '壬',
+            '戊': '甲', '癸': '甲'
+        };
+        const firstMonthGan = wuHuDun[lnGan];
+        const firstMonthGanIndex = stems.indexOf(firstMonthGan);
+        const yueList = [];
+        
+        for (let i = 0; i < 12; i++) {
+            const mGan = stems[(firstMonthGanIndex + i) % 10];
+            const mZhi = branches[(2 + i) % 12]; // 正月建寅 (index 2)
+            yueList.push({ month: i + 1, gan: mGan, zhi: mZhi });
+        }
+        return yueList;
+    });
+
+    const currentLiuYueObj = computed(() => currentLiuYueList.value.find(lm => lm.month === selectedLiuYue.value) || null);
 
     const selectDaYun = (dy) => {
-      if (!dy || (selectedDaYun.value?.startYear === dy.startYear)) { selectedDaYun.value = null; selectedLiuNian.value = null; } 
-      else { selectedDaYun.value = dy; selectedLiuNian.value = dy.startYear; }
+      if (!dy || (selectedDaYun.value?.startYear === dy.startYear)) { 
+          selectedDaYun.value = null; 
+          selectedLiuNian.value = null; 
+          selectedLiuYue.value = null;
+      } else { 
+          selectedDaYun.value = dy; 
+          selectedLiuNian.value = dy.startYear; 
+          selectedLiuYue.value = null;
+      }
     };
 
+    const selectLiuNian = (lnYear) => {
+        selectedLiuNian.value = lnYear;
+        selectedLiuYue.value = null;
+    };
+
+    // 🌟 核心排版：動態六柱/七柱切換
     const displayPillars = computed(() => {
       if (!result.value) return [];
       let list = [
@@ -790,6 +852,11 @@ createApp({
       if (currentLiuNianObj.value) {
           const effGan = getEffGanGlobal('流年', currentLiuNianObj.value.gan);
           list.push({ role: '流年', isCore: false, gan: effGan, zhi: currentLiuNianObj.value.zhi, shishen: getShiShen(result.value.dayGan, effGan), scoreDetail: null });
+      }
+      // ✨ 擴展：加入流月
+      if (currentLiuYueObj.value) {
+          const effGan = getEffGanGlobal('流月', currentLiuYueObj.value.gan);
+          list.push({ role: '流月', isCore: false, gan: effGan, zhi: currentLiuYueObj.value.zhi, shishen: getShiShen(result.value.dayGan, effGan), scoreDetail: null });
       }
       return list;
     });
@@ -830,6 +897,7 @@ createApp({
       return (parseFloat(getMatrixCangDetail(selectedPillar, targetBranchPillar, '主').score) + parseFloat(getMatrixCangDetail(selectedPillar, targetBranchPillar, '中').score) + parseFloat(getMatrixCangDetail(selectedPillar, targetBranchPillar, '餘').score)).toFixed(1);
     };
 
+    // 🌟 全新計分核心：加入流月動態重構
     const calcQuantScore = () => {
       if (!result.value) return;
       let scores = [], ally = 0, diff = 0;
@@ -845,7 +913,13 @@ createApp({
 
       result.value.pillars.forEach(p => {
         let effGan = getEffGanGlobal(p.name, p.gan); 
-        let res = getStemRootEnergy(effGan, p.name, result.value.pillars);
+        // 在取根計算時，如果流月存在，將不會只計四柱，會將大運/流年/流月都視為地支環境
+        let envZhis = result.value.pillars.map(x => x.zhi);
+        if (selectedDaYun.value) envZhis.push(selectedDaYun.value.zhi);
+        if (currentLiuNianObj.value) envZhis.push(currentLiuNianObj.value.zhi);
+        if (currentLiuYueObj.value) envZhis.push(currentLiuYueObj.value.zhi);
+        
+        let res = getStemRootEnergy(effGan, p.name, result.value.pillars); // Note: 這裡只算原局四柱權重，若要將歲運地支加入分數計算可在此擴展，目前依循師傅法則以原局為體
         let isAlly = p.isDayMaster || ['比肩','劫財','正印','偏印'].includes(p.isDayMaster ? '日主' : getShiShen(dayGan, effGan));
         scores.push({ name: p.name, gan: effGan, shishen: p.isDayMaster ? '日主' : getShiShen(dayGan, effGan), isAlly, energy: res.total, breakdown: res.breakdown });
       });
@@ -876,6 +950,7 @@ createApp({
         let allActiveGans = result.value.pillars.map(p => getEffGanGlobal(p.name, p.gan));
         if (selectedDaYun.value) allActiveGans.push(getEffGanGlobal('大運', selectedDaYun.value.gan));
         if (currentLiuNianObj.value) allActiveGans.push(getEffGanGlobal('流年', currentLiuNianObj.value.gan));
+        if (currentLiuYueObj.value) allActiveGans.push(getEffGanGlobal('流月', currentLiuYueObj.value.gan));
         isComboTransformed = allActiveGans.some(gan => STEM_PROPS[gan] && STEM_PROPS[gan].e === comboTargetElem);
       }
 
@@ -953,12 +1028,14 @@ createApp({
       return Math.min(95, 80 + ((ratio - 2.50) / 2.50) * 20);
     });
 
+    // 🌟 修正：加入流月天干掃描爭合
     const checkAllRelations = () => {
       if (!result.value) return;
       const dayGan = result.value.dayGan;
       let allStemList = result.value.pillars.map(p => ({ name: p.name, gan: p.gan, isDayMaster: p.isDayMaster, zhi: p.zhi, isOrig: true }));
       if (selectedDaYun.value) allStemList.push({ name: '大運', gan: selectedDaYun.value.gan, isDayMaster: false, zhi: selectedDaYun.value.zhi, isOrig: false });
       if (currentLiuNianObj.value) allStemList.push({ name: '流年', gan: currentLiuNianObj.value.gan, isDayMaster: false, zhi: currentLiuNianObj.value.zhi, isOrig: false });
+      if (currentLiuYueObj.value) allStemList.push({ name: '流月', gan: currentLiuYueObj.value.gan, isDayMaster: false, zhi: currentLiuYueObj.value.zhi, isOrig: false });
 
       const comboRules = [ { s1:'甲', s2:'己', res:'己', targetName:'土' }, { s1:'乙', s2:'庚', res:'庚', targetName:'金' }, { s1:'丙', s2:'辛', res:'壬', targetName:'水' }, { s1:'丁', s2:'壬', res:'甲', targetName:'木' }, { s1:'戊', s2:'癸', res:'丙', targetName:'火' } ];
       let newTransInfo = {}, sRels = [], stemCounts = {};
@@ -1035,6 +1112,7 @@ createApp({
       let activeZhis = result.value.pillars.map(p => ({ zhi: p.zhi }));
       if (selectedDaYun.value) activeZhis.push({ zhi: selectedDaYun.value.zhi });
       if (currentLiuNianObj.value) activeZhis.push({ zhi: currentLiuNianObj.value.zhi });
+      if (currentLiuYueObj.value) activeZhis.push({ zhi: currentLiuYueObj.value.zhi });
 
       const branchStr = activeZhis.map(x => x.zhi).join('');
       let bCombos = [], bClashes = [];
@@ -1097,7 +1175,6 @@ createApp({
                           if (!STEM_PROPS[gan] || !STEM_PROPS[cang.stem]) return false;
                           const isSameElem = STEM_PROPS[gan].e === STEM_PROPS[cang.stem].e;
                           const shishen = getShiShen(dayGan, gan);
-                          // ✨ 核心修正：不能以比肩劫財取格！
                           return isSameElem && shishen !== '比肩' && shishen !== '劫財';
                       });
                       if (matchedGan) { protrudingGan = matchedGan; break; }
@@ -1106,7 +1183,6 @@ createApp({
               if (protrudingGan) mainPattern = `${getShiShen(dayGan, protrudingGan)}格`;
               else {
                   const sortedScores = [...pillarScores.value].filter(p => !p.isDayMaster && ['年柱','月柱','時柱'].includes(p.name)).sort((a, b) => b.energy - a.energy);
-                  // 借用也排除比劫
                   const validScores = sortedScores.filter(s => s.shishen !== '比肩' && s.shishen !== '劫財');
                   if (validScores.length > 0 && validScores[0].energy > 0) mainPattern = `借用 ‧ ${validScores[0].shishen}格`;
               }
@@ -1116,6 +1192,7 @@ createApp({
       const cong = quantScore.value.congCategory;
       if (cong) mainPattern = quantScore.value.verdict;
 
+      // 🌟 修正：加入流月掃描副格
       let subPattern = null;
       let allActiveGans = [...origGans];
       let activeZhis = [...origZhis];
@@ -1128,8 +1205,12 @@ createApp({
           allActiveGans.push(getEffGanGlobal('流年', currentLiuNianObj.value.gan));
           activeZhis.push(currentLiuNianObj.value.zhi);
       }
+      if (currentLiuYueObj.value) {
+          allActiveGans.push(getEffGanGlobal('流月', currentLiuYueObj.value.gan));
+          activeZhis.push(currentLiuYueObj.value.zhi);
+      }
 
-      if (selectedDaYun.value || currentLiuNianObj.value) {
+      if (selectedDaYun.value || currentLiuNianObj.value || currentLiuYueObj.value) {
           let dynBranchStr = activeZhis.join('');
           let dynComboElem = null;
           [ ['寅','卯','辰','木'], ['巳','午','未','火'], ['申','酉','戌','金'], ['亥','子','丑','水'], ['申','子','辰','水'], ['亥','卯','未','木'], ['寅','午','戌','火'], ['巳','酉','丑','金'] ].forEach(h => {
@@ -1144,7 +1225,6 @@ createApp({
               let targetGan = allActiveGans.find(gan => STEM_PROPS[gan] && STEM_PROPS[gan].e === dynComboElem);
               if (targetGan) {
                   const ss = getShiShen(dayGan, targetGan);
-                  // 副格同樣不採納比肩劫財
                   if (ss !== '比肩' && ss !== '劫財') {
                       subPattern = `${ss}合局`;
                   }
@@ -1171,6 +1251,7 @@ createApp({
       let activeGans = effectivePillars.value.filter(p => !p.isDayMaster).map(p => p.effGan);
       if (selectedDaYun.value) activeGans.push(transformedInfo.value['大運']?.isSuccess ? transformedInfo.value['大運'].targetStem : selectedDaYun.value.gan);
       if (currentLiuNianObj.value) activeGans.push(transformedInfo.value['流年']?.isSuccess ? transformedInfo.value['流年'].targetStem : currentLiuNianObj.value.gan);
+      if (currentLiuYueObj.value) activeGans.push(transformedInfo.value['流月']?.isSuccess ? transformedInfo.value['流月'].targetStem : currentLiuYueObj.value.gan);
       const curShiShens = activeGans.map(g => getShiShen(result.value.dayGan, g));
       const has = (name) => curShiShens.includes(name) || (subPattern && subPattern.includes(name)); 
 
@@ -1298,10 +1379,15 @@ createApp({
         let effGan = transformedInfo.value['流年']?.isSuccess ? transformedInfo.value['流年'].targetStem : currentLiuNianObj.value.gan;
         allStems.push({ gan: effGan, isDM: false });
       }
+      if (currentLiuYueObj.value) {
+        let effGan = transformedInfo.value['流月']?.isSuccess ? transformedInfo.value['流月'].targetStem : currentLiuYueObj.value.gan;
+        allStems.push({ gan: effGan, isDM: false });
+      }
 
       let activeZhis = result.value.pillars.map(p => p.zhi);
       if (selectedDaYun.value) activeZhis.push(selectedDaYun.value.zhi);
       if (currentLiuNianObj.value) activeZhis.push(currentLiuNianObj.value.zhi);
+      if (currentLiuYueObj.value) activeZhis.push(currentLiuYueObj.value.zhi);
 
       allStems.forEach(item => {
         if (item.isDM) {
@@ -1361,6 +1447,7 @@ createApp({
       const curZhis = [...result.value.pillars.map(p => p.zhi)];
       if (selectedDaYun.value) { curGans.push(selectedDaYun.value.gan); curZhis.push(selectedDaYun.value.zhi); }
       if (currentLiuNianObj.value) { curGans.push(currentLiuNianObj.value.gan); curZhis.push(currentLiuNianObj.value.zhi); }
+      if (currentLiuYueObj.value) { curGans.push(currentLiuYueObj.value.gan); curZhis.push(currentLiuYueObj.value.zhi); }
 
       effPillars.forEach(p => {
         const gan = p.effGan; const zhi = p.zhi;
@@ -1397,7 +1484,7 @@ createApp({
       };
     });
 
-    watch([selectedDaYun, selectedLiuNian], () => {
+    watch([selectedDaYun, selectedLiuNian, selectedLiuYue], () => {
       if (result.value) { checkAllRelations(); checkCircuitDiagnostics(); checkInjuryAlerts(); }
     });
 
@@ -1536,7 +1623,7 @@ createApp({
           };
         }
 
-        selectedDaYun.value = null; selectedLiuNian.value = null; selectedMatrixPillar.value = '日柱'; selectedScorePillar.value = null;
+        selectedDaYun.value = null; selectedLiuNian.value = null; selectedLiuYue.value = null; selectedMatrixPillar.value = '日柱'; selectedScorePillar.value = null;
         checkAllRelations(); calcQuantScore(); checkCircuitDiagnostics(); checkInjuryAlerts();
       } catch (error) {
         console.error("Calculation Error:", error);
@@ -1545,13 +1632,13 @@ createApp({
 
     return { 
       name, inputMode, manualPillars, manualGender, manualStartAge, stems, branches,
-      birthTime, gender, result, selectedDaYun, selectedLiuNian, currentLiuNianObj, selectedScorePillar, selectedMatrixPillar,
+      birthTime, gender, result, selectedDaYun, selectedLiuNian, selectedLiuYue, currentLiuNianObj, currentLiuYueList, currentLiuYueObj, selectedScorePillar, selectedMatrixPillar,
       effectivePillars, transformedInfo, pillarScores, strengthBarPercent, getPillarByRole, getPillarScoreDetail, getMainQi, displayPillars, getPillarWeightLabel,
       perspectiveRole, perspectivePillars, perspectiveTacticalReport,
       isCategoryPresent, isSpecificGodPresent,
       stemRelations, branchCombos, branchClashes, circuitDiagnostics, injuryAlerts, quantScore, godsInfo, tenGodsTactics,
       isFiveElementsComplete, presentElementsStr, missingElementsStr, fiveElementsReport, iso7Report, activeModal,
-      records, showRecords, saveRecord, loadRecord, deleteRecord, formatTime, selectDaYun, getMatrixCangDetail, getMatrixColumnSubtotal, openComboDetailModal,
+      records, showRecords, saveRecord, loadRecord, deleteRecord, formatTime, selectDaYun, selectLiuNian, getMatrixCangDetail, getMatrixColumnSubtotal, openComboDetailModal,
       calculate, getShiShen, getSecondLayerTenGod, getElemClass, get12ChangSheng, getChangShengScore, getCategoryElemInfo,
       getCustomCangGan: zhi => CUSTOM_CANG_GAN[zhi] || [] 
     };
