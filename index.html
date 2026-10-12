@@ -77,7 +77,7 @@
 
   <!-- 輸入區 & 命例管理 -->
   <div class="card-bg p-4 sm:p-5 rounded-3xl max-w-2xl mx-auto">
-    <!-- 🌟 模式切換按鈕 -->
+    <!-- 模式切換按鈕 -->
     <div class="flex gap-2 mb-5 bg-white/40 p-1.5 rounded-2xl shadow-inner border border-white">
       <button @click="inputMode = 'birth'" :class="['flex-1 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition', inputMode === 'birth' ? 'bg-white text-pink-500 shadow-sm' : 'text-slate-500 hover:bg-white/50']">📅 生辰排盤</button>
       <button @click="inputMode = 'manual'" :class="['flex-1 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition', inputMode === 'manual' ? 'bg-white text-pink-500 shadow-sm' : 'text-slate-500 hover:bg-white/50']">📚 命盤學習 (免日期)</button>
@@ -106,7 +106,7 @@
         </div>
       </div>
 
-      <!-- 🌟 模式 2：命盤學習 (四柱手動輸入) -->
+      <!-- 模式 2：命盤學習 (四柱手動輸入) -->
       <div v-if="inputMode === 'manual'" class="space-y-4 animate-fade-in">
         <div class="grid grid-cols-4 gap-2 sm:gap-3 bg-white/30 p-3 rounded-2xl border border-white shadow-inner">
           <div v-for="(p, i) in manualPillars" :key="i" class="space-y-2">
@@ -173,10 +173,10 @@
       </div>
     </div>
 
-    <!-- 🌟 大運選擇區 -->
+    <!-- 1. 第一層：大運選擇區 -->
     <div class="card-bg p-4 rounded-3xl">
       <div class="flex justify-between items-center pb-2 mb-2 border-b border-slate-100">
-        <h2 class="text-xs sm:text-sm font-extrabold text-slate-600">☁️ 選擇大運軌跡：</h2>
+        <h2 class="text-xs sm:text-sm font-extrabold text-slate-600">☁️ 第一步：選擇大運軌跡</h2>
         <button v-if="selectedDaYun" @click="selectDaYun(null)" class="text-[10px] bg-white text-slate-500 px-2.5 py-1 rounded-full shadow-sm border border-slate-100 transition active:scale-95 font-bold">↺ 恢復原局</button>
       </div>
       <div class="flex overflow-x-auto no-scrollbar gap-2 pb-2 mt-3">
@@ -191,16 +191,16 @@
       </div>
     </div>
 
-    <!-- 🌟 流年選擇區 (選擇大運後顯示) -->
+    <!-- 2. 第二層：流年選擇區 (僅當大運已選時顯示) -->
     <div v-if="selectedDaYun" class="card-bg p-4 rounded-3xl animate-fade-in mt-2">
       <div class="flex justify-between items-center pb-2 mb-2 border-b border-slate-100">
-        <h2 class="text-xs sm:text-sm font-extrabold text-slate-600">🌸 選擇流年軌跡：</h2>
+        <h2 class="text-xs sm:text-sm font-extrabold text-slate-600">🌸 第二步：選擇流年軌跡</h2>
         <span class="text-[10px] bg-slate-50 text-slate-400 px-2 py-0.5 rounded-full font-bold">大運 {{ selectedDaYun.gan }}{{ selectedDaYun.zhi }} 期間</span>
       </div>
       <div class="flex overflow-x-auto no-scrollbar gap-2 pb-2 mt-3">
         <div v-for="ln in selectedDaYun.liuNianList" :key="'ln'+ln.year" @click="selectLiuNian(ln)"
              :class="['cursor-pointer border rounded-2xl p-2 w-[70px] sm:w-[85px] text-center flex-shrink-0 transition relative', 
-                      selectedLiuNian?.year === ln.year ? 'bg-gradient-to-br from-sky-100 to-indigo-100 border-indigo-200 shadow-md transform -translate-y-1' : 'bg-white/60 border-white hover:bg-white']">
+                      selectedLiuNian === ln.year ? 'bg-gradient-to-br from-sky-100 to-indigo-100 border-indigo-200 shadow-md transform -translate-y-1' : 'bg-white/60 border-white hover:bg-white']">
           <div class="text-[9px] sm:text-[10px] text-slate-500 font-bold mb-1">{{ ln.year }}</div>
           <div class="text-sm sm:text-base font-extrabold">
             <span :class="getElemClass(ln.gan)">{{ ln.gan }}</span><span :class="getElemClass(ln.zhi)">{{ ln.zhi }}</span>
@@ -209,14 +209,14 @@
       </div>
     </div>
 
-    <!-- 🌟 流月選擇區 (選擇流年後顯示) -->
+    <!-- 3. 第三層：流月選擇區 (僅當流年已選時顯示) -->
     <div v-if="selectedLiuNian" class="card-bg p-4 rounded-3xl animate-fade-in mt-2">
       <div class="flex justify-between items-center pb-2 mb-2 border-b border-slate-100">
-        <h2 class="text-xs sm:text-sm font-extrabold text-slate-600">🍃 選擇流月軌跡：</h2>
-        <span class="text-[10px] bg-slate-50 text-slate-400 px-2 py-0.5 rounded-full font-bold">流年 {{ selectedLiuNian.gan }}{{ selectedLiuNian.zhi }} 期間</span>
+        <h2 class="text-xs sm:text-sm font-extrabold text-slate-600">🍃 第三步：選擇流月軌跡</h2>
+        <span class="text-[10px] bg-slate-50 text-slate-400 px-2 py-0.5 rounded-full font-bold">流年 {{ currentLiuNianObj?.gan }}{{ currentLiuNianObj?.zhi }} 期間</span>
       </div>
       <div class="flex overflow-x-auto no-scrollbar gap-2 pb-2 mt-3">
-        <div v-for="lm in currentLiuYueList" :key="'lm'+lm.month" @click="selectedLiuYue = lm.month"
+        <div v-for="lm in currentLiuYueList" :key="'lm'+lm.month" @click="selectLiuYue(lm.month)"
              :class="['cursor-pointer border rounded-xl p-2 w-[65px] text-center flex-shrink-0 transition relative', 
                       selectedLiuYue === lm.month ? 'bg-gradient-to-br from-emerald-50 to-teal-100 border-teal-200 shadow-sm transform -translate-y-1' : 'bg-white/50 border-white hover:bg-white']">
           <div class="text-[8px] sm:text-[9px] text-slate-400 font-bold mb-0.5">{{ lm.month }}月</div>
@@ -228,11 +228,11 @@
     </div>
 
     <!-- ============================================== -->
-    <!-- 1. 核心盤面：七柱連動 (動態寬度) -->
+    <!-- 核心盤面：多柱全息連動 (四柱 / 五柱 / 六柱 / 七柱) -->
     <!-- ============================================== -->
     <div class="card-bg p-3 sm:p-5 rounded-3xl overflow-hidden relative mt-5">
       <h2 class="text-xs sm:text-sm font-extrabold text-slate-600 mb-3 flex justify-between items-center px-1">
-        <span>✨ {{ selectedDaYun ? (selectedLiuYue ? '七柱全息連動' : '六柱全息連動') : '四柱原命盤' }}</span>
+        <span>✨ {{ boardTitle }}</span>
         <span class="text-[9px] sm:text-[10px] text-pink-500 bg-pink-50 px-2 py-1 rounded-full shadow-sm">💡 點擊「得分」看細節</span>
       </h2>
       
@@ -294,7 +294,7 @@
         </div>
       </div>
 
-      <!-- 🎯 四柱取根明細矩陣 -->
+      <!-- 四柱取根明細矩陣 -->
       <div v-if="selectedMatrixPillar" class="mt-4 sm:mt-6 bg-white/80 rounded-3xl p-3 sm:p-5 border border-white shadow-lg space-y-3 text-xs animate-fade-in">
         <div class="grid grid-cols-5 text-center border-b border-slate-100 pb-2 font-bold">
           <div class="flex flex-col items-center justify-center bg-slate-50 rounded-xl py-1 mr-1">
@@ -408,7 +408,7 @@
           <div v-if="godsInfo.subPattern" class="flex items-center gap-2 animate-fade-in">
             <span class="text-[10px] sm:text-xs text-slate-400 whitespace-nowrap">🌸 歲運副格：</span>
             <b class="text-pink-500 text-sm bg-pink-50 border border-pink-100 px-3 py-1 rounded-full shadow-sm">{{ godsInfo.subPattern }}</b>
-            <span class="text-[9px] text-slate-400">(大運/流年引發)</span>
+            <span class="text-[9px] text-slate-400">(大運/歲月引發)</span>
           </div>
 
           <div class="flex items-center gap-2 pt-1">
@@ -669,10 +669,10 @@ createApp({
     for(let i=0; i<60; i++) jiazi.push(stems[i%10] + branches[i%12]);
 
     const manualPillars = ref([
-      { gan: '庚', zhi: '子' },
-      { gan: '庚', zhi: '辰' },
-      { gan: '甲', zhi: '申' },
-      { gan: '丁', zhi: '卯' }
+      { gan: '丙', zhi: '寅' },
+      { gan: '乙', zhi: '未' },
+      { gan: '丙', zhi: '寅' },
+      { gan: '丁', zhi: '酉' }
     ]);
 
     const result = ref(null);
@@ -789,12 +789,14 @@ createApp({
       });
     });
 
-    const currentLiuNianObj = computed(() => selectedDaYun.value?.liuNianList.find(ln => ln.year === selectedLiuNian.value) || null);
+    const currentLiuNianObj = computed(() => {
+        if (!selectedDaYun.value || !selectedLiuNian.value) return null;
+        return selectedDaYun.value.liuNianList.find(ln => ln.year === selectedLiuNian.value) || null;
+    });
     
-    // 🌟 新增：計算流年對應的 12 個流月
+    // 計算流年對應的 12 個流月
     const currentLiuYueList = computed(() => {
         if (!currentLiuNianObj.value) return [];
-        const lnYear = currentLiuNianObj.value.year;
         const lnGan = currentLiuNianObj.value.gan;
         
         // 五虎遁訣求正月天干
@@ -811,14 +813,18 @@ createApp({
         
         for (let i = 0; i < 12; i++) {
             const mGan = stems[(firstMonthGanIndex + i) % 10];
-            const mZhi = branches[(2 + i) % 12]; // 正月建寅 (index 2)
+            const mZhi = branches[(2 + i) % 12]; // 正月建寅
             yueList.push({ month: i + 1, gan: mGan, zhi: mZhi });
         }
         return yueList;
     });
 
-    const currentLiuYueObj = computed(() => currentLiuYueList.value.find(lm => lm.month === selectedLiuYue.value) || null);
+    const currentLiuYueObj = computed(() => {
+        if (!selectedLiuYue.value) return null;
+        return currentLiuYueList.value.find(lm => lm.month === selectedLiuYue.value) || null;
+    });
 
+    // 🌟 第一層選取：選擇大運 (同時完全重置流年與流月)
     const selectDaYun = (dy) => {
       if (!dy || (selectedDaYun.value?.startYear === dy.startYear)) { 
           selectedDaYun.value = null; 
@@ -826,17 +832,41 @@ createApp({
           selectedLiuYue.value = null;
       } else { 
           selectedDaYun.value = dy; 
-          selectedLiuNian.value = dy.startYear; 
-          selectedLiuYue.value = null;
+          selectedLiuNian.value = null; // 重置流年，促使使用者手動點選
+          selectedLiuYue.value = null;  // 重置流月
       }
     };
 
-    const selectLiuNian = (lnYear) => {
-        selectedLiuNian.value = lnYear;
-        selectedLiuYue.value = null;
+    // 🌟 第二層選取：選擇流年 (同時重置流月)
+    const selectLiuNian = (ln) => {
+        const yearVal = typeof ln === 'object' ? ln.year : ln;
+        if (selectedLiuNian.value === yearVal) {
+            selectedLiuNian.value = null;
+            selectedLiuYue.value = null;
+        } else {
+            selectedLiuNian.value = yearVal;
+            selectedLiuYue.value = null; // 重置流月
+        }
     };
 
-    // 🌟 核心排版：動態六柱/七柱切換
+    // 🌟 第三層選取：選擇流月
+    const selectLiuYue = (monthVal) => {
+        if (selectedLiuYue.value === monthVal) {
+            selectedLiuYue.value = null;
+        } else {
+            selectedLiuYue.value = monthVal;
+        }
+    };
+
+    // 動態標題文字
+    const boardTitle = computed(() => {
+        if (currentLiuYueObj.value) return '七柱全息連動';
+        if (currentLiuNianObj.value) return '六柱全息連動';
+        if (selectedDaYun.value) return '五柱全息連動';
+        return '四柱原命盤';
+    });
+
+    // 核心排版：依據階梯選取動態展現柱數
     const displayPillars = computed(() => {
       if (!result.value) return [];
       let list = [
@@ -853,7 +883,6 @@ createApp({
           const effGan = getEffGanGlobal('流年', currentLiuNianObj.value.gan);
           list.push({ role: '流年', isCore: false, gan: effGan, zhi: currentLiuNianObj.value.zhi, shishen: getShiShen(result.value.dayGan, effGan), scoreDetail: null });
       }
-      // ✨ 擴展：加入流月
       if (currentLiuYueObj.value) {
           const effGan = getEffGanGlobal('流月', currentLiuYueObj.value.gan);
           list.push({ role: '流月', isCore: false, gan: effGan, zhi: currentLiuYueObj.value.zhi, shishen: getShiShen(result.value.dayGan, effGan), scoreDetail: null });
@@ -897,7 +926,6 @@ createApp({
       return (parseFloat(getMatrixCangDetail(selectedPillar, targetBranchPillar, '主').score) + parseFloat(getMatrixCangDetail(selectedPillar, targetBranchPillar, '中').score) + parseFloat(getMatrixCangDetail(selectedPillar, targetBranchPillar, '餘').score)).toFixed(1);
     };
 
-    // 🌟 全新計分核心：加入流月動態重構
     const calcQuantScore = () => {
       if (!result.value) return;
       let scores = [], ally = 0, diff = 0;
@@ -913,13 +941,7 @@ createApp({
 
       result.value.pillars.forEach(p => {
         let effGan = getEffGanGlobal(p.name, p.gan); 
-        // 在取根計算時，如果流月存在，將不會只計四柱，會將大運/流年/流月都視為地支環境
-        let envZhis = result.value.pillars.map(x => x.zhi);
-        if (selectedDaYun.value) envZhis.push(selectedDaYun.value.zhi);
-        if (currentLiuNianObj.value) envZhis.push(currentLiuNianObj.value.zhi);
-        if (currentLiuYueObj.value) envZhis.push(currentLiuYueObj.value.zhi);
-        
-        let res = getStemRootEnergy(effGan, p.name, result.value.pillars); // Note: 這裡只算原局四柱權重，若要將歲運地支加入分數計算可在此擴展，目前依循師傅法則以原局為體
+        let res = getStemRootEnergy(effGan, p.name, result.value.pillars);
         let isAlly = p.isDayMaster || ['比肩','劫財','正印','偏印'].includes(p.isDayMaster ? '日主' : getShiShen(dayGan, effGan));
         scores.push({ name: p.name, gan: effGan, shishen: p.isDayMaster ? '日主' : getShiShen(dayGan, effGan), isAlly, energy: res.total, breakdown: res.breakdown });
       });
@@ -1028,7 +1050,6 @@ createApp({
       return Math.min(95, 80 + ((ratio - 2.50) / 2.50) * 20);
     });
 
-    // 🌟 修正：加入流月天干掃描爭合
     const checkAllRelations = () => {
       if (!result.value) return;
       const dayGan = result.value.dayGan;
@@ -1192,7 +1213,6 @@ createApp({
       const cong = quantScore.value.congCategory;
       if (cong) mainPattern = quantScore.value.verdict;
 
-      // 🌟 修正：加入流月掃描副格
       let subPattern = null;
       let allActiveGans = [...origGans];
       let activeZhis = [...origZhis];
@@ -1475,7 +1495,7 @@ createApp({
       const dmYinYang = STEM_PROPS[result.value.dayGan].y === 0 ? '陽干' : '陰干';
       return {
         step1: `四柱根氣得分已於上方明細中展示，清晰可見各柱能量。`,
-        step2: `【月令透干取格】：確定為主格【${godsInfo.value.geShen}】。`,
+        step2: `【月令透干取格】：確定為主格【${godsInfo.value.mainPattern}】。`,
         step3: `【同異黨比例】：同黨能量 ${quantScore.value.allyScore} 分 vs 異黨能量 ${quantScore.value.diffScore} 分，比率 ${quantScore.value.ratio}。`,
         step4: `【看氣勢定正偏格】：日干為 ${result.value.dayGan} (${dmYinYang})，判定為【${quantScore.value.verdict}】。`,
         step5: `【局中戰術】：目前戰略為「${godsInfo.value.currentTactic}」，採【${godsInfo.value.tacticalStrategy}】。樞紐鎖定為【${godsInfo.value.yongShen}】。`,
@@ -1632,13 +1652,13 @@ createApp({
 
     return { 
       name, inputMode, manualPillars, manualGender, manualStartAge, stems, branches,
-      birthTime, gender, result, selectedDaYun, selectedLiuNian, selectedLiuYue, currentLiuNianObj, currentLiuYueList, currentLiuYueObj, selectedScorePillar, selectedMatrixPillar,
+      birthTime, gender, result, selectedDaYun, selectedLiuNian, selectedLiuYue, currentLiuNianObj, currentLiuYueList, currentLiuYueObj, selectedScorePillar, selectedMatrixPillar, boardTitle,
       effectivePillars, transformedInfo, pillarScores, strengthBarPercent, getPillarByRole, getPillarScoreDetail, getMainQi, displayPillars, getPillarWeightLabel,
       perspectiveRole, perspectivePillars, perspectiveTacticalReport,
       isCategoryPresent, isSpecificGodPresent,
       stemRelations, branchCombos, branchClashes, circuitDiagnostics, injuryAlerts, quantScore, godsInfo, tenGodsTactics,
       isFiveElementsComplete, presentElementsStr, missingElementsStr, fiveElementsReport, iso7Report, activeModal,
-      records, showRecords, saveRecord, loadRecord, deleteRecord, formatTime, selectDaYun, selectLiuNian, getMatrixCangDetail, getMatrixColumnSubtotal, openComboDetailModal,
+      records, showRecords, saveRecord, loadRecord, deleteRecord, formatTime, selectDaYun, selectLiuNian, selectLiuYue, getMatrixCangDetail, getMatrixColumnSubtotal, openComboDetailModal,
       calculate, getShiShen, getSecondLayerTenGod, getElemClass, get12ChangSheng, getChangShengScore, getCategoryElemInfo,
       getCustomCangGan: zhi => CUSTOM_CANG_GAN[zhi] || [] 
     };
